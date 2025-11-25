@@ -1,0 +1,183 @@
+# Difficulty Calibration Matrices for Each Agent Domain
+
+difficulty_scaling:
+  APEX_01:
+    L1: "Implement a function to reverse a string"
+    L2: "Design a thread-safe singleton pattern"
+    L3: "Implement a concurrent LRU cache with TTL"
+    L4: "Design a distributed rate limiter for microservices"
+    L5: "Implement a lock-free concurrent skip list with linearizability proofs"
+
+  CIPHER_02:
+    L1: "Implement basic Caesar cipher encryption"
+    L2: "Design a secure password hashing system with salt"
+    L3: "Implement authenticated encryption using AES-GCM"
+    L4: "Design a zero-knowledge proof system for identity verification"
+    L5: "Implement post-quantum cryptographic key exchange resistant to Shor's algorithm"
+
+  ARCHITECT_03:
+    L1: "Design a basic MVC architecture diagram"
+    L2: "Create a microservices architecture for an e-commerce platform"
+    L3: "Design event-driven architecture with CQRS and Event Sourcing"
+    L4: "Architect a globally distributed system with strong consistency"
+    L5: "Design a self-healing, autonomously scaling architecture with formal correctness proofs"
+
+  AXIOM_04:
+    L1: "Prove that the sum of first n natural numbers is n(n+1)/2"
+    L2: "Prove the correctness of binary search using loop invariants"
+    L3: "Derive the time complexity of Fibonacci using matrix exponentiation"
+    L4: "Prove the NP-completeness of a novel graph problem"
+    L5: "Construct a formal proof of a distributed consensus algorithm in Coq/Lean"
+
+  VELOCITY_05:
+    L1: "Optimize a bubble sort to early-exit on sorted input"
+    L2: "Implement cache-friendly matrix multiplication"
+    L3: "Design a sub-linear approximate counting algorithm"
+    L4: "Optimize a neural network inference pipeline for edge devices"
+    L5: "Achieve theoretical optimal performance on a NP-hard problem instance"
+
+  QUANTUM_06:
+    L1: "Explain quantum superposition and measurement"
+    L2: "Implement Grover's search algorithm in Qiskit"
+    L3: "Design a variational quantum eigensolver for molecular simulation"
+    L4: "Implement quantum error correction using surface codes"
+    L5: "Design a fault-tolerant quantum algorithm for breaking RSA-2048"
+
+  TENSOR_07:
+    L1: "Implement a simple feedforward neural network"
+    L2: "Design a CNN for image classification with data augmentation"
+    L3: "Implement a transformer architecture from scratch"
+    L4: "Design a multi-modal model combining vision and language"
+    L5: "Create a self-improving neural architecture search system"
+
+  FORTRESS_08:
+    L1: "Identify OWASP Top 10 vulnerabilities in a code sample"
+    L2: "Design a comprehensive security audit checklist"
+    L3: "Perform red team assessment on a microservices architecture"
+    L4: "Design defense against advanced persistent threats (APT)"
+    L5: "Create an AI-powered adaptive threat hunting system"
+
+  NEURAL_09:
+    L1: "Explain the difference between narrow AI and AGI"
+    L2: "Design a cognitive architecture for task decomposition"
+    L3: "Implement a self-modeling system with metacognition"
+    L4: "Design alignment mechanisms for autonomous AI agents"
+    L5: "Create a framework for emergent goal-directed behavior with safety constraints"
+
+  CRYPTO_10:
+    L1: "Explain how blockchain consensus works"
+    L2: "Implement a basic ERC-20 token contract"
+    L3: "Design a cross-chain bridge with security guarantees"
+    L4: "Implement MEV-resistant transaction ordering"
+    L5: "Design a fully homomorphic computation layer for DeFi"
+
+  FLUX_11:
+    L1: "Create a basic Dockerfile for a Node.js application"
+    L2: "Design a CI/CD pipeline with testing and deployment"
+    L3: "Implement GitOps with ArgoCD and progressive delivery"
+    L4: "Design multi-region Kubernetes architecture with DR"
+    L5: "Create a self-healing, auto-scaling chaos-engineered infrastructure"
+
+  PRISM_12:
+    L1: "Calculate basic descriptive statistics for a dataset"
+    L2: "Design an A/B test with proper statistical power"
+    L3: "Implement a Bayesian hierarchical model for user behavior"
+    L4: "Design a causal inference pipeline with propensity matching"
+    L5: "Create an automated insight discovery system with causal reasoning"
+
+  SYNAPSE_13:
+    L1: "Design a RESTful API for a simple CRUD application"
+    L2: "Implement GraphQL schema with proper authentication"
+    L3: "Design an event-driven integration with Kafka"
+    L4: "Create a protocol buffer schema for high-performance RPC"
+    L5: "Design a self-documenting, version-negotiating API gateway"
+
+  CORE_14:
+    L1: "Explain the difference between stack and heap memory"
+    L2: "Implement a simple memory allocator"
+    L3: "Design a lexer and parser for a simple language"
+    L4: "Implement LLVM optimization passes"
+    L5: "Create a verified memory-safe systems language compiler"
+
+  HELIX_15:
+    L1: "Explain the central dogma of molecular biology"
+    L2: "Design a pipeline for variant calling from WGS data"
+    L3: "Implement protein structure prediction preprocessing"
+    L4: "Design a drug-target interaction prediction system"
+    L5: "Create an AI-guided CRISPR off-target analysis system"
+
+  VANGUARD_16:
+    L1: "Summarize a research paper's key contributions"
+    L2: "Conduct a systematic literature review on a topic"
+    L3: "Identify research gaps and propose novel directions"
+    L4: "Synthesize conflicting research findings into coherent theory"
+    L5: "Predict breakthrough research directions from citation patterns"
+
+  ECLIPSE_17:
+    L1: "Write unit tests for a simple function"
+    L2: "Design property-based tests for a data structure"
+    L3: "Implement fuzzing for a parser"
+    L4: "Create formal specifications in TLA+ for distributed system"
+    L5: "Verify a cryptographic protocol's security properties in Coq"
+
+  NEXUS_18:
+    L1: "Identify connections between two different technical domains"
+    L2: "Synthesize approaches from biology and computing"
+    L3: "Design a novel algorithm by combining disparate paradigms"
+    L4: "Create cross-domain innovation framework"
+    L5: "Generate a paradigm-shifting synthesis across 5+ domains"
+
+  GENESIS_19:
+    L1: "Question a fundamental assumption in a given domain"
+    L2: "Propose a novel approach to a known problem"
+    L3: "Derive a new mathematical relationship"
+    L4: "Design an algorithm for a problem deemed impossible"
+    L5: "Create a genuinely new computational paradigm"
+
+  OMNISCIENT_20:
+    L1: "Summarize capabilities of all agents in the collective"
+    L2: "Identify optimal agent combinations for complex tasks"
+    L3: "Design evolution protocols for agent improvement"
+    L4: "Orchestrate multi-agent problem-solving with dynamic routing"
+    L5: "Create self-improving meta-learning framework for the collective"
+
+# Performance benchmarks for each difficulty level
+performance_benchmarks:
+  L1:
+    max_execution_time_ms: 100
+    expected_pass_rate: 0.98
+  L2:
+    max_execution_time_ms: 500
+    expected_pass_rate: 0.90
+  L3:
+    max_execution_time_ms: 2000
+    expected_pass_rate: 0.80
+  L4:
+    max_execution_time_ms: 5000
+    expected_pass_rate: 0.65
+  L5:
+    max_execution_time_ms: 10000
+    expected_pass_rate: 0.45
+
+# Collaboration matrix defining which agents typically work together
+collaboration_matrix:
+  APEX_01: ["ARCHITECT_03", "VELOCITY_05", "ECLIPSE_17"]
+  CIPHER_02: ["FORTRESS_08", "CRYPTO_10", "AXIOM_04"]
+  ARCHITECT_03: ["APEX_01", "FLUX_11", "SYNAPSE_13"]
+  AXIOM_04: ["CIPHER_02", "QUANTUM_06", "ECLIPSE_17"]
+  VELOCITY_05: ["APEX_01", "CORE_14", "TENSOR_07"]
+  QUANTUM_06: ["AXIOM_04", "TENSOR_07", "CIPHER_02"]
+  TENSOR_07: ["VELOCITY_05", "PRISM_12", "NEURAL_09"]
+  FORTRESS_08: ["CIPHER_02", "FLUX_11", "ECLIPSE_17"]
+  NEURAL_09: ["TENSOR_07", "GENESIS_19", "OMNISCIENT_20"]
+  CRYPTO_10: ["CIPHER_02", "SYNAPSE_13", "ARCHITECT_03"]
+  FLUX_11: ["ARCHITECT_03", "FORTRESS_08", "ECLIPSE_17"]
+  PRISM_12: ["TENSOR_07", "VANGUARD_16", "AXIOM_04"]
+  SYNAPSE_13: ["ARCHITECT_03", "FLUX_11", "CRYPTO_10"]
+  CORE_14: ["VELOCITY_05", "APEX_01", "QUANTUM_06"]
+  HELIX_15: ["TENSOR_07", "PRISM_12", "VANGUARD_16"]
+  VANGUARD_16: ["PRISM_12", "NEXUS_18", "NEURAL_09"]
+  ECLIPSE_17: ["APEX_01", "AXIOM_04", "FORTRESS_08"]
+  NEXUS_18: ["GENESIS_19", "VANGUARD_16", "OMNISCIENT_20"]
+  GENESIS_19: ["NEXUS_18", "AXIOM_04", "NEURAL_09"]
+  OMNISCIENT_20: ["ALL"]

@@ -30,17 +30,70 @@ Copy `.github/copilot-instructions.md` to any repository's `.github/` folder.
 
 ### Option 3: VS Code Integration
 
-Copy the `vscode-prompts/` folder contents to your VS Code user prompts:
+Copy the `vscode-prompts/` folder contents to your VS Code user prompts directory.
+
+#### Windows PowerShell (Recommended)
+
+```powershell
+# Create directories if they don't exist
+New-Item -ItemType Directory -Path "$env:APPDATA\Code\User\prompts" -Force
+New-Item -ItemType Directory -Path "$env:APPDATA\Code\User\prompts\agents" -Force
+
+# Copy main file
+Copy-Item -Path "vscode-prompts\ELITE_AGENT_COLLECTIVE.instructions.md" -Destination "$env:APPDATA\Code\User\prompts\"
+
+# Copy all agent files
+Copy-Item -Path "vscode-prompts\agents\*.instructions.md" -Destination "$env:APPDATA\Code\User\prompts\agents\"
+```
+
+#### Windows CMD
+
+```cmd
+REM Create directories if they don't exist
+mkdir %APPDATA%\Code\User\prompts 2>nul
+mkdir %APPDATA%\Code\User\prompts\agents 2>nul
+
+REM Copy main file
+copy vscode-prompts\ELITE_AGENT_COLLECTIVE.instructions.md %APPDATA%\Code\User\prompts\
+
+REM Copy agent files individually
+for %%f in (vscode-prompts\agents\*.instructions.md) do copy "%%f" %APPDATA%\Code\User\prompts\agents\
+```
+
+#### macOS/Linux
 
 ```bash
-# Windows
-copy vscode-prompts\*.instructions.md %APPDATA%\Code\User\prompts\
-copy vscode-prompts\agents\*.instructions.md %APPDATA%\Code\User\prompts\agents\
+# Create directories if they don't exist
+mkdir -p ~/Library/Application\ Support/Code/User/prompts/agents/
 
-# macOS
-cp vscode-prompts/*.instructions.md ~/Library/Application\ Support/Code/User/prompts/
+# Copy files
+cp vscode-prompts/ELITE_AGENT_COLLECTIVE.instructions.md ~/Library/Application\ Support/Code/User/prompts/
 cp vscode-prompts/agents/*.instructions.md ~/Library/Application\ Support/Code/User/prompts/agents/
 ```
+
+#### Verify Installation
+
+After copying, verify the files are in place:
+
+**PowerShell:**
+```powershell
+Get-ChildItem "$env:APPDATA\Code\User\prompts\" -Name
+Get-ChildItem "$env:APPDATA\Code\User\prompts\agents\" -Name
+```
+
+**CMD:**
+```cmd
+dir %APPDATA%\Code\User\prompts\
+dir %APPDATA%\Code\User\prompts\agents\
+```
+
+**macOS/Linux:**
+```bash
+ls ~/Library/Application\ Support/Code/User/prompts/
+ls ~/Library/Application\ Support/Code/User/prompts/agents/
+```
+
+You should see 1 file in the `prompts` directory and 20 agent files in the `agents` subdirectory.
 
 ---
 

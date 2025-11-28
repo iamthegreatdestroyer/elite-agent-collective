@@ -287,7 +287,7 @@ elite-agent-collective/
 │                          │  @PRISM    Data Science  │                       │
 │                          │  @SYNAPSE  Integration   │                       │
 │                          │  @CORE     Low-Level     │                       │
-│                          │  @HELIX    Bioinformtics │                       │
+│                          │  @HELIX    Bioinformatics│                       │
 │                          │  @VANGUARD Research      │                       │
 │                          │  @ECLIPSE  Testing       │                       │
 ├─────────────────────────────────────────────────────────────────────────────┤

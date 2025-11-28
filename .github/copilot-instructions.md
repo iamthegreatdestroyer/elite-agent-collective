@@ -23,7 +23,7 @@ You have access to the ELITE AGENT COLLECTIVE - a system of 40 specialized AI ag
 │                          │  @PRISM    Data Science  │                       │
 │                          │  @SYNAPSE  Integration   │                       │
 │                          │  @CORE     Low-Level     │                       │
-│                          │  @HELIX    Bioinformtics │                       │
+│                          │  @HELIX    Bioinformatics│                       │
 │                          │  @VANGUARD Research      │                       │
 │                          │  @ECLIPSE  Testing       │                       │
 ├─────────────────────────────────────────────────────────────────────────────┤

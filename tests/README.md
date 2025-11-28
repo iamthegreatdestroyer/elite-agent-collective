@@ -2,7 +2,7 @@
 
 ## 🧠 Overview
 
-Comprehensive test suite for the **Elite Agent Collective** - a system of 20 specialized AI agents organized across 4 tiers, designed to provide expert-level assistance across all domains of software engineering, research, and innovation.
+Comprehensive test suite for the **Elite Agent Collective** - a system of 40 specialized AI agents organized across 8 tiers, designed to provide expert-level assistance across all domains of software engineering, research, and innovation.
 
 ## 📊 Test Suite Structure
 
@@ -56,6 +56,38 @@ tests/
 ├── tier_4_meta/                  # Tier 4 agent tests
 │   ├── __init__.py
 │   └── test_omniscient_20.py     # Collective Orchestration
+│
+├── tier_5_domain_specialists/    # Tier 5 agent tests
+│   ├── __init__.py
+│   ├── test_atlas_21.py          # Cloud Infrastructure
+│   ├── test_forge_22.py          # Build Systems
+│   ├── test_sentry_23.py         # Observability
+│   ├── test_vertex_24.py         # Graph Databases
+│   └── test_stream_25.py         # Real-Time Data
+│
+├── tier_6_emerging_tech/         # Tier 6 agent tests
+│   ├── __init__.py
+│   ├── test_photon_26.py         # Edge Computing
+│   ├── test_lattice_27.py        # Distributed Consensus
+│   ├── test_morph_28.py          # Code Migration
+│   ├── test_phantom_29.py        # Reverse Engineering
+│   └── test_orbit_30.py          # Satellite Systems
+│
+├── tier_7_human_centric/         # Tier 7 agent tests
+│   ├── __init__.py
+│   ├── test_canvas_31.py         # UI/UX Design
+│   ├── test_lingua_32.py         # NLP/LLM
+│   ├── test_scribe_33.py         # Documentation
+│   ├── test_mentor_34.py         # Code Review
+│   └── test_bridge_35.py         # Cross-Platform
+│
+├── tier_8_enterprise/            # Tier 8 agent tests
+│   ├── __init__.py
+│   ├── test_aegis_36.py          # Compliance
+│   ├── test_ledger_37.py         # Financial Systems
+│   ├── test_pulse_38.py          # Healthcare IT
+│   ├── test_arbiter_39.py        # Merge Strategies
+│   └── test_oracle_40.py         # Predictive Analytics
 │
 └── integration/                  # Integration tests
     ├── __init__.py
@@ -156,11 +188,51 @@ python tests/run_all_tests.py --agent APEX-01
 | ------------- | ----------- | ------------------------ |
 | OMNISCIENT-20 | @OMNISCIENT | Collective Orchestration |
 
+### Tier 5: Domain Specialists (5 agents)
+
+| ID        | Codename | Domain                   |
+| --------- | -------- | ------------------------ |
+| ATLAS-21  | @ATLAS   | Cloud Infrastructure     |
+| FORGE-22  | @FORGE   | Build Systems            |
+| SENTRY-23 | @SENTRY  | Observability            |
+| VERTEX-24 | @VERTEX  | Graph Databases          |
+| STREAM-25 | @STREAM  | Real-Time Data           |
+
+### Tier 6: Emerging Tech (5 agents)
+
+| ID         | Codename | Domain                |
+| ---------- | -------- | --------------------- |
+| PHOTON-26  | @PHOTON  | Edge Computing        |
+| LATTICE-27 | @LATTICE | Distributed Consensus |
+| MORPH-28   | @MORPH   | Code Migration        |
+| PHANTOM-29 | @PHANTOM | Reverse Engineering   |
+| ORBIT-30   | @ORBIT   | Satellite Systems     |
+
+### Tier 7: Human-Centric (5 agents)
+
+| ID        | Codename | Domain            |
+| --------- | -------- | ----------------- |
+| CANVAS-31 | @CANVAS  | UI/UX Design      |
+| LINGUA-32 | @LINGUA  | NLP/LLM           |
+| SCRIBE-33 | @SCRIBE  | Documentation     |
+| MENTOR-34 | @MENTOR  | Code Review       |
+| BRIDGE-35 | @BRIDGE  | Cross-Platform    |
+
+### Tier 8: Enterprise (5 agents)
+
+| ID         | Codename | Domain               |
+| ---------- | -------- | -------------------- |
+| AEGIS-36   | @AEGIS   | Compliance           |
+| LEDGER-37  | @LEDGER  | Financial Systems    |
+| PULSE-38   | @PULSE   | Healthcare IT        |
+| ARBITER-39 | @ARBITER | Merge Strategies     |
+| ORACLE-40  | @ORACLE  | Predictive Analytics |
+
 ## 📊 Test Metrics
 
-- **Total Agents:** 20
-- **Total Test Cases:** 328
-- **Individual Agent Tests:** 300 (15 per agent)
+- **Total Agents:** 40
+- **Total Test Cases:** 628
+- **Individual Agent Tests:** 600 (15 per agent)
 - **Integration Tests:** 28
 - **Target Pass Rate:** 90%
 
@@ -178,7 +250,7 @@ python tests/run_all_tests.py --agent APEX-01
    - Local complexity (2-3 agents)
    - Regional complexity (5-8 agents)
    - Global complexity (10+ agents)
-   - Universal complexity (all 20 agents)
+   - Universal complexity (all 40 agents)
 
 3. **Evolution Protocols** (10 tests)
    - Capability acquisition

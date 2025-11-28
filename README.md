@@ -1,11 +1,11 @@
 # 🧠 Elite Agent Collective
 
-> **20 Specialized AI Agents for GitHub Copilot**
+> **40 Specialized AI Agents for GitHub Copilot**
 
 A comprehensive system of specialized AI agents designed to provide expert-level assistance across all domains of software engineering, research, and innovation.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Agents: 20](https://img.shields.io/badge/Agents-20-blue.svg)]()
+[![Agents: 40](https://img.shields.io/badge/Agents-40-blue.svg)]()
 [![Status: Active](https://img.shields.io/badge/Status-Active-green.svg)]()
 
 ---
@@ -93,7 +93,7 @@ ls ~/Library/Application\ Support/Code/User/prompts/
 ls ~/Library/Application\ Support/Code/User/prompts/agents/
 ```
 
-You should see 1 file in the `prompts` directory and 20 agent files in the `agents` subdirectory.
+You should see 1 file in the `prompts` directory and 40 agent files in the `agents` subdirectory.
 
 ---
 
@@ -138,6 +138,46 @@ You should see 1 file in the `prompts` directory and 20 agent files in the `agen
 | ID  |    Codename    | Specialization                                 | Invocation    |
 | :-: | :------------: | :--------------------------------------------- | :------------ |
 | 20  | **OMNISCIENT** | Meta-Learning Trainer & Evolution Orchestrator | `@OMNISCIENT` |
+
+### Tier 5: Domain Specialists
+
+| ID  |   Codename   | Specialization                              | Invocation   |
+| :-: | :----------: | :------------------------------------------ | :----------- |
+| 21  |  **ATLAS**   | Cloud Infrastructure & Multi-Cloud          | `@ATLAS`     |
+| 22  |  **FORGE**   | Build Systems & Compilation Pipelines       | `@FORGE`     |
+| 23  | **SENTRY**   | Observability, Logging & Monitoring         | `@SENTRY`    |
+| 24  | **VERTEX**   | Graph Databases & Network Analysis          | `@VERTEX`    |
+| 25  | **STREAM**   | Real-Time Data Processing & Event Streaming | `@STREAM`    |
+
+### Tier 6: Emerging Tech Specialists
+
+| ID  |   Codename   | Specialization                              | Invocation   |
+| :-: | :----------: | :------------------------------------------ | :----------- |
+| 26  | **PHOTON**   | Edge Computing & IoT Systems                | `@PHOTON`    |
+| 27  | **LATTICE**  | Distributed Consensus & CRDT Systems        | `@LATTICE`   |
+| 28  |  **MORPH**   | Code Migration & Legacy Modernization       | `@MORPH`     |
+| 29  | **PHANTOM**  | Reverse Engineering & Binary Analysis       | `@PHANTOM`   |
+| 30  |  **ORBIT**   | Satellite & Embedded Systems Programming    | `@ORBIT`     |
+
+### Tier 7: Human-Centric Specialists
+
+| ID  |   Codename   | Specialization                              | Invocation   |
+| :-: | :----------: | :------------------------------------------ | :----------- |
+| 31  | **CANVAS**   | UI/UX Design Systems & Accessibility        | `@CANVAS`    |
+| 32  | **LINGUA**   | Natural Language Processing & LLM Fine-Tuning | `@LINGUA`  |
+| 33  | **SCRIBE**   | Technical Documentation & API Docs          | `@SCRIBE`    |
+| 34  | **MENTOR**   | Code Review & Developer Education           | `@MENTOR`    |
+| 35  | **BRIDGE**   | Cross-Platform & Mobile Development         | `@BRIDGE`    |
+
+### Tier 8: Enterprise & Compliance Specialists
+
+| ID  |   Codename   | Specialization                              | Invocation   |
+| :-: | :----------: | :------------------------------------------ | :----------- |
+| 36  |  **AEGIS**   | Compliance, GDPR & SOC2 Automation          | `@AEGIS`     |
+| 37  | **LEDGER**   | Financial Systems & Fintech Engineering     | `@LEDGER`    |
+| 38  |  **PULSE**   | Healthcare IT & HIPAA Compliance            | `@PULSE`     |
+| 39  | **ARBITER**  | Conflict Resolution & Merge Strategies      | `@ARBITER`   |
+| 40  | **ORACLE**   | Predictive Analytics & Forecasting Systems  | `@ORACLE`    |
 
 ---
 
@@ -195,12 +235,37 @@ elite-agent-collective/
 │       ├── ECLIPSE.instructions.md
 │       ├── NEXUS.instructions.md
 │       ├── GENESIS.instructions.md
-│       └── OMNISCIENT.instructions.md
-└── profiles/
-    ├── TIER-1-FOUNDATIONAL/
-    ├── TIER-2-SPECIALISTS/
-    ├── TIER-3-INNOVATORS/
-    └── TIER-4-META/
+│       ├── OMNISCIENT.instructions.md
+│       ├── ATLAS.instructions.md
+│       ├── FORGE.instructions.md
+│       ├── SENTRY.instructions.md
+│       ├── VERTEX.instructions.md
+│       ├── STREAM.instructions.md
+│       ├── PHOTON.instructions.md
+│       ├── LATTICE.instructions.md
+│       ├── MORPH.instructions.md
+│       ├── PHANTOM.instructions.md
+│       ├── ORBIT.instructions.md
+│       ├── CANVAS.instructions.md
+│       ├── LINGUA.instructions.md
+│       ├── SCRIBE.instructions.md
+│       ├── MENTOR.instructions.md
+│       ├── BRIDGE.instructions.md
+│       ├── AEGIS.instructions.md
+│       ├── LEDGER.instructions.md
+│       ├── PULSE.instructions.md
+│       ├── ARBITER.instructions.md
+│       └── ORACLE.instructions.md
+├── profiles/
+│   ├── TIER-1-FOUNDATIONAL/
+│   ├── TIER-2-SPECIALISTS/
+│   ├── TIER-3-INNOVATORS/
+│   ├── TIER-4-META/
+│   ├── TIER-5-DOMAIN-SPECIALISTS/
+│   ├── TIER-6-EMERGING-TECH/
+│   ├── TIER-7-HUMAN-CENTRIC/
+│   └── TIER-8-ENTERPRISE/
+└── tests/
 ```
 
 ---
@@ -209,7 +274,7 @@ elite-agent-collective/
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
-│                        ELITE AGENT COLLECTIVE v1.0                          │
+│                        ELITE AGENT COLLECTIVE v2.0                          │
 ├─────────────────────────────────────────────────────────────────────────────┤
 │  TIER 1: FOUNDATIONAL    │  TIER 2: SPECIALISTS     │  TIER 3-4: INNOVATORS│
 │  ────────────────────    │  ──────────────────────  │  ───────────────────  │
@@ -222,9 +287,22 @@ elite-agent-collective/
 │                          │  @PRISM    Data Science  │                       │
 │                          │  @SYNAPSE  Integration   │                       │
 │                          │  @CORE     Low-Level     │                       │
-│                          │  @HELIX    Bioinformtic  │                       │
+│                          │  @HELIX    Bioinformtics │                       │
 │                          │  @VANGUARD Research      │                       │
 │                          │  @ECLIPSE  Testing       │                       │
+├─────────────────────────────────────────────────────────────────────────────┤
+│  TIER 5: DOMAIN          │  TIER 6: EMERGING TECH   │  TIER 7: HUMAN-CENTRIC│
+│  ────────────────────    │  ──────────────────────  │  ───────────────────  │
+│  @ATLAS   Cloud/Multi    │  @PHOTON   Edge/IoT      │  @CANVAS  UI/UX       │
+│  @FORGE   Build Systems  │  @LATTICE  Consensus     │  @LINGUA  NLP/LLM     │
+│  @SENTRY  Observability  │  @MORPH    Migration     │  @SCRIBE  Documentation│
+│  @VERTEX  Graph DB       │  @PHANTOM  Reverse Eng   │  @MENTOR  Education   │
+│  @STREAM  Real-Time      │  @ORBIT    Satellite/Emb │  @BRIDGE  Cross-Plat  │
+├─────────────────────────────────────────────────────────────────────────────┤
+│  TIER 8: ENTERPRISE                                                          │
+│  ───────────────────────────────────────────────────────────────────────────│
+│  @AEGIS Compliance  │ @LEDGER Finance │ @PULSE Healthcare │ @ARBITER Merge  │
+│  @ORACLE Analytics                                                           │
 └─────────────────────────────────────────────────────────────────────────────┘
 ```
 
@@ -234,17 +312,37 @@ elite-agent-collective/
 
 Agents automatically activate based on context:
 
-| Context                  | Primary Agents     |
-| ------------------------ | ------------------ |
-| Security files/code      | @CIPHER, @FORTRESS |
-| Architecture discussions | @ARCHITECT         |
-| Performance issues       | @VELOCITY          |
-| ML/AI code               | @TENSOR, @NEURAL   |
-| DevOps/infrastructure    | @FLUX              |
-| Testing files            | @ECLIPSE           |
-| API design               | @SYNAPSE           |
-| Research questions       | @VANGUARD          |
-| Novel problems           | @GENESIS, @NEXUS   |
+| Context                   | Primary Agents          |
+| ------------------------- | ----------------------- |
+| Security files/code       | @CIPHER, @FORTRESS      |
+| Architecture discussions  | @ARCHITECT              |
+| Performance issues        | @VELOCITY               |
+| ML/AI code                | @TENSOR, @NEURAL        |
+| DevOps/infrastructure     | @FLUX, @ATLAS           |
+| Testing files             | @ECLIPSE                |
+| API design                | @SYNAPSE                |
+| Research questions        | @VANGUARD               |
+| Novel problems            | @GENESIS, @NEXUS        |
+| Cloud infrastructure      | @ATLAS                  |
+| Build systems             | @FORGE                  |
+| Monitoring/logging        | @SENTRY                 |
+| Graph databases           | @VERTEX                 |
+| Streaming data            | @STREAM                 |
+| IoT/edge computing        | @PHOTON                 |
+| Distributed systems       | @LATTICE                |
+| Code migration            | @MORPH                  |
+| Binary analysis           | @PHANTOM                |
+| Embedded systems          | @ORBIT                  |
+| UI/UX design              | @CANVAS                 |
+| NLP/LLM tasks             | @LINGUA                 |
+| Documentation             | @SCRIBE                 |
+| Code review               | @MENTOR                 |
+| Mobile development        | @BRIDGE                 |
+| Compliance                | @AEGIS                  |
+| Financial systems         | @LEDGER                 |
+| Healthcare IT             | @PULSE                  |
+| Merge conflicts           | @ARBITER                |
+| Predictive analytics      | @ORACLE                 |
 
 ---
 

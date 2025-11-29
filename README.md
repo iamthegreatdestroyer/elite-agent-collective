@@ -7,6 +7,19 @@ A comprehensive system of specialized AI agents designed to provide expert-level
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Agents: 40](https://img.shields.io/badge/Agents-40-blue.svg)]()
 [![Status: Active](https://img.shields.io/badge/Status-Active-green.svg)]()
+[![Version: 1.0.0](https://img.shields.io/badge/Version-1.0.0-brightgreen.svg)](CHANGELOG.md)
+
+---
+
+## 📚 Documentation
+
+| Section | Description |
+|---------|-------------|
+| [Installation Guide](docs/getting-started/installation.md) | How to install and set up |
+| [Quick Start](docs/getting-started/quick-start.md) | Get started in 5 minutes |
+| [Agent Reference](docs/user-guide/agent-reference.md) | All 40 agents detailed |
+| [Best Practices](docs/user-guide/best-practices.md) | Tips for effective usage |
+| [Contributing](CONTRIBUTING.md) | How to contribute |
 
 ---
 
@@ -354,11 +367,23 @@ MIT License - feel free to use, modify, and distribute.
 
 ## 🤝 Contributing
 
-Contributions welcome! Feel free to:
+Contributions welcome! See our [Contributing Guide](CONTRIBUTING.md) for details.
 
-- Add new agent specializations
-- Improve existing agent capabilities
+Ways to contribute:
+- Report issues and bugs
+- Suggest new agents
+- Improve documentation
+- Enhance existing agents
 - Share usage patterns and examples
+
+---
+
+## 📖 Additional Resources
+
+- [Full Documentation](docs/README.md)
+- [Changelog](CHANGELOG.md)
+- [Troubleshooting](docs/troubleshooting/common-issues.md)
+- [Support](docs/troubleshooting/support.md)
 
 ---
 

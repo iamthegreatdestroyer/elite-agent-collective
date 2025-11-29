@@ -1,6 +1,8 @@
 package agents
 
 import (
+	"os"
+	"path/filepath"
 	"testing"
 )
 
@@ -104,4 +106,100 @@ func TestAllAgentsHaveRequiredFields(t *testing.T) {
 			t.Errorf("agent %s has no directives", agent.Codename)
 		}
 	}
+}
+
+func TestLoadManifest(t *testing.T) {
+	// Find the manifest file relative to the repo root
+	manifestPath := findManifestPath(t)
+	if manifestPath == "" {
+		t.Skip("manifest file not found, skipping test")
+	}
+
+	manifest, err := LoadManifest(manifestPath)
+	if err != nil {
+		t.Fatalf("failed to load manifest: %v", err)
+	}
+
+	if manifest.Version == "" {
+		t.Error("manifest version is empty")
+	}
+	if manifest.Name == "" {
+		t.Error("manifest name is empty")
+	}
+	if len(manifest.Agents) != 40 {
+		t.Errorf("expected 40 agents, got %d", len(manifest.Agents))
+	}
+}
+
+func TestValidateManifest(t *testing.T) {
+	manifestPath := findManifestPath(t)
+	if manifestPath == "" {
+		t.Skip("manifest file not found, skipping test")
+	}
+
+	manifest, err := LoadManifest(manifestPath)
+	if err != nil {
+		t.Fatalf("failed to load manifest: %v", err)
+	}
+
+	if err := ValidateManifest(manifest); err != nil {
+		t.Errorf("manifest validation failed: %v", err)
+	}
+}
+
+func TestRegistryFromManifest(t *testing.T) {
+	manifestPath := findManifestPath(t)
+	if manifestPath == "" {
+		t.Skip("manifest file not found, skipping test")
+	}
+
+	registry, err := RegistryFromManifest(manifestPath)
+	if err != nil {
+		t.Fatalf("failed to create registry from manifest: %v", err)
+	}
+
+	if registry.Count() != 40 {
+		t.Errorf("expected 40 agents, got %d", registry.Count())
+	}
+
+	// Verify APEX is available
+	apex, err := registry.Get("APEX")
+	if err != nil {
+		t.Errorf("failed to get APEX: %v", err)
+	}
+	if apex == nil {
+		t.Error("APEX handler is nil")
+	}
+}
+
+// findManifestPath looks for the agents-manifest.yaml file.
+func findManifestPath(t *testing.T) string {
+	t.Helper()
+
+	// Try common locations
+	locations := []string{
+		"../../../config/agents-manifest.yaml",
+		"../../../../config/agents-manifest.yaml",
+	}
+
+	cwd, err := os.Getwd()
+	if err == nil {
+		// Also try from current directory upwards
+		dir := cwd
+		for i := 0; i < 5; i++ {
+			candidate := filepath.Join(dir, "config", "agents-manifest.yaml")
+			if _, err := os.Stat(candidate); err == nil {
+				return candidate
+			}
+			dir = filepath.Dir(dir)
+		}
+	}
+
+	for _, loc := range locations {
+		if _, err := os.Stat(loc); err == nil {
+			return loc
+		}
+	}
+
+	return ""
 }

@@ -3,10 +3,43 @@ package agents
 
 import (
 	"fmt"
+	"os"
 	"sync"
 
+	"github.com/iamthegreatdestroyer/elite-agent-collective/backend/internal/agents/handlers"
 	"github.com/iamthegreatdestroyer/elite-agent-collective/backend/pkg/models"
+	"gopkg.in/yaml.v3"
 )
+
+// ManifestConfig represents the structure of agents-manifest.yaml.
+type ManifestConfig struct {
+	Version     string        `yaml:"version"`
+	Name        string        `yaml:"name"`
+	Description string        `yaml:"description"`
+	Tiers       []TierConfig  `yaml:"tiers"`
+	Agents      []AgentConfig `yaml:"agents"`
+}
+
+// TierConfig represents a tier definition in the manifest.
+type TierConfig struct {
+	ID          int    `yaml:"id"`
+	Name        string `yaml:"name"`
+	Description string `yaml:"description"`
+}
+
+// AgentConfig represents an agent definition in the manifest.
+type AgentConfig struct {
+	ID            string   `yaml:"id"`
+	Codename      string   `yaml:"codename"`
+	Tier          int      `yaml:"tier"`
+	Name          string   `yaml:"name"`
+	Description   string   `yaml:"description"`
+	Philosophy    string   `yaml:"philosophy"`
+	Keywords      []string `yaml:"keywords"`
+	Directives    []string `yaml:"directives"`
+	Examples      []string `yaml:"examples"`
+	Collaborators []string `yaml:"collaborators"`
+}
 
 // Registry maintains a registry of all available agents.
 type Registry struct {
@@ -63,4 +96,101 @@ func DefaultRegistry() *Registry {
 	registry := NewRegistry()
 	RegisterAllAgents(registry)
 	return registry
+}
+
+// LoadManifest reads and parses the agents manifest YAML file.
+func LoadManifest(path string) (*ManifestConfig, error) {
+	data, err := os.ReadFile(path)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read manifest file: %w", err)
+	}
+
+	var manifest ManifestConfig
+	if err := yaml.Unmarshal(data, &manifest); err != nil {
+		return nil, fmt.Errorf("failed to parse manifest YAML: %w", err)
+	}
+
+	return &manifest, nil
+}
+
+// RegistryFromManifest creates a registry by loading agents from a manifest file.
+// It registers handlers for all agents defined in the manifest.
+func RegistryFromManifest(manifestPath string) (*Registry, error) {
+	manifest, err := LoadManifest(manifestPath)
+	if err != nil {
+		return nil, err
+	}
+
+	registry := NewRegistry()
+
+	for _, agentConfig := range manifest.Agents {
+		agent := models.Agent{
+			ID:         agentConfig.ID,
+			Codename:   agentConfig.Codename,
+			Tier:       agentConfig.Tier,
+			Specialty:  agentConfig.Name,
+			Philosophy: agentConfig.Philosophy,
+			Directives: agentConfig.Directives,
+		}
+
+		// Use custom handler for APEX, base handler for others
+		if agentConfig.Codename == "APEX" {
+			registry.Register(handlers.NewApexAgent())
+		} else {
+			registry.Register(handlers.NewBaseAgent(agent))
+		}
+	}
+
+	return registry, nil
+}
+
+// ValidateManifest checks that a manifest contains all required agents and fields.
+func ValidateManifest(manifest *ManifestConfig) error {
+	if len(manifest.Agents) != 40 {
+		return fmt.Errorf("expected 40 agents, found %d", len(manifest.Agents))
+	}
+
+	// Check for duplicate codenames
+	seen := make(map[string]bool)
+	for _, agent := range manifest.Agents {
+		if seen[agent.Codename] {
+			return fmt.Errorf("duplicate agent codename: %s", agent.Codename)
+		}
+		seen[agent.Codename] = true
+
+		// Validate required fields
+		if agent.ID == "" {
+			return fmt.Errorf("agent missing ID")
+		}
+		if agent.Codename == "" {
+			return fmt.Errorf("agent %s missing codename", agent.ID)
+		}
+		if agent.Name == "" {
+			return fmt.Errorf("agent %s missing name", agent.Codename)
+		}
+		if agent.Philosophy == "" {
+			return fmt.Errorf("agent %s missing philosophy", agent.Codename)
+		}
+		if len(agent.Directives) == 0 {
+			return fmt.Errorf("agent %s missing directives", agent.Codename)
+		}
+	}
+
+	// Verify all 8 tiers are present with correct counts
+	tierCounts := make(map[int]int)
+	for _, agent := range manifest.Agents {
+		tierCounts[agent.Tier]++
+	}
+
+	expectedTiers := map[int]int{
+		1: 5, 2: 12, 3: 2, 4: 1, 5: 5, 6: 5, 7: 5, 8: 5,
+	}
+
+	for tier, expected := range expectedTiers {
+		if tierCounts[tier] != expected {
+			return fmt.Errorf("tier %d: expected %d agents, found %d", tier, expected, tierCounts[tier])
+		}
+	}
+
+	return nil
 }

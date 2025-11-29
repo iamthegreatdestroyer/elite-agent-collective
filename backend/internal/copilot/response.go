@@ -3,6 +3,7 @@ package copilot
 
 import (
 	"encoding/json"
+	"log"
 	"net/http"
 
 	"github.com/iamthegreatdestroyer/elite-agent-collective/backend/pkg/models"
@@ -30,7 +31,9 @@ func WriteError(w http.ResponseWriter, message string, statusCode int) {
 			},
 		},
 	}
-	json.NewEncoder(w).Encode(resp)
+	if err := json.NewEncoder(w).Encode(resp); err != nil {
+		log.Printf("Error encoding error response: %v", err)
+	}
 }
 
 // NewResponse creates a new Copilot response with the given content.

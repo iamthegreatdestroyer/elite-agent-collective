@@ -11,11 +11,12 @@ import (
 
 // ParseRequest parses a Copilot request from an HTTP request body.
 func ParseRequest(r *http.Request) (*models.CopilotRequest, error) {
+	defer r.Body.Close()
+	
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
 		return nil, err
 	}
-	defer r.Body.Close()
 
 	var req models.CopilotRequest
 	if err := json.Unmarshal(body, &req); err != nil {

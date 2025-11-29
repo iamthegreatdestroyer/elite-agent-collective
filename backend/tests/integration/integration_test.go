@@ -59,10 +59,14 @@ func TestMain(m *testing.M) {
 
 	// Create test server
 	testServer = httptest.NewServer(r)
-	defer testServer.Close()
 
 	// Run tests
-	os.Exit(m.Run())
+	code := m.Run()
+
+	// Close the test server
+	testServer.Close()
+
+	os.Exit(code)
 }
 
 // healthCheckHandler is a simple health check for the test server.

@@ -13,9 +13,15 @@ on:
       - '.github/workflows/integration-tests.yml'
   workflow_dispatch:
 
+# Restrict permissions of the GITHUB_TOKEN
+permissions:
+  contents: read
+
 jobs:
   integration:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     defaults:
       run:
         working-directory: ./backend
@@ -45,6 +51,8 @@ jobs:
 
   lint:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     defaults:
       run:
         working-directory: ./backend
@@ -72,6 +80,8 @@ jobs:
 
   build:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     defaults:
       run:
         working-directory: ./backend

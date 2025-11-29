@@ -6,6 +6,7 @@ package integration
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"sync"
 	"testing"
@@ -163,7 +164,7 @@ func TestConcurrentAgentRequests(t *testing.T) {
 			defer resp.Body.Close()
 
 			if resp.StatusCode != http.StatusOK {
-				errors <- err
+				errors <- fmt.Errorf("unexpected status code: %d", resp.StatusCode)
 				return
 			}
 		}()

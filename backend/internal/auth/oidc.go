@@ -73,6 +73,14 @@ func NewOIDCValidator(cfg *config.OIDCConfig) *OIDCValidator {
 }
 
 // ValidateToken validates an OIDC token and returns the claims.
+// It performs the following validation steps:
+//   - Parses the JWT token structure
+//   - Verifies the RS256 signature using the provider's JWKS
+//   - Validates the issuer matches the configured OIDC_ISSUER
+//   - Validates the audience matches the configured OIDC_CLIENT_ID
+//   - Validates the token has not expired
+//
+// Returns an error if any validation step fails.
 func (v *OIDCValidator) ValidateToken(tokenString string) (*Claims, error) {
 	if tokenString == "" {
 		return nil, errors.New("token is required")
@@ -145,7 +153,9 @@ func (v *OIDCValidator) ValidateToken(tokenString string) (*Claims, error) {
 	return claims, nil
 }
 
-// getPublicKey retrieves the RSA public key for the given key ID.
+// getPublicKey retrieves an RSA public key by key ID (kid) from the cached JWKS.
+// If the cache is expired or the key is not found, it triggers a refresh from the OIDC provider.
+// Thread-safe for concurrent access.
 func (v *OIDCValidator) getPublicKey(kid string) (*rsa.PublicKey, error) {
 	// Check cache first
 	v.cacheMu.RLock()
@@ -179,6 +189,9 @@ func (v *OIDCValidator) getPublicKey(kid string) (*rsa.PublicKey, error) {
 }
 
 // refreshJWKS fetches and caches the JWKS from the OIDC provider.
+// It first retrieves the OIDC discovery document to obtain the JWKS URI,
+// then fetches the JWKS and parses all RSA public keys.
+// Keys are cached with a 1-hour TTL. Thread-safe for concurrent access.
 func (v *OIDCValidator) refreshJWKS() error {
 	v.cacheMu.Lock()
 	defer v.cacheMu.Unlock()
@@ -228,7 +241,8 @@ func (v *OIDCValidator) refreshJWKS() error {
 	return nil
 }
 
-// fetchDiscovery fetches the OIDC discovery document.
+// fetchDiscovery fetches the OIDC discovery document from the provider's
+// well-known endpoint (/.well-known/openid-configuration) to obtain the JWKS URI.
 func (v *OIDCValidator) fetchDiscovery(url string) (*OIDCDiscovery, error) {
 	resp, err := v.httpClient.Get(url)
 	if err != nil {
@@ -248,7 +262,7 @@ func (v *OIDCValidator) fetchDiscovery(url string) (*OIDCDiscovery, error) {
 	return &discovery, nil
 }
 
-// fetchJWKS fetches the JWKS from the given URL.
+// fetchJWKS fetches the JSON Web Key Set from the provider's JWKS endpoint.
 func (v *OIDCValidator) fetchJWKS(url string) (*JWKS, error) {
 	resp, err := v.httpClient.Get(url)
 	if err != nil {
@@ -268,7 +282,9 @@ func (v *OIDCValidator) fetchJWKS(url string) (*JWKS, error) {
 	return &jwks, nil
 }
 
-// parseRSAPublicKey parses a JWK into an RSA public key.
+// parseRSAPublicKey converts a JWK (JSON Web Key) with RSA parameters
+// into an *rsa.PublicKey for JWT signature verification.
+// The JWK must contain base64url-encoded modulus (n) and exponent (e).
 func parseRSAPublicKey(jwk JWK) (*rsa.PublicKey, error) {
 	// Decode the modulus (n)
 	nBytes, err := base64.RawURLEncoding.DecodeString(jwk.N)

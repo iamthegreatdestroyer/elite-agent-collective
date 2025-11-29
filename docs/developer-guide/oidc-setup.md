@@ -132,18 +132,47 @@ curl -X POST http://localhost:8080/agents/APEX/invoke \
 
 ### Generate Test Token
 
-For testing with a local OIDC provider or mock server, you can generate a test JWT:
+For testing purposes, you can generate a test JWT using OpenSSL and a scripting language. Here's an example using Python:
 
 ```bash
-# Using jwt-cli (install with: npm install -g jwt-cli)
-jwt encode \
-  --secret "your-test-secret" \
-  --alg RS256 \
-  --sub "test-user" \
-  --iss "https://your-issuer.example.com" \
-  --aud "your-client-id" \
-  --exp "1h"
+# Install PyJWT if not already installed
+pip install PyJWT cryptography
+
+# Generate a test token with a test RSA key pair
+python3 -c "
+import jwt
+import datetime
+from cryptography.hazmat.primitives import serialization
+from cryptography.hazmat.primitives.asymmetric import rsa
+from cryptography.hazmat.backends import default_backend
+
+# Generate a test RSA key pair
+private_key = rsa.generate_private_key(
+    public_exponent=65537,
+    key_size=2048,
+    backend=default_backend()
+)
+
+# Create the token
+payload = {
+    'sub': 'test-user',
+    'iss': 'https://your-issuer.example.com',
+    'aud': 'your-client-id',
+    'exp': datetime.datetime.utcnow() + datetime.timedelta(hours=1)
+}
+
+token = jwt.encode(
+    payload,
+    private_key,
+    algorithm='RS256',
+    headers={'kid': 'test-key-id'}
+)
+
+print(token)
+"
 ```
+
+Note: For production testing, use tokens from your actual OIDC provider.
 
 ## JWKS Caching
 

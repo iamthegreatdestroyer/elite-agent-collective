@@ -45,6 +45,12 @@ htmlcov/
 .tox/
 .pytest_cache/
 
+# Test results and generated data
+tests/results/test_results.json
+tests/supreme_master_suite/reports/*.json
+tests/supreme_master_suite/reports/*.md
+!tests/supreme_master_suite/reports/.gitkeep
+
 # OS
 .DS_Store
 Thumbs.db

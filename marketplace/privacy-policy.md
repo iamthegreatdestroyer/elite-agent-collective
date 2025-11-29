@@ -1,120 +1,76 @@
-# Privacy Policy
-
-**Effective Date:** November 29, 2025
+# Privacy Policy for Elite Agent Collective
 
 **Last Updated:** November 29, 2025
 
 ## Overview
 
-The Elite Agent Collective ("we", "our", or "the project") is an open-source collection of specialized AI agent instructions for use with GitHub Copilot. This privacy policy explains how we handle information when you use the Elite Agent Collective.
+The Elite Agent Collective ("Extension") is a GitHub Copilot Extension that provides specialized AI agent assistance. This privacy policy explains how we handle your data.
 
-## What We Are
+## Data Collection
 
-The Elite Agent Collective is:
-- A set of instruction files (Markdown documents)
-- Open source and fully transparent
-- Not a web service or application
-- Not connected to any backend servers
+### What We DON'T Collect
 
-## Information Collection
+- ❌ We do NOT store your code
+- ❌ We do NOT store your conversations
+- ❌ We do NOT collect personal information
+- ❌ We do NOT use cookies or tracking
+- ❌ We do NOT share data with third parties
 
-### What We Don't Collect
+### What We Process (Temporarily)
 
-We do not collect, store, or process:
-- Your code or source files
-- Your prompts or queries
-- Your personal information
-- Usage analytics or telemetry
-- Any data whatsoever
+When you invoke an agent, the following is processed **in memory only**:
+- Your message/prompt
+- Relevant code context (provided by Copilot)
+- Conversation history (for context)
 
-### How It Works
+This data is:
+- Processed in real-time
+- Never written to disk
+- Discarded immediately after response generation
+- Not used for training or analytics
 
-1. You install our instruction files locally or in your repository
-2. GitHub Copilot reads these instructions when generating responses
-3. All processing happens through GitHub's Copilot service
-4. We never see or receive any information
+## Authentication
 
-## Data Flow
-
-```
-You → GitHub Copilot → Response
-
-Elite Agent Collective instructions are used by Copilot locally.
-No data flows to us.
-```
-
-## Third-Party Services
-
-### GitHub Copilot
-
-When using the Elite Agent Collective with GitHub Copilot:
-- GitHub processes your prompts and code context
-- GitHub's privacy policy applies to Copilot usage
-- See: [GitHub Privacy Statement](https://docs.github.com/en/site-policy/privacy-policies/github-privacy-statement)
-- See: [GitHub Copilot Privacy](https://docs.github.com/en/copilot/overview-of-github-copilot/about-github-copilot-individual#about-privacy-for-github-copilot-individual)
-
-### GitHub Repository
-
-Our project is hosted on GitHub:
-- Standard GitHub features (issues, PRs) are governed by GitHub's policies
-- No additional tracking beyond GitHub's standard features
-
-## Your Responsibilities
-
-When using the Elite Agent Collective:
-
-1. **Code Confidentiality**: Be mindful of what code you share with Copilot
-2. **Sensitive Data**: Avoid sharing sensitive information in prompts
-3. **Compliance**: Ensure your use complies with your organization's policies
-4. **GitHub Terms**: Comply with GitHub Copilot terms of service
-
-## Enterprise Considerations
-
-For enterprise users:
-
-- Review with your security team before installation
-- Consider your organization's data handling policies
-- Understand how GitHub Copilot handles your code
-- Evaluate compliance with your regulatory requirements (GDPR, SOC2, HIPAA, etc.)
+We use GitHub's OIDC authentication to verify requests. This means:
+- We validate tokens issued by GitHub
+- We do not store authentication tokens
+- We do not have access to your GitHub credentials
 
 ## Open Source
 
-The Elite Agent Collective is fully open source:
+This extension is fully open source. You can audit our code at:
+https://github.com/iamthegreatdestroyer/elite-agent-collective
 
-- All instructions are publicly visible
-- You can inspect exactly what the agents do
-- No hidden functionality or data collection
-- MIT License allows modification and distribution
+## Data Retention
+
+**None.** We maintain no persistent storage of user data.
+
+## Third-Party Services
+
+The Extension relies on:
+- **GitHub Copilot** - For chat interface and code context
+- **GitHub Authentication** - For OIDC token validation
+
+We do not integrate with any other third-party services.
 
 ## Children's Privacy
 
-The Elite Agent Collective is a developer tool not intended for children under 13. We do not knowingly collect information from children.
+This Extension is intended for professional developers and is not directed at children under 13.
 
 ## Changes to This Policy
 
-We may update this privacy policy:
-- Changes will be reflected in the "Last Updated" date
-- Significant changes will be noted in release notes
-- Continued use after changes constitutes acceptance
+We may update this policy occasionally. Changes will be posted to this page with an updated date.
 
 ## Contact
 
-For privacy-related questions:
+For privacy concerns, please open an issue at:
+https://github.com/iamthegreatdestroyer/elite-agent-collective/issues
 
-- **GitHub Issues**: [Open an Issue](https://github.com/iamthegreatdestroyer/elite-agent-collective/issues)
-- **GitHub Discussions**: [Start a Discussion](https://github.com/iamthegreatdestroyer/elite-agent-collective/discussions)
+## Your Rights
 
-## Summary
+Under GDPR and similar regulations, you have the right to:
+- Access your data (we don't store any)
+- Delete your data (nothing to delete)
+- Data portability (no data to export)
 
-| Aspect | Status |
-|--------|--------|
-| Data Collection | None |
-| Data Storage | None |
-| Data Sharing | None |
-| Tracking/Analytics | None |
-| Backend Services | None |
-| Open Source | Yes (MIT) |
-
----
-
-*This privacy policy applies to the Elite Agent Collective project. GitHub Copilot has its own privacy policy which governs how GitHub handles your data.*
+Since we don't collect or store personal data, these rights are automatically fulfilled.

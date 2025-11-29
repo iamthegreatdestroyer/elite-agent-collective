@@ -8,6 +8,7 @@ A comprehensive system of specialized AI agents designed to provide expert-level
 [![Agents: 40](https://img.shields.io/badge/Agents-40-blue.svg)]()
 [![Status: Active](https://img.shields.io/badge/Status-Active-green.svg)]()
 [![Version: 1.0.0](https://img.shields.io/badge/Version-1.0.0-brightgreen.svg)](CHANGELOG.md)
+[![GitHub Marketplace](https://img.shields.io/badge/Marketplace-Elite%20Agent%20Collective-blue?logo=github)](https://github.com/marketplace/elite-agent-collective)
 
 ---
 

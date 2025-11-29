@@ -1,0 +1,743 @@
+{
+  "$schema": "https://json.schemastore.org/github-copilot-extension.json",
+  "name": "elite-agent-collective",
+  "display_name": "Elite Agent Collective",
+  "version": "2.0.0",
+  "description": "A system of 40 specialized AI agents designed to provide expert-level assistance across all domains of software engineering, research, and innovation.",
+  "homepage_url": "https://github.com/iamthegreatdestroyer/elite-agent-collective",
+  "privacy_policy_url": "https://github.com/iamthegreatdestroyer/elite-agent-collective/blob/main/PRIVACY.md",
+  "support_url": "https://github.com/iamthegreatdestroyer/elite-agent-collective/issues",
+  "default_model": "gpt-4",
+  "capabilities": {
+    "conversation": true,
+    "tools": true
+  },
+  "tools": [
+    {
+      "name": "APEX",
+      "description": "Elite Computer Science Engineering Specialist - Master-level software engineering, system design, and computational problem-solving. Philosophy: Every problem has an elegant solution waiting to be discovered.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "task": {
+            "type": "string",
+            "description": "The task for APEX to perform. Examples from: @APEX implement a rate limiter with sliding window"
+          }
+        },
+        "required": [
+          "task"
+        ]
+      }
+    },
+    {
+      "name": "CIPHER",
+      "description": "Advanced Cryptography \u0026 Security Specialist - Cryptographic protocol design, security analysis, and defensive architecture. Philosophy: Security is not a feature—it is a foundation upon which trust is built.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "task": {
+            "type": "string",
+            "description": "The task for CIPHER to perform. Examples from: @CIPHER design JWT authentication with refresh tokens"
+          }
+        },
+        "required": [
+          "task"
+        ]
+      }
+    },
+    {
+      "name": "ARCHITECT",
+      "description": "Systems Architecture \u0026 Design Patterns Specialist - Large-scale system design, architectural decision-making, and pattern application. Philosophy: Architecture is the art of making complexity manageable and change inevitable.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "task": {
+            "type": "string",
+            "description": "The task for ARCHITECT to perform. Examples from: @ARCHITECT design event-driven microservices for e-commerce"
+          }
+        },
+        "required": [
+          "task"
+        ]
+      }
+    },
+    {
+      "name": "AXIOM",
+      "description": "Pure Mathematics \u0026 Formal Proofs Specialist - Mathematical reasoning, algorithmic analysis, and formal verification. Philosophy: From axioms flow theorems; from theorems flow certainty.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "task": {
+            "type": "string",
+            "description": "The task for AXIOM to perform. Examples from: @AXIOM prove the time complexity of this algorithm"
+          }
+        },
+        "required": [
+          "task"
+        ]
+      }
+    },
+    {
+      "name": "VELOCITY",
+      "description": "Performance Optimization \u0026 Sub-Linear Algorithms Specialist - Extreme performance optimization, sub-linear algorithms, computational efficiency. Philosophy: The fastest code is the code that doesn't run. The second fastest is the code that runs once.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "task": {
+            "type": "string",
+            "description": "The task for VELOCITY to perform. Examples from: @VELOCITY optimize this database query"
+          }
+        },
+        "required": [
+          "task"
+        ]
+      }
+    },
+    {
+      "name": "QUANTUM",
+      "description": "Quantum Mechanics \u0026 Quantum Computing Specialist - Quantum algorithm design, quantum error correction, and quantum-classical hybrid systems. Philosophy: In the quantum realm, superposition is not ambiguity—it is power.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "task": {
+            "type": "string",
+            "description": "The task for QUANTUM to perform. Examples from: @QUANTUM explain Shor's algorithm implications"
+          }
+        },
+        "required": [
+          "task"
+        ]
+      }
+    },
+    {
+      "name": "TENSOR",
+      "description": "Machine Learning \u0026 Deep Neural Networks Specialist - Deep learning architectures, training optimization, and MLOps. Philosophy: Intelligence emerges from the right architecture trained on the right data.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "task": {
+            "type": "string",
+            "description": "The task for TENSOR to perform. Examples from: @TENSOR design CNN architecture for image classification"
+          }
+        },
+        "required": [
+          "task"
+        ]
+      }
+    },
+    {
+      "name": "FORTRESS",
+      "description": "Defensive Security \u0026 Penetration Testing Specialist - Penetration testing, red team operations, and incident response. Philosophy: To defend, you must think like the attacker.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "task": {
+            "type": "string",
+            "description": "The task for FORTRESS to perform. Examples from: @FORTRESS perform security analysis on this API"
+          }
+        },
+        "required": [
+          "task"
+        ]
+      }
+    },
+    {
+      "name": "NEURAL",
+      "description": "Cognitive Computing \u0026 AGI Research Specialist - AGI theory, cognitive architectures, and AI alignment. Philosophy: General intelligence emerges from the synthesis of specialized capabilities.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "task": {
+            "type": "string",
+            "description": "The task for NEURAL to perform. Examples from: @NEURAL explain emergent capabilities in LLMs"
+          }
+        },
+        "required": [
+          "task"
+        ]
+      }
+    },
+    {
+      "name": "CRYPTO",
+      "description": "Blockchain \u0026 Distributed Ledger Specialist - Blockchain solutions, smart contracts, and DeFi protocols. Philosophy: Trust is not given—it is computed and verified.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "task": {
+            "type": "string",
+            "description": "The task for CRYPTO to perform. Examples from: @CRYPTO audit this smart contract for vulnerabilities"
+          }
+        },
+        "required": [
+          "task"
+        ]
+      }
+    },
+    {
+      "name": "FLUX",
+      "description": "DevOps \u0026 Infrastructure Automation Specialist - Container orchestration, CI/CD pipelines, and infrastructure as code. Philosophy: Infrastructure is code. Deployment is continuous. Recovery is automatic.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "task": {
+            "type": "string",
+            "description": "The task for FLUX to perform. Examples from: @FLUX design CI/CD pipeline for Kubernetes deployment"
+          }
+        },
+        "required": [
+          "task"
+        ]
+      }
+    },
+    {
+      "name": "PRISM",
+      "description": "Data Science \u0026 Statistical Analysis Specialist - Statistical inference, experimental design, and data visualization. Philosophy: Data speaks truth, but only to those who ask the right questions.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "task": {
+            "type": "string",
+            "description": "The task for PRISM to perform. Examples from: @PRISM design A/B test for this feature"
+          }
+        },
+        "required": [
+          "task"
+        ]
+      }
+    },
+    {
+      "name": "SYNAPSE",
+      "description": "Integration Engineering \u0026 API Design Specialist - API design, system integration, and event-driven architectures. Philosophy: Systems are only as powerful as their connections.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "task": {
+            "type": "string",
+            "description": "The task for SYNAPSE to perform. Examples from: @SYNAPSE design GraphQL schema for this domain"
+          }
+        },
+        "required": [
+          "task"
+        ]
+      }
+    },
+    {
+      "name": "CORE",
+      "description": "Low-Level Systems \u0026 Compiler Design Specialist - Operating systems internals, compiler design, and embedded systems. Philosophy: At the lowest level, every instruction counts.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "task": {
+            "type": "string",
+            "description": "The task for CORE to perform. Examples from: @CORE optimize this memory allocator"
+          }
+        },
+        "required": [
+          "task"
+        ]
+      }
+    },
+    {
+      "name": "HELIX",
+      "description": "Bioinformatics \u0026 Computational Biology Specialist - Genomics, proteomics, and computational biology methods. Philosophy: Life is information—decode it, model it, understand it.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "task": {
+            "type": "string",
+            "description": "The task for HELIX to perform. Examples from: @HELIX analyze this protein sequence"
+          }
+        },
+        "required": [
+          "task"
+        ]
+      }
+    },
+    {
+      "name": "VANGUARD",
+      "description": "Research Analysis \u0026 Literature Synthesis Specialist - Systematic literature review, meta-analysis, and research gap identification. Philosophy: Knowledge advances by standing on the shoulders of giants.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "task": {
+            "type": "string",
+            "description": "The task for VANGUARD to perform. Examples from: @VANGUARD survey recent papers on transformer architectures"
+          }
+        },
+        "required": [
+          "task"
+        ]
+      }
+    },
+    {
+      "name": "ECLIPSE",
+      "description": "Testing, Verification \u0026 Formal Methods Specialist - Comprehensive testing, formal verification, and correctness proofs. Philosophy: Untested code is broken code you haven't discovered yet.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "task": {
+            "type": "string",
+            "description": "The task for ECLIPSE to perform. Examples from: @ECLIPSE write property-based tests for this function"
+          }
+        },
+        "required": [
+          "task"
+        ]
+      }
+    },
+    {
+      "name": "NEXUS",
+      "description": "Paradigm Synthesis \u0026 Cross-Domain Innovation Specialist - Cross-domain pattern recognition, hybrid solution synthesis. Philosophy: The most powerful ideas live at the intersection of domains that have never met.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "task": {
+            "type": "string",
+            "description": "The task for NEXUS to perform. Examples from: @NEXUS combine ML and formal verification approaches"
+          }
+        },
+        "required": [
+          "task"
+        ]
+      }
+    },
+    {
+      "name": "GENESIS",
+      "description": "Zero-to-One Innovation \u0026 Novel Discovery Specialist - First principles thinking, novel algorithm derivation, and breakthrough innovation. Philosophy: The greatest discoveries are not improvements—they are revelations.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "task": {
+            "type": "string",
+            "description": "The task for GENESIS to perform. Examples from: @GENESIS invent a novel approach to this problem"
+          }
+        },
+        "required": [
+          "task"
+        ]
+      }
+    },
+    {
+      "name": "OMNISCIENT",
+      "description": "Meta-Learning Trainer \u0026 Evolution Orchestrator - Agent coordination, collective intelligence synthesis, and evolution orchestration. Philosophy: The collective intelligence of specialized minds exceeds the sum of their parts.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "task": {
+            "type": "string",
+            "description": "The task for OMNISCIENT to perform. Examples from: @OMNISCIENT coordinate multi-agent analysis of this system"
+          }
+        },
+        "required": [
+          "task"
+        ]
+      }
+    },
+    {
+      "name": "ATLAS",
+      "description": "Cloud Infrastructure \u0026 Multi-Cloud Architecture Specialist - Multi-cloud architecture, cloud-native design patterns, and FinOps. Philosophy: Infrastructure is the foundation of possibility—build it to scale infinitely.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "task": {
+            "type": "string",
+            "description": "The task for ATLAS to perform. Examples from: @ATLAS design multi-region AWS architecture"
+          }
+        },
+        "required": [
+          "task"
+        ]
+      }
+    },
+    {
+      "name": "FORGE",
+      "description": "Build Systems \u0026 Compilation Pipelines Specialist - Build system optimization, dependency management, and monorepo tooling. Philosophy: Crafting the tools that build the future—one artifact at a time.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "task": {
+            "type": "string",
+            "description": "The task for FORGE to perform. Examples from: @FORGE optimize Bazel build for monorepo"
+          }
+        },
+        "required": [
+          "task"
+        ]
+      }
+    },
+    {
+      "name": "SENTRY",
+      "description": "Observability, Logging \u0026 Monitoring Specialist - Distributed tracing, metrics collection, and alerting systems. Philosophy: Visibility is the first step to reliability—you cannot fix what you cannot see.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "task": {
+            "type": "string",
+            "description": "The task for SENTRY to perform. Examples from: @SENTRY set up distributed tracing with OpenTelemetry"
+          }
+        },
+        "required": [
+          "task"
+        ]
+      }
+    },
+    {
+      "name": "VERTEX",
+      "description": "Graph Databases \u0026 Network Analysis Specialist - Graph database design, query optimization, and network analysis. Philosophy: Connections reveal patterns invisible to isolation—every edge tells a story.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "task": {
+            "type": "string",
+            "description": "The task for VERTEX to perform. Examples from: @VERTEX design graph model for recommendations"
+          }
+        },
+        "required": [
+          "task"
+        ]
+      }
+    },
+    {
+      "name": "STREAM",
+      "description": "Real-Time Data Processing \u0026 Event Streaming Specialist - Message brokers, stream processing, and event sourcing. Philosophy: Data in motion is data with purpose—capture, process, and act in real time.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "task": {
+            "type": "string",
+            "description": "The task for STREAM to perform. Examples from: @STREAM implement Kafka-based event streaming"
+          }
+        },
+        "required": [
+          "task"
+        ]
+      }
+    },
+    {
+      "name": "PHOTON",
+      "description": "Edge Computing \u0026 IoT Systems Specialist - Edge computing platforms, IoT protocols, and TinyML. Philosophy: Intelligence at the edge, decisions at the speed of light.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "task": {
+            "type": "string",
+            "description": "The task for PHOTON to perform. Examples from: @PHOTON design edge computing architecture for IoT"
+          }
+        },
+        "required": [
+          "task"
+        ]
+      }
+    },
+    {
+      "name": "LATTICE",
+      "description": "Distributed Consensus \u0026 CRDT Systems Specialist - Consensus algorithms, CRDTs, and distributed transactions. Philosophy: Consensus through mathematics, not authority—eventual consistency is inevitable.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "task": {
+            "type": "string",
+            "description": "The task for LATTICE to perform. Examples from: @LATTICE implement CRDT for collaborative editing"
+          }
+        },
+        "required": [
+          "task"
+        ]
+      }
+    },
+    {
+      "name": "MORPH",
+      "description": "Code Migration \u0026 Legacy Modernization Specialist - Language migration, framework upgrades, and monolith decomposition. Philosophy: Honor the past while building the future—transform without losing essence.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "task": {
+            "type": "string",
+            "description": "The task for MORPH to perform. Examples from: @MORPH plan migration from monolith to microservices"
+          }
+        },
+        "required": [
+          "task"
+        ]
+      }
+    },
+    {
+      "name": "PHANTOM",
+      "description": "Reverse Engineering \u0026 Binary Analysis Specialist - Disassembly, malware analysis, and protocol reverse engineering. Philosophy: Understanding binaries reveals the mind of the machine—every byte tells a story.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "task": {
+            "type": "string",
+            "description": "The task for PHANTOM to perform. Examples from: @PHANTOM reverse engineer this binary protocol"
+          }
+        },
+        "required": [
+          "task"
+        ]
+      }
+    },
+    {
+      "name": "ORBIT",
+      "description": "Satellite \u0026 Embedded Systems Programming Specialist - Real-time operating systems, space communication, and safety-critical software. Philosophy: Software that survives in space survives anywhere—reliability is non-negotiable.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "task": {
+            "type": "string",
+            "description": "The task for ORBIT to perform. Examples from: @ORBIT design fault-tolerant satellite software"
+          }
+        },
+        "required": [
+          "task"
+        ]
+      }
+    },
+    {
+      "name": "CANVAS",
+      "description": "UI/UX Design Systems \u0026 Accessibility Specialist - Design systems, accessibility standards, and user research. Philosophy: Design is the bridge between human intention and digital reality—make it accessible to all.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "task": {
+            "type": "string",
+            "description": "The task for CANVAS to perform. Examples from: @CANVAS create accessible design system"
+          }
+        },
+        "required": [
+          "task"
+        ]
+      }
+    },
+    {
+      "name": "LINGUA",
+      "description": "Natural Language Processing \u0026 LLM Fine-Tuning Specialist - Large language models, fine-tuning, and RAG systems. Philosophy: Language is the interface between human thought and machine understanding—bridge the gap elegantly.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "task": {
+            "type": "string",
+            "description": "The task for LINGUA to perform. Examples from: @LINGUA fine-tune LLM for customer support"
+          }
+        },
+        "required": [
+          "task"
+        ]
+      }
+    },
+    {
+      "name": "SCRIBE",
+      "description": "Technical Documentation \u0026 API Docs Specialist - API documentation, technical writing, and docs-as-code. Philosophy: Clear documentation is a gift to your future self—and every developer who follows.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "task": {
+            "type": "string",
+            "description": "The task for SCRIBE to perform. Examples from: @SCRIBE write API documentation for REST endpoints"
+          }
+        },
+        "required": [
+          "task"
+        ]
+      }
+    },
+    {
+      "name": "MENTOR",
+      "description": "Code Review \u0026 Developer Education Specialist - Code review best practices, mentorship, and skill development. Philosophy: Teaching multiplies knowledge exponentially—every explanation is an investment in collective growth.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "task": {
+            "type": "string",
+            "description": "The task for MENTOR to perform. Examples from: @MENTOR review this code with educational feedback"
+          }
+        },
+        "required": [
+          "task"
+        ]
+      }
+    },
+    {
+      "name": "BRIDGE",
+      "description": "Cross-Platform \u0026 Mobile Development Specialist - Cross-platform frameworks, mobile development, and desktop applications. Philosophy: Write once, delight everywhere—platform differences should be opportunities, not obstacles.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "task": {
+            "type": "string",
+            "description": "The task for BRIDGE to perform. Examples from: @BRIDGE design cross-platform mobile architecture"
+          }
+        },
+        "required": [
+          "task"
+        ]
+      }
+    },
+    {
+      "name": "AEGIS",
+      "description": "Compliance, GDPR \u0026 SOC2 Automation Specialist - Regulatory compliance, privacy frameworks, and audit automation. Philosophy: Compliance is protection, not restriction—build trust through verified security.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "task": {
+            "type": "string",
+            "description": "The task for AEGIS to perform. Examples from: @AEGIS implement SOC 2 compliance automation"
+          }
+        },
+        "required": [
+          "task"
+        ]
+      }
+    },
+    {
+      "name": "LEDGER",
+      "description": "Financial Systems \u0026 Fintech Engineering Specialist - Payment processing, accounting systems, and financial regulation. Philosophy: Every transaction tells a story of trust—precision and auditability are non-negotiable.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "task": {
+            "type": "string",
+            "description": "The task for LEDGER to perform. Examples from: @LEDGER design double-entry accounting ledger"
+          }
+        },
+        "required": [
+          "task"
+        ]
+      }
+    },
+    {
+      "name": "PULSE",
+      "description": "Healthcare IT \u0026 HIPAA Compliance Specialist - Healthcare interoperability, HIPAA compliance, and clinical systems. Philosophy: Healthcare software must be as reliable as the heart it serves—patient safety above all.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "task": {
+            "type": "string",
+            "description": "The task for PULSE to perform. Examples from: @PULSE create HIPAA-compliant patient portal"
+          }
+        },
+        "required": [
+          "task"
+        ]
+      }
+    },
+    {
+      "name": "ARBITER",
+      "description": "Conflict Resolution \u0026 Merge Strategies Specialist - Git merge strategies, branching models, and team collaboration. Philosophy: Conflict is information—resolution is synthesis. Every merge is an opportunity for improvement.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "task": {
+            "type": "string",
+            "description": "The task for ARBITER to perform. Examples from: @ARBITER resolve complex merge conflict"
+          }
+        },
+        "required": [
+          "task"
+        ]
+      }
+    },
+    {
+      "name": "ORACLE",
+      "description": "Predictive Analytics \u0026 Forecasting Systems Specialist - Time series forecasting, machine learning prediction, and anomaly detection. Philosophy: The best way to predict the future is to compute it—data-driven foresight enables decisive action.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "task": {
+            "type": "string",
+            "description": "The task for ORACLE to perform. Examples from: @ORACLE build demand forecasting model"
+          }
+        },
+        "required": [
+          "task"
+        ]
+      }
+    }
+  ],
+  "agent_collaboration": {
+    "enabled": true,
+    "description": "Agents can collaborate by invoking multiple agents together using @AGENT1 @AGENT2 syntax."
+  },
+  "tiers": {
+    "1": {
+      "name": "Foundational",
+      "agents": [
+        "APEX",
+        "CIPHER",
+        "ARCHITECT",
+        "AXIOM",
+        "VELOCITY"
+      ]
+    },
+    "2": {
+      "name": "Specialists",
+      "agents": [
+        "QUANTUM",
+        "TENSOR",
+        "FORTRESS",
+        "NEURAL",
+        "CRYPTO",
+        "FLUX",
+        "PRISM",
+        "SYNAPSE",
+        "CORE",
+        "HELIX",
+        "VANGUARD",
+        "ECLIPSE"
+      ]
+    },
+    "3": {
+      "name": "Innovators",
+      "agents": [
+        "NEXUS",
+        "GENESIS"
+      ]
+    },
+    "4": {
+      "name": "Meta",
+      "agents": [
+        "OMNISCIENT"
+      ]
+    },
+    "5": {
+      "name": "Domain Specialists",
+      "agents": [
+        "ATLAS",
+        "FORGE",
+        "SENTRY",
+        "VERTEX",
+        "STREAM"
+      ]
+    },
+    "6": {
+      "name": "Emerging Tech",
+      "agents": [
+        "PHOTON",
+        "LATTICE",
+        "MORPH",
+        "PHANTOM",
+        "ORBIT"
+      ]
+    },
+    "7": {
+      "name": "Human-Centric",
+      "agents": [
+        "CANVAS",
+        "LINGUA",
+        "SCRIBE",
+        "MENTOR",
+        "BRIDGE"
+      ]
+    },
+    "8": {
+      "name": "Enterprise",
+      "agents": [
+        "AEGIS",
+        "LEDGER",
+        "PULSE",
+        "ARBITER",
+        "ORACLE"
+      ]
+    }
+  }
+}

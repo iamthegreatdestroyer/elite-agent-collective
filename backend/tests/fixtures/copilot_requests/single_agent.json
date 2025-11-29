@@ -1,0 +1,10 @@
+{
+  "messages": [
+    {
+      "role": "user",
+      "content": "@APEX help me design an algorithm for sorting"
+    }
+  ],
+  "model": "gpt-4",
+  "stream": false
+}

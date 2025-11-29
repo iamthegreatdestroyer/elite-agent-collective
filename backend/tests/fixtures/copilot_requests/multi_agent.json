@@ -1,0 +1,10 @@
+{
+  "messages": [
+    {
+      "role": "user",
+      "content": "@APEX @ARCHITECT design a distributed system"
+    }
+  ],
+  "model": "gpt-4",
+  "stream": false
+}

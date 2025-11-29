@@ -1,0 +1,5 @@
+{
+  "token": "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ0ZXN0LXVzZXIiLCJpc3MiOiJodHRwczovL2V4YW1wbGUuY29tIiwiYXVkIjoidGVzdC1jbGllbnQiLCJleHAiOjk5OTk5OTk5OTl9.valid",
+  "expected_subject": "development-user",
+  "note": "This is a mock token for testing. The stub validator accepts any non-empty token."
+}

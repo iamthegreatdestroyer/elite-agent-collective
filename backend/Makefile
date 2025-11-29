@@ -1,4 +1,4 @@
-.PHONY: build run test clean docker docker-run lint fmt help
+.PHONY: build run test clean docker docker-run lint fmt help test-integration test-e2e test-all test-bench
 
 # Go parameters
 GOCMD=go
@@ -31,6 +31,25 @@ test-coverage:
 	$(GOTEST) -v -coverprofile=coverage.out ./...
 	$(GOCMD) tool cover -html=coverage.out -o coverage.html
 	@echo "Coverage report generated: coverage.html"
+
+# Run integration tests
+test-integration:
+	@echo "Running integration tests..."
+	$(GOTEST) -v -tags=integration ./tests/integration/...
+
+# Run end-to-end tests (alias for integration tests)
+test-e2e:
+	@echo "Running end-to-end tests..."
+	$(GOTEST) -v -tags=integration ./tests/integration/...
+
+# Run all tests including integration tests
+test-all: test test-integration
+	@echo "All tests completed."
+
+# Run integration benchmarks
+test-bench:
+	@echo "Running integration benchmarks..."
+	$(GOTEST) -v -tags=integration -bench=. -benchmem ./tests/integration/...
 
 # Clean build artifacts
 clean:
@@ -82,16 +101,20 @@ compose-down:
 # Show help
 help:
 	@echo "Available targets:"
-	@echo "  build          - Build the server binary"
-	@echo "  run            - Run the server locally"
-	@echo "  test           - Run all tests"
-	@echo "  test-coverage  - Run tests with coverage report"
-	@echo "  clean          - Remove build artifacts"
-	@echo "  deps           - Download and tidy dependencies"
-	@echo "  fmt            - Format code"
-	@echo "  lint           - Lint code"
-	@echo "  docker         - Build Docker image"
-	@echo "  docker-run     - Run Docker container"
-	@echo "  compose-up     - Start with docker-compose"
-	@echo "  compose-down   - Stop docker-compose"
-	@echo "  help           - Show this help"
+	@echo "  build            - Build the server binary"
+	@echo "  run              - Run the server locally"
+	@echo "  test             - Run unit tests"
+	@echo "  test-integration - Run integration tests"
+	@echo "  test-e2e         - Run end-to-end tests (alias for integration)"
+	@echo "  test-all         - Run all tests (unit + integration)"
+	@echo "  test-bench       - Run integration benchmarks"
+	@echo "  test-coverage    - Run tests with coverage report"
+	@echo "  clean            - Remove build artifacts"
+	@echo "  deps             - Download and tidy dependencies"
+	@echo "  fmt              - Format code"
+	@echo "  lint             - Lint code"
+	@echo "  docker           - Build Docker image"
+	@echo "  docker-run       - Run Docker container"
+	@echo "  compose-up       - Start with docker-compose"
+	@echo "  compose-down     - Stop docker-compose"
+	@echo "  help             - Show this help"

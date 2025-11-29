@@ -1,0 +1,14 @@
+{
+  "status_codes": [400, 401, 404, 500],
+  "error_response_structure": {
+    "choices": [
+      {
+        "message": {
+          "role": "assistant",
+          "content": "error message"
+        },
+        "finish_reason": "stop"
+      }
+    ]
+  }
+}

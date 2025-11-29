@@ -1,0 +1,242 @@
+# Supreme Master Test Suite Configuration
+# =========================================
+# Master configuration for all 40 agents across 8 tiers
+
+version: "2.0.0"
+collective_size: 40
+
+# Tier Definitions
+tiers:
+  tier_1:
+    name: "Foundational"
+    weight: 1.0
+    agents: 5
+    description: "Core capabilities that form the foundation of the collective"
+    
+  tier_2:
+    name: "Specialists"
+    weight: 0.9
+    agents: 12
+    description: "Domain-specific expertise and specialized capabilities"
+    
+  tier_3:
+    name: "Innovators"
+    weight: 1.2
+    agents: 2
+    description: "Cross-domain synthesis and novel discovery"
+    
+  tier_4:
+    name: "Meta"
+    weight: 1.5
+    agents: 1
+    description: "Collective orchestration and meta-learning"
+    
+  tier_5:
+    name: "Domain Specialists"
+    weight: 0.85
+    agents: 5
+    description: "Infrastructure and platform expertise"
+    
+  tier_6:
+    name: "Emerging Tech"
+    weight: 0.95
+    agents: 5
+    description: "Cutting-edge technology and emerging paradigms"
+    
+  tier_7:
+    name: "Human-Centric"
+    weight: 0.8
+    agents: 5
+    description: "User experience and developer productivity"
+    
+  tier_8:
+    name: "Enterprise"
+    weight: 0.9
+    agents: 5
+    description: "Compliance, security, and enterprise requirements"
+
+# Test Mode Configurations
+test_modes:
+  structured:
+    description: "Predefined test sequences with deterministic execution"
+    chaos_enabled: false
+    parallelism: 1
+    timeout_seconds: 300
+    retry_count: 1
+    
+  randomized:
+    description: "Random scenario generation for diverse coverage"
+    chaos_enabled: true
+    chaos_probability: 0.2
+    parallelism: 4
+    timeout_seconds: 600
+    retry_count: 2
+    
+  adaptive:
+    description: "Adapts test strategy based on performance patterns"
+    chaos_enabled: true
+    chaos_probability: 0.1
+    parallelism: 2
+    timeout_seconds: 450
+    retry_count: 3
+    adaptation_threshold: 0.85
+    
+  chaos:
+    description: "Maximum chaos injection for resilience testing"
+    chaos_enabled: true
+    chaos_probability: 0.5
+    parallelism: 4
+    timeout_seconds: 900
+    retry_count: 1
+    circuit_breaker_threshold: 0.3
+    
+  evolution:
+    description: "Focused on capability improvement and learning"
+    chaos_enabled: false
+    parallelism: 2
+    timeout_seconds: 600
+    retry_count: 3
+    focus_on_weaknesses: true
+    learning_rate_multiplier: 1.5
+
+# OMNISCIENT-20 Learning Settings
+omniscient:
+  enabled: true
+  database_path: "reports/learning.db"
+  
+  # Learning signals to capture
+  learning_signals:
+    - performance_patterns
+    - failure_modes
+    - collaboration_efficiency
+    - capability_gaps
+    - evolution_opportunities
+    - emergent_behaviors
+    
+  # Aggregation settings
+  aggregation:
+    method: "hierarchical_synthesis"
+    tier_weights_enabled: true
+    cross_tier_synergy_detection: true
+    
+  # Evolution settings
+  evolution:
+    snapshot_frequency: 1  # Every test run
+    trend_window_size: 10  # Last 10 snapshots
+    breakthrough_threshold: 0.5
+    decline_alert_threshold: -0.1
+    
+  # Pattern detection
+  patterns:
+    synergy_detection: true
+    anti_pattern_detection: true
+    capability_clustering: true
+    failure_cascade_analysis: true
+
+# Randomization Parameters
+randomization:
+  seed_enabled: true
+  default_seed: null  # null = random seed
+  
+  # Complexity distribution (weights for random selection)
+  complexity_weights:
+    atomic: 0.1
+    molecular: 0.2
+    compound: 0.35
+    complex: 0.25
+    universal: 0.1
+    
+  # Challenge type distribution
+  challenge_weights:
+    speed_run: 0.1
+    accuracy_focus: 0.15
+    resource_constrained: 0.1
+    adversarial: 0.1
+    creative: 0.15
+    collaborative: 0.15
+    competitive: 0.05
+    evolutionary: 0.1
+    chaos: 0.1
+    
+  # Chaos event probabilities
+  chaos_events:
+    agent_timeout: 0.10
+    resource_spike: 0.15
+    data_corruption: 0.05
+    dependency_failure: 0.10
+    requirement_change: 0.20
+    priority_shift: 0.15
+    team_member_unavailable: 0.10
+    security_incident: 0.05
+
+# Performance Thresholds and Limits
+performance:
+  # Pass rate thresholds
+  thresholds:
+    excellent: 0.95
+    good: 0.90
+    acceptable: 0.85
+    warning: 0.75
+    critical: 0.60
+    
+  # Time limits (seconds)
+  time_limits:
+    single_test: 30
+    agent_suite: 180
+    tier_suite: 600
+    full_suite: 3600
+    
+  # Resource limits
+  resource_limits:
+    max_memory_mb: 4096
+    max_cpu_percent: 80
+    max_concurrent_agents: 20
+    
+  # Retry policy
+  retries:
+    max_attempts: 3
+    backoff_multiplier: 1.5
+    initial_delay_seconds: 1
+
+# Reporting Configuration
+reporting:
+  output_directory: "reports"
+  formats:
+    - json
+    - markdown
+    
+  # Report components
+  components:
+    executive_summary: true
+    tier_breakdown: true
+    agent_details: true
+    synergy_analysis: true
+    evolution_tracking: true
+    recommendations: true
+    
+  # Archive settings
+  archive:
+    enabled: true
+    retention_days: 90
+    compression: true
+
+# Integration Settings
+integrations:
+  # Learning database integration
+  learning_db:
+    enabled: true
+    auto_ingest: true
+    pattern_synthesis_interval: 5  # Every 5 test runs
+    
+  # Evolution tracker integration
+  evolution_tracker:
+    enabled: true
+    snapshot_interval: 1
+    report_generation: "on_demand"
+    
+  # Collective intelligence integration
+  collective_intelligence:
+    enabled: true
+    synergy_matrix_update: true
+    emergent_capability_detection: true
+    team_prediction: true

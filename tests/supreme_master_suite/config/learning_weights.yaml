@@ -1,0 +1,360 @@
+# Supreme Master Test Suite - OMNISCIENT Learning Weights
+# =========================================================
+# Priority weights for learning signals and capability rankings
+
+version: "2.0.0"
+
+# Learning Signal Priority Weights
+# Higher weight = more important for learning
+learning_priorities:
+  # Performance signals
+  performance:
+    pass_rate:
+      weight: 1.0
+      description: "Overall test pass rate"
+      
+    execution_time:
+      weight: 0.7
+      description: "Test execution speed"
+      
+    resource_efficiency:
+      weight: 0.6
+      description: "Resource utilization efficiency"
+      
+    error_recovery:
+      weight: 0.9
+      description: "Ability to recover from errors"
+      
+  # Collaboration signals
+  collaboration:
+    synergy_score:
+      weight: 0.95
+      description: "Effectiveness of multi-agent collaboration"
+      
+    communication_clarity:
+      weight: 0.7
+      description: "Clarity of inter-agent communication"
+      
+    handoff_efficiency:
+      weight: 0.8
+      description: "Efficiency of task handoffs"
+      
+    conflict_resolution:
+      weight: 0.85
+      description: "Ability to resolve conflicting approaches"
+      
+  # Innovation signals
+  innovation:
+    novelty_score:
+      weight: 0.9
+      description: "Originality of solutions"
+      
+    paradigm_bridging:
+      weight: 1.0
+      description: "Cross-domain synthesis ability"
+      
+    emergent_behavior:
+      weight: 1.2
+      description: "Emergence of new capabilities"
+      
+    breakthrough_detection:
+      weight: 1.1
+      description: "Identification of breakthrough opportunities"
+      
+  # Reliability signals
+  reliability:
+    consistency:
+      weight: 0.85
+      description: "Consistency across test runs"
+      
+    fault_tolerance:
+      weight: 0.9
+      description: "Tolerance to faults and failures"
+      
+    graceful_degradation:
+      weight: 0.8
+      description: "Quality of performance under stress"
+      
+    recovery_speed:
+      weight: 0.75
+      description: "Speed of recovery from failures"
+
+# Capability Importance Rankings
+capability_rankings:
+  # Core capabilities (Tier 1)
+  core:
+    algorithm_implementation:
+      importance: 1.0
+      primary_agent: "APEX-01"
+      related_agents: ["AXIOM-04", "VELOCITY-05"]
+      
+    security_analysis:
+      importance: 0.95
+      primary_agent: "CIPHER-02"
+      related_agents: ["FORTRESS-08", "AEGIS-36"]
+      
+    system_design:
+      importance: 0.9
+      primary_agent: "ARCHITECT-03"
+      related_agents: ["ATLAS-21", "SYNAPSE-13"]
+      
+    mathematical_reasoning:
+      importance: 0.85
+      primary_agent: "AXIOM-04"
+      related_agents: ["QUANTUM-06", "PRISM-12"]
+      
+    performance_optimization:
+      importance: 0.9
+      primary_agent: "VELOCITY-05"
+      related_agents: ["CORE-14", "FORGE-22"]
+      
+  # Specialist capabilities (Tier 2)
+  specialist:
+    quantum_computing:
+      importance: 0.7
+      primary_agent: "QUANTUM-06"
+      
+    machine_learning:
+      importance: 0.9
+      primary_agent: "TENSOR-07"
+      related_agents: ["NEURAL-09", "PRISM-12", "ORACLE-40"]
+      
+    penetration_testing:
+      importance: 0.85
+      primary_agent: "FORTRESS-08"
+      related_agents: ["PHANTOM-29"]
+      
+    agi_research:
+      importance: 0.75
+      primary_agent: "NEURAL-09"
+      
+    blockchain:
+      importance: 0.65
+      primary_agent: "CRYPTO-10"
+      related_agents: ["LATTICE-27"]
+      
+    devops:
+      importance: 0.85
+      primary_agent: "FLUX-11"
+      related_agents: ["ATLAS-21", "FORGE-22"]
+      
+    data_science:
+      importance: 0.85
+      primary_agent: "PRISM-12"
+      related_agents: ["TENSOR-07", "ORACLE-40"]
+      
+    integration:
+      importance: 0.8
+      primary_agent: "SYNAPSE-13"
+      related_agents: ["STREAM-25"]
+      
+    low_level_systems:
+      importance: 0.75
+      primary_agent: "CORE-14"
+      related_agents: ["ORBIT-30"]
+      
+    bioinformatics:
+      importance: 0.6
+      primary_agent: "HELIX-15"
+      
+    research_synthesis:
+      importance: 0.7
+      primary_agent: "VANGUARD-16"
+      related_agents: ["SCRIBE-33"]
+      
+    testing_verification:
+      importance: 0.9
+      primary_agent: "ECLIPSE-17"
+      
+  # Innovation capabilities (Tier 3)
+  innovation:
+    paradigm_synthesis:
+      importance: 1.0
+      primary_agent: "NEXUS-18"
+      
+    novel_discovery:
+      importance: 1.0
+      primary_agent: "GENESIS-19"
+      
+  # Meta capabilities (Tier 4)
+  meta:
+    collective_orchestration:
+      importance: 1.2
+      primary_agent: "OMNISCIENT-20"
+      
+  # Domain specialist capabilities (Tier 5)
+  domain:
+    cloud_architecture:
+      importance: 0.85
+      primary_agent: "ATLAS-21"
+      
+    build_systems:
+      importance: 0.7
+      primary_agent: "FORGE-22"
+      
+    observability:
+      importance: 0.8
+      primary_agent: "SENTRY-23"
+      
+    graph_databases:
+      importance: 0.65
+      primary_agent: "VERTEX-24"
+      
+    stream_processing:
+      importance: 0.75
+      primary_agent: "STREAM-25"
+      
+  # Emerging tech capabilities (Tier 6)
+  emerging:
+    edge_computing:
+      importance: 0.7
+      primary_agent: "PHOTON-26"
+      
+    distributed_consensus:
+      importance: 0.75
+      primary_agent: "LATTICE-27"
+      
+    code_migration:
+      importance: 0.65
+      primary_agent: "MORPH-28"
+      
+    reverse_engineering:
+      importance: 0.6
+      primary_agent: "PHANTOM-29"
+      
+    embedded_systems:
+      importance: 0.6
+      primary_agent: "ORBIT-30"
+      
+  # Human-centric capabilities (Tier 7)
+  human_centric:
+    ui_ux_design:
+      importance: 0.75
+      primary_agent: "CANVAS-31"
+      
+    nlp_llm:
+      importance: 0.85
+      primary_agent: "LINGUA-32"
+      
+    documentation:
+      importance: 0.7
+      primary_agent: "SCRIBE-33"
+      
+    code_review:
+      importance: 0.8
+      primary_agent: "MENTOR-34"
+      
+    cross_platform:
+      importance: 0.7
+      primary_agent: "BRIDGE-35"
+      
+  # Enterprise capabilities (Tier 8)
+  enterprise:
+    compliance:
+      importance: 0.85
+      primary_agent: "AEGIS-36"
+      
+    financial_systems:
+      importance: 0.8
+      primary_agent: "LEDGER-37"
+      
+    healthcare_it:
+      importance: 0.75
+      primary_agent: "PULSE-38"
+      
+    conflict_resolution:
+      importance: 0.7
+      primary_agent: "ARBITER-39"
+      
+    predictive_analytics:
+      importance: 0.8
+      primary_agent: "ORACLE-40"
+
+# Evolution Focus Areas
+evolution_focus:
+  # Priority areas for capability improvement
+  priority_areas:
+    - name: "Cross-Tier Collaboration"
+      weight: 1.2
+      description: "Improve collaboration between different tiers"
+      target_agents: all
+      
+    - name: "Innovation Amplification"
+      weight: 1.1
+      description: "Enhance creative and novel solution generation"
+      target_agents: ["NEXUS-18", "GENESIS-19", "NEURAL-09"]
+      
+    - name: "Security Hardening"
+      weight: 1.0
+      description: "Strengthen security capabilities across collective"
+      target_agents: ["CIPHER-02", "FORTRESS-08", "AEGIS-36", "PHANTOM-29"]
+      
+    - name: "Performance Excellence"
+      weight: 0.9
+      description: "Optimize performance across all agents"
+      target_agents: ["VELOCITY-05", "CORE-14", "FORGE-22"]
+      
+    - name: "Enterprise Readiness"
+      weight: 0.95
+      description: "Improve enterprise capability coverage"
+      target_agents: ["AEGIS-36", "LEDGER-37", "PULSE-38", "ORACLE-40"]
+      
+  # Weakness detection thresholds
+  weakness_thresholds:
+    critical: 0.6
+    warning: 0.75
+    attention: 0.85
+    
+  # Improvement targets
+  improvement_targets:
+    minimum_pass_rate: 0.90
+    target_pass_rate: 0.95
+    excellence_threshold: 0.98
+    
+  # Learning rate adjustments
+  learning_adjustments:
+    declining_agent_boost: 1.5
+    stagnant_agent_boost: 1.2
+    weak_capability_boost: 1.3
+
+# Synergy Multipliers
+synergy_multipliers:
+  # Tier pair synergy multipliers
+  tier_pairs:
+    "1-8":  # Foundational + Enterprise
+      multiplier: 1.2
+      description: "Strong foundation supports enterprise goals"
+      
+    "2-3":  # Specialists + Innovators
+      multiplier: 1.3
+      description: "Specialist depth enables innovation"
+      
+    "4-7":  # Meta + Human-Centric
+      multiplier: 1.15
+      description: "Collective orchestration with human focus"
+      
+    "5-6":  # Domain + Emerging
+      multiplier: 1.25
+      description: "Platform expertise meets new paradigms"
+      
+  # Agent pair synergies (notable combinations)
+  agent_pairs:
+    "APEX-01_ARCHITECT-03":
+      multiplier: 1.3
+      description: "Algorithm meets architecture"
+      
+    "CIPHER-02_FORTRESS-08":
+      multiplier: 1.4
+      description: "Crypto meets defense"
+      
+    "TENSOR-07_PRISM-12":
+      multiplier: 1.25
+      description: "ML meets data science"
+      
+    "NEXUS-18_GENESIS-19":
+      multiplier: 1.5
+      description: "Synthesis meets discovery"
+      
+    "OMNISCIENT-20_NEURAL-09":
+      multiplier: 1.35
+      description: "Meta-learning collaboration"

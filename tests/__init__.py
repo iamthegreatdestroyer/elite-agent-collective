@@ -34,9 +34,9 @@ __version__ = "1.0.0"
 __author__ = "Elite Agent Collective"
 
 # Framework imports
-from .framework.base_agent_test import BaseAgentTest, TestResult, TestDifficulty
+from .framework.base_agent_test import BaseAgentTest, TestResult, DifficultyLevel as TestDifficulty
 from .framework.difficulty_engine import DifficultyEngine
-from .framework.test_runner import AgentTestRunner
+from .framework.test_runner import MasterTestRunner as AgentTestRunner
 from .framework.documentation_generator import DocumentationGenerator
 from .framework.omniscient_aggregator import OmniscientAggregator
 

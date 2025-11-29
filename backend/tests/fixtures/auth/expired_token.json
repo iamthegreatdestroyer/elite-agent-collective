@@ -1,0 +1,4 @@
+{
+  "token": "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ0ZXN0LXVzZXIiLCJpc3MiOiJodHRwczovL2V4YW1wbGUuY29tIiwiYXVkIjoidGVzdC1jbGllbnQiLCJleHAiOjE2MDAwMDAwMDB9.expired",
+  "note": "This represents an expired token. In a real implementation, this would fail validation."
+}

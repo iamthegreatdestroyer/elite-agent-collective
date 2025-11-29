@@ -1,0 +1,10 @@
+{
+  "messages": [
+    {
+      "role": "user",
+      "content": "help me with something"
+    }
+  ],
+  "model": "gpt-4",
+  "stream": false
+}

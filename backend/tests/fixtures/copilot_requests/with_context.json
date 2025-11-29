@@ -1,0 +1,22 @@
+{
+  "messages": [
+    {
+      "role": "system",
+      "content": "You are a helpful assistant."
+    },
+    {
+      "role": "user",
+      "content": "What is the best sorting algorithm?"
+    },
+    {
+      "role": "assistant",
+      "content": "It depends on your use case. QuickSort is generally fast."
+    },
+    {
+      "role": "user",
+      "content": "@APEX can you explain merge sort in detail?"
+    }
+  ],
+  "model": "gpt-4",
+  "stream": false
+}

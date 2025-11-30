@@ -1,6 +1,11 @@
 // Package copilot provides types matching the GitHub Copilot Extension API.
 package copilot
 
+import (
+	"fmt"
+	"time"
+)
+
 // Request represents the incoming request from GitHub Copilot.
 // This matches the GitHub Copilot Extension API specification.
 type Request struct {
@@ -209,10 +214,19 @@ func NewSystemMessage(content string) Message {
 	return NewMessage("system", content)
 }
 
+// generateResponseID creates a unique response ID.
+func generateResponseID() string {
+	return fmt.Sprintf("chatcmpl-%d", time.Now().UnixNano())
+}
+
 // NewResponse creates a new response with a single choice.
+// Includes ID, Created timestamp, and Model fields as per GitHub Copilot API spec.
 func NewResponse(content string) *Response {
 	return &Response{
-		Object: "chat.completion",
+		ID:      generateResponseID(),
+		Object:  "chat.completion",
+		Created: time.Now().Unix(),
+		Model:   "elite-agent-collective",
 		Choices: []Choice{
 			{
 				Index: 0,

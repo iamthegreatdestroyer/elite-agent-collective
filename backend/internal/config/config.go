@@ -12,6 +12,9 @@ type Config struct {
 	Port     int
 	LogLevel string
 
+	// CORS configuration
+	CORSAllowedOrigins string
+
 	// OIDC configuration
 	OIDC OIDCConfig
 
@@ -39,8 +42,9 @@ type GitHubConfig struct {
 // Load reads configuration from environment variables with sensible defaults.
 func Load() *Config {
 	return &Config{
-		Port:     getEnvAsInt("PORT", 8080),
-		LogLevel: getEnv("LOG_LEVEL", "info"),
+		Port:               getEnvAsInt("PORT", 8080),
+		LogLevel:           getEnv("LOG_LEVEL", "info"),
+		CORSAllowedOrigins: getEnv("CORS_ALLOWED_ORIGINS", ""),
 		OIDC: OIDCConfig{
 			Issuer:       getEnv("OIDC_ISSUER", "https://token.actions.githubusercontent.com"),
 			ClientID:     getEnv("OIDC_CLIENT_ID", ""),

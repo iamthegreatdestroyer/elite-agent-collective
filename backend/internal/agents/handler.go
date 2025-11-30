@@ -163,22 +163,26 @@ func (h *Handler) CopilotWebhook(w http.ResponseWriter, r *http.Request) {
 
 // handleMultiAgentRequest handles requests that invoke multiple agents.
 // It combines responses from all specified agents into a single response.
+// If some agents are unavailable, they are skipped and noted in the response.
 func (h *Handler) handleMultiAgentRequest(w http.ResponseWriter, r *http.Request, req *models.CopilotRequest, codenames []string) {
 	log.Printf("Copilot webhook: multi-agent collaboration with agents: %v", codenames)
 	
 	var responses []string
 	var validAgents []string
+	var skippedAgents []string
 	
 	for _, codename := range codenames {
 		agent, err := h.registry.Get(codename)
 		if err != nil {
 			log.Printf("Agent %s not found, skipping", codename)
+			skippedAgents = append(skippedAgents, codename)
 			continue
 		}
 		
 		resp, err := agent.Handle(r.Context(), req)
 		if err != nil {
 			log.Printf("Error from agent %s: %v", codename, err)
+			skippedAgents = append(skippedAgents, codename)
 			continue
 		}
 		
@@ -196,6 +200,11 @@ func (h *Handler) handleMultiAgentRequest(w http.ResponseWriter, r *http.Request
 	// Combine responses with clear separation
 	var combinedContent strings.Builder
 	combinedContent.WriteString(fmt.Sprintf("## Multi-Agent Collaboration: %s\n\n", strings.Join(validAgents, " + ")))
+	
+	// Note any skipped agents
+	if len(skippedAgents) > 0 {
+		combinedContent.WriteString(fmt.Sprintf("*Note: The following requested agents were unavailable: %s*\n\n", strings.Join(skippedAgents, ", ")))
+	}
 	
 	for i, content := range responses {
 		if i > 0 {

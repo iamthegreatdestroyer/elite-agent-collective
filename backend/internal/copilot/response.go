@@ -164,10 +164,14 @@ func (s *SSEWriter) writeData(data interface{}) error {
 // WriteStreamingResponse writes a complete response as a stream.
 // This is useful for backwards compatibility when streaming is requested
 // but only a complete response is available.
+// If the ResponseWriter doesn't support streaming (no Flusher interface),
+// it falls back to a regular JSON response.
 func WriteStreamingResponse(w http.ResponseWriter, content string) error {
 	sse := NewSSEWriter(w)
 	if sse == nil {
 		// Fall back to regular response if streaming not supported
+		// Log this fallback so it's visible in debugging
+		log.Printf("SSE streaming not supported, falling back to JSON response")
 		return WriteResponse(w, NewResponse(content))
 	}
 

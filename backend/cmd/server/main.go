@@ -19,22 +19,32 @@ import (
 	"github.com/iamthegreatdestroyer/elite-agent-collective/backend/internal/config"
 )
 
-// corsMiddleware adds CORS headers for cross-origin requests.
-func corsMiddleware(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Access-Control-Allow-Origin", "*")
-		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
-		w.Header().Set("Access-Control-Allow-Headers", "Accept, Authorization, Content-Type, X-GitHub-Signature-256")
-		w.Header().Set("Access-Control-Max-Age", "86400")
+// corsMiddleware creates CORS middleware with configurable allowed origins.
+// If allowedOrigins is empty, it allows all origins (for development).
+// In production, set CORS_ALLOWED_ORIGINS to restrict to specific domains.
+func corsMiddleware(allowedOrigins string) func(http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			origin := allowedOrigins
+			if origin == "" {
+				// Default to allowing all origins if not configured
+				// For production, set CORS_ALLOWED_ORIGINS environment variable
+				origin = "*"
+			}
+			w.Header().Set("Access-Control-Allow-Origin", origin)
+			w.Header().Set("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
+			w.Header().Set("Access-Control-Allow-Headers", "Accept, Authorization, Content-Type, X-GitHub-Signature-256")
+			w.Header().Set("Access-Control-Max-Age", "86400")
 
-		// Handle preflight requests
-		if r.Method == http.MethodOptions {
-			w.WriteHeader(http.StatusOK)
-			return
-		}
+			// Handle preflight requests
+			if r.Method == http.MethodOptions {
+				w.WriteHeader(http.StatusOK)
+				return
+			}
 
-		next.ServeHTTP(w, r)
-	})
+			next.ServeHTTP(w, r)
+		})
+	}
 }
 
 func main() {
@@ -63,7 +73,7 @@ func main() {
 	r.Use(middleware.Logger)
 	r.Use(middleware.Recoverer)
 	r.Use(middleware.Timeout(60 * time.Second))
-	r.Use(corsMiddleware)
+	r.Use(corsMiddleware(cfg.CORSAllowedOrigins))
 
 	// Health check endpoint (no auth required)
 	r.Get("/health", healthCheckHandler)

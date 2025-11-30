@@ -1,0 +1,10 @@
+{
+  "messages": [
+    {
+      "role": "user",
+      "content": "@APEX explain quicksort"
+    }
+  ],
+  "model": "gpt-4",
+  "stream": true
+}

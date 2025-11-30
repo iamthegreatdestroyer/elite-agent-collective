@@ -19,6 +19,24 @@ import (
 	"github.com/iamthegreatdestroyer/elite-agent-collective/backend/internal/config"
 )
 
+// corsMiddleware adds CORS headers for cross-origin requests.
+func corsMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Access-Control-Allow-Origin", "*")
+		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
+		w.Header().Set("Access-Control-Allow-Headers", "Accept, Authorization, Content-Type, X-GitHub-Signature-256")
+		w.Header().Set("Access-Control-Max-Age", "86400")
+
+		// Handle preflight requests
+		if r.Method == http.MethodOptions {
+			w.WriteHeader(http.StatusOK)
+			return
+		}
+
+		next.ServeHTTP(w, r)
+	})
+}
+
 func main() {
 	// Load configuration
 	cfg := config.Load()
@@ -33,6 +51,9 @@ func main() {
 	// Initialize authentication middleware
 	authMiddleware := auth.NewMiddleware(&cfg.OIDC)
 
+	// Initialize signature verification middleware for GitHub webhooks
+	signatureMiddleware := auth.NewSignatureMiddleware(cfg.GitHub.WebhookSecret)
+
 	// Setup router
 	r := chi.NewRouter()
 
@@ -42,6 +63,7 @@ func main() {
 	r.Use(middleware.Logger)
 	r.Use(middleware.Recoverer)
 	r.Use(middleware.Timeout(60 * time.Second))
+	r.Use(corsMiddleware)
 
 	// Health check endpoint (no auth required)
 	r.Get("/health", healthCheckHandler)
@@ -53,8 +75,13 @@ func main() {
 		r.With(authMiddleware.Authenticate).Post("/{codename}/invoke", agentHandler.InvokeAgent)
 	})
 
-	// Copilot webhook endpoint
-	r.With(authMiddleware.Authenticate).Post("/copilot", agentHandler.CopilotWebhook)
+	// Copilot webhook endpoint with signature verification
+	// Uses signature verification when GITHUB_WEBHOOK_SECRET is configured
+	// Falls back to OIDC auth otherwise
+	r.With(signatureMiddleware.VerifySignature, authMiddleware.OptionalAuth).Post("/copilot", agentHandler.CopilotWebhook)
+
+	// Alternative Copilot endpoint with only OIDC auth (for direct API calls)
+	r.With(authMiddleware.Authenticate).Post("/agent", agentHandler.CopilotWebhook)
 
 	// Start server
 	addr := fmt.Sprintf(":%d", cfg.Port)
@@ -88,6 +115,14 @@ func main() {
 	log.Printf("Server is starting on %s", addr)
 	log.Printf("Health check available at http://localhost%s/health", addr)
 	log.Printf("Agent list available at http://localhost%s/agents", addr)
+	log.Printf("Copilot webhook at http://localhost%s/copilot", addr)
+
+	if cfg.GitHub.WebhookSecret != "" {
+		log.Printf("GitHub webhook signature verification enabled")
+	}
+	if cfg.OIDC.ClientID != "" {
+		log.Printf("OIDC authentication enabled")
+	}
 
 	if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 		log.Fatalf("Could not listen on %s: %v\n", addr, err)
@@ -104,7 +139,7 @@ func healthCheckHandler(w http.ResponseWriter, r *http.Request) {
 		"status":    "healthy",
 		"timestamp": time.Now().UTC().Format(time.RFC3339),
 		"service":   "elite-agent-collective",
-		"version":   "1.0.0",
+		"version":   "2.0.0",
 	}
 	json.NewEncoder(w).Encode(response)
 }

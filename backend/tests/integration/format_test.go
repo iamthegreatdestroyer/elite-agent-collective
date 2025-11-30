@@ -4,6 +4,7 @@
 package integration
 
 import (
+	"bufio"
 	"bytes"
 	"encoding/json"
 	"net/http"
@@ -158,8 +159,8 @@ func TestCopilotResponseFormat(t *testing.T) {
 	}
 }
 
-// TestStreamingResponse tests that streaming requests are handled.
-// Note: Current implementation may not support actual streaming.
+// TestStreamingResponse tests that streaming requests are handled with SSE format.
+// Now that SSE streaming is implemented, the response is in text/event-stream format.
 func TestStreamingResponse(t *testing.T) {
 	reqBody := models.CopilotRequest{
 		Messages: []models.Message{
@@ -176,18 +177,37 @@ func TestStreamingResponse(t *testing.T) {
 	}
 	defer resp.Body.Close()
 
-	// Current implementation returns standard JSON response even for streaming requests
 	if resp.StatusCode != http.StatusOK {
 		t.Fatalf("expected status 200, got %d", resp.StatusCode)
 	}
 
-	var copilotResp models.CopilotResponse
-	if err := json.NewDecoder(resp.Body).Decode(&copilotResp); err != nil {
-		t.Fatalf("failed to decode response: %v", err)
+	// Streaming responses should have text/event-stream content type
+	contentType := resp.Header.Get("Content-Type")
+	if !strings.Contains(contentType, "text/event-stream") {
+		t.Errorf("expected text/event-stream content type, got: %s", contentType)
 	}
 
-	if len(copilotResp.Choices) == 0 {
-		t.Fatal("expected at least one choice in response")
+	// Read the SSE response and verify it contains data
+	reader := bufio.NewReader(resp.Body)
+	hasData := false
+
+	for {
+		line, err := reader.ReadString('\n')
+		if err != nil {
+			break
+		}
+		line = strings.TrimSpace(line)
+		if strings.HasPrefix(line, "data: ") {
+			hasData = true
+			data := strings.TrimPrefix(line, "data: ")
+			if data == "[DONE]" {
+				break
+			}
+		}
+	}
+
+	if !hasData {
+		t.Error("expected streaming response to contain data")
 	}
 }
 

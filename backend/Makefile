@@ -1,4 +1,4 @@
-.PHONY: build run test clean docker docker-run lint fmt help test-integration test-e2e test-all test-bench
+.PHONY: build run test clean docker docker-run lint fmt help test-integration test-e2e test-all test-bench test-copilot test-signature test-streaming
 
 # Go parameters
 GOCMD=go
@@ -36,6 +36,22 @@ test-coverage:
 test-integration:
 	@echo "Running integration tests..."
 	$(GOTEST) -v -tags=integration ./tests/integration/...
+
+# Run Copilot-specific tests
+test-copilot:
+	@echo "Running Copilot-specific tests..."
+	$(GOTEST) -v -tags=integration -run "Copilot|Streaming|MultiAgent|Signature" ./tests/integration/...
+
+# Run signature verification tests
+test-signature:
+	@echo "Running signature verification tests..."
+	$(GOTEST) -v -run "Signature" ./internal/auth/...
+	$(GOTEST) -v -tags=integration -run "Signature" ./tests/integration/...
+
+# Run streaming response tests
+test-streaming:
+	@echo "Running streaming response tests..."
+	$(GOTEST) -v -tags=integration -run "Streaming|SSE" ./tests/integration/...
 
 # Run end-to-end tests (alias for integration tests)
 test-e2e:
@@ -105,6 +121,9 @@ help:
 	@echo "  run              - Run the server locally"
 	@echo "  test             - Run unit tests"
 	@echo "  test-integration - Run integration tests"
+	@echo "  test-copilot     - Run Copilot-specific tests"
+	@echo "  test-signature   - Run signature verification tests"
+	@echo "  test-streaming   - Run streaming response tests"
 	@echo "  test-e2e         - Run end-to-end tests (alias for integration)"
 	@echo "  test-all         - Run all tests (unit + integration)"
 	@echo "  test-bench       - Run integration benchmarks"

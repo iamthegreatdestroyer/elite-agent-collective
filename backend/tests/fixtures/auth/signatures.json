@@ -1,0 +1,16 @@
+{
+  "description": "Mock signatures for testing webhook signature verification",
+  "test_secret": "test-webhook-secret-12345",
+  "test_payloads": [
+    {
+      "name": "valid_copilot_request",
+      "body": "{\"messages\":[{\"role\":\"user\",\"content\":\"@APEX help\"}],\"model\":\"gpt-4\"}",
+      "signature": "sha256=<computed-at-runtime>"
+    }
+  ],
+  "notes": [
+    "Signatures are computed at runtime using auth.ComputeSignature",
+    "The test_secret should match GITHUB_WEBHOOK_SECRET for integration tests",
+    "Invalid signatures can be generated with a different secret"
+  ]
+}

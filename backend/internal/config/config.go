@@ -12,8 +12,14 @@ type Config struct {
 	Port     int
 	LogLevel string
 
+	// CORS configuration
+	CORSAllowedOrigins string
+
 	// OIDC configuration
 	OIDC OIDCConfig
+
+	// GitHub App configuration for Copilot Extensions
+	GitHub GitHubConfig
 }
 
 // OIDCConfig holds OIDC authentication configuration.
@@ -23,15 +29,31 @@ type OIDCConfig struct {
 	ClientSecret string
 }
 
+// GitHubConfig holds GitHub App configuration for Copilot Extensions.
+type GitHubConfig struct {
+	// AppID is the GitHub App ID
+	AppID string
+	// PrivateKey is the GitHub App private key (PEM format)
+	PrivateKey string
+	// WebhookSecret is the secret used to verify webhook payloads
+	WebhookSecret string
+}
+
 // Load reads configuration from environment variables with sensible defaults.
 func Load() *Config {
 	return &Config{
-		Port:     getEnvAsInt("PORT", 8080),
-		LogLevel: getEnv("LOG_LEVEL", "info"),
+		Port:               getEnvAsInt("PORT", 8080),
+		LogLevel:           getEnv("LOG_LEVEL", "info"),
+		CORSAllowedOrigins: getEnv("CORS_ALLOWED_ORIGINS", ""),
 		OIDC: OIDCConfig{
 			Issuer:       getEnv("OIDC_ISSUER", "https://token.actions.githubusercontent.com"),
 			ClientID:     getEnv("OIDC_CLIENT_ID", ""),
 			ClientSecret: getEnv("OIDC_CLIENT_SECRET", ""),
+		},
+		GitHub: GitHubConfig{
+			AppID:         getEnv("GITHUB_APP_ID", ""),
+			PrivateKey:    getEnv("GITHUB_APP_PRIVATE_KEY", ""),
+			WebhookSecret: getEnv("GITHUB_WEBHOOK_SECRET", ""),
 		},
 	}
 }

@@ -1021,7 +1021,7 @@ func (r *SubLinearRetriever) GetByTier(tierID int) []*ExperienceTuple {
 }
 
 // GetStats returns the current memory statistics.
-func (r *SubLinearRetriever) GetStats() MemoryStats {
+func (r *SubLinearRetriever) GetStats() *MemoryStats {
 	return r.stats.GetStats()
 }
 

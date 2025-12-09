@@ -5,6 +5,9 @@ This is the HTTP backend service that powers the GitHub Copilot Extension for th
 ## Features
 
 - **40 Specialized Agents**: Full registry of all Elite Agent Collective agents
+- **MNEMONIC Memory System**: Sub-linear experience retrieval with Bloom Filter (O(1)), LSH Index (O(1)), and HNSW Graph (O(log n))
+- **ReMem-Elite Control Loop**: 5-phase memory-augmented execution (RETRIEVE → THINK → ACT → REFLECT → EVOLVE)
+- **Experience-Based Learning**: Agents accumulate strategies, share knowledge across tiers, and self-improve at inference time
 - **RESTful API**: Clean API design with proper error handling
 - **GitHub Copilot Integration**: Compatible with GitHub Copilot Extension specifications
 - **OIDC Authentication**: Stub implementation ready for OIDC integration
@@ -186,6 +189,29 @@ The server can be configured using environment variables:
 | `OIDC_CLIENT_ID` | `` | OIDC client ID (enables authentication when set) |
 | `OIDC_CLIENT_SECRET` | `` | OIDC client secret |
 
+### Memory System Configuration
+
+The MNEMONIC memory system can be configured via `pkg/models/memory.go`:
+
+| Parameter | Default | Description |
+|-----------|---------|-------------|
+| `Enabled` | `true` | Enable/disable memory system |
+| `EmbeddingDimension` | `384` | Size of embedding vectors |
+| `MaxExperiencesPerAgent` | `1000` | Max experiences stored per agent |
+| `MinFitnessThreshold` | `0.3` | Minimum fitness score for retrieval |
+| `BreakthroughThreshold` | `0.9` | Fitness threshold for collective promotion |
+| `LSHNumTables` | `10` | Number of LSH hash tables |
+| `LSHNumHashFuncs` | `12` | Hash functions per table |
+| `HNSWMaxConnections` | `16` | HNSW graph max connections (M parameter) |
+| `HNSWEfConstruction` | `200` | HNSW construction quality parameter |
+| `HNSWEfSearch` | `100` | HNSW search quality parameter |
+
+**Tuning Guidelines:**
+- Increase `LSHNumTables` for higher recall (more memory usage)
+- Increase `HNSWEfConstruction` for better graph quality (slower indexing)
+- Increase `HNSWEfSearch` for better recall (slower queries)
+- Adjust `MinFitnessThreshold` to filter low-quality experiences
+
 ## Project Structure
 
 ```
@@ -206,9 +232,15 @@ backend/
 │   │   └── middleware.go           # Auth middleware
 │   ├── config/
 │   │   └── config.go               # Configuration management
-│   └── copilot/
-│       ├── request.go              # Copilot request parsing
-│       └── response.go             # Copilot response formatting
+│   ├── copilot/
+│   │   ├── request.go              # Copilot request parsing
+│   │   └── response.go             # Copilot response formatting
+│   └── memory/                     # MNEMONIC Memory System
+│       ├── experience.go           # ExperienceTuple data structures, query contexts
+│       ├── remem_loop.go           # ReMem-Elite control loop orchestration
+│       ├── sublinear_retriever.go  # Sub-linear retrieval (Bloom, LSH, HNSW)
+│       ├── errors.go               # Memory-specific error types
+│       └── sublinear_retriever_test.go  # Comprehensive tests and benchmarks
 ├── pkg/
 │   └── models/
 │       └── agent.go                # Agent data models
@@ -219,6 +251,24 @@ backend/
 ├── go.sum
 └── README.md
 ```
+
+### Memory System Components
+
+The `internal/memory/` directory implements the MNEMONIC system:
+
+| File | Purpose | Key Components |
+|------|---------|----------------|
+| **experience.go** | Core data structures | ExperienceTuple, QueryContext, RetrievalResult, Breakthrough, MemoryStats |
+| **remem_loop.go** | ReMem control loop | ReMemController, ContextConstructor, MemoryUpdater, OutcomeEvaluator |
+| **sublinear_retriever.go** | Sub-linear retrieval | BloomFilter (O(1)), LSHIndex (O(1)), HNSWGraph (O(log n)), SubLinearRetriever |
+| **errors.go** | Error handling | Memory-specific error types and constants |
+| **sublinear_retriever_test.go** | Testing & benchmarks | Unit tests, integration tests, performance benchmarks |
+
+**Performance Characteristics:**
+- Exact task signature matching: O(1) via Bloom Filter
+- Approximate nearest neighbor: O(1) expected via LSH Index  
+- Semantic similarity search: O(log n) via HNSW Graph
+- Optimized for 1M+ experiences with minimal memory overhead
 
 ## Agent Registry
 

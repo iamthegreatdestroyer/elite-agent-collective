@@ -349,8 +349,9 @@ func (s *MemoryStats) UpdateRetrievalStats(latencyNs int64, cacheHit bool) {
 	}
 }
 
-// GetStats returns a copy of the current statistics.
-func (s *MemoryStats) GetStats() MemoryStats {
+// GetStats returns a pointer to a copy of the current statistics.
+// Returns a pointer to avoid copying the embedded sync.RWMutex.
+func (s *MemoryStats) GetStats() *MemoryStats {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 
@@ -364,7 +365,7 @@ func (s *MemoryStats) GetStats() MemoryStats {
 		tierCopy[k] = v
 	}
 
-	return MemoryStats{
+	return &MemoryStats{
 		TotalExperiences:      s.TotalExperiences,
 		ExperiencesByAgent:    agentCopy,
 		ExperiencesByTier:     tierCopy,

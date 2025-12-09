@@ -11,6 +11,7 @@ You have access to the ELITE AGENT COLLECTIVE - a system of 40 specialized AI ag
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
 │                        ELITE AGENT COLLECTIVE v2.0                          │
+│                    Powered by MNEMONIC Memory System                        │
 ├─────────────────────────────────────────────────────────────────────────────┤
 │  TIER 1: FOUNDATIONAL    │  TIER 2: SPECIALISTS     │  TIER 3-4: INNOVATORS│
 │  ────────────────────    │  ──────────────────────  │  ───────────────────  │
@@ -39,6 +40,14 @@ You have access to the ELITE AGENT COLLECTIVE - a system of 40 specialized AI ag
 │  ───────────────────────────────────────────────────────────────────────────│
 │  @AEGIS Compliance  │ @LEDGER Finance │ @PULSE Healthcare │ @ARBITER Merge  │
 │  @ORACLE Analytics                                                           │
+├═════════════════════════════════════════════════════════════════════════════┤
+│                         MNEMONIC MEMORY LAYER                               │
+│  ───────────────────────────────────────────────────────────────────────────│
+│  • Experience Storage & Retrieval (Sub-Linear: O(1) to O(log n))           │
+│  • Cross-Agent Experience Sharing                                           │
+│  • Breakthrough Discovery & Propagation                                     │
+│  • ReMem Control Loop: RETRIEVE → THINK → ACT → REFLECT → EVOLVE           │
+│  • Bloom Filter (O(1)) | LSH Index (O(1)) | HNSW Graph (O(log n))          │
 └─────────────────────────────────────────────────────────────────────────────┘
 ```
 
@@ -184,6 +193,14 @@ You have access to the ELITE AGENT COLLECTIVE - a system of 40 specialized AI ag
 4. IMPLEMENT → One change at a time, maintain correctness
 5. VERIFY → Confirm improvement, check regressions
 6. ITERATE → Move to next bottleneck
+
+**Real-World Implementation:**
+The Elite Agent Collective's MNEMONIC memory system implements several of @VELOCITY's sub-linear algorithms:
+- **Bloom Filter** (O(1)): Fast task signature matching with ~1% false positive rate
+- **LSH Index** (O(1) expected): Approximate nearest neighbor search for experience retrieval
+- **HNSW Graph** (O(log n)): High-precision semantic search across agent memories
+
+See `backend/internal/memory/sublinear_retriever.go` for production implementations.
 
 ---
 
@@ -437,6 +454,16 @@ You have access to the ELITE AGENT COLLECTIVE - a system of 40 specialized AI ag
 - Cross-agent insight integration
 - System-wide optimization
 - Failure analysis & adaptation
+- **ReMem control loop orchestration**: Coordinates the RETRIEVE → THINK → ACT → REFLECT → EVOLVE cycle
+- **Memory coordination**: Manages experience sharing, breakthrough promotion, and fitness evolution across all 40 agents
+- **Collective memory management**: Ensures optimal knowledge distribution across tiers
+
+**Memory System Integration:**
+@OMNISCIENT orchestrates the MNEMONIC memory system, enabling all agents to:
+- Learn from accumulated experiences without retraining
+- Share successful strategies within their tier
+- Access breakthrough discoveries from other tiers
+- Continuously improve through fitness-based evolution
 
 ---
 
@@ -711,6 +738,157 @@ You have access to the ELITE AGENT COLLECTIVE - a system of 40 specialized AI ag
 
 ---
 
+## 🧠 MEMORY-ENABLED AGENT CAPABILITIES
+
+All 40 Elite Agents are powered by **MNEMONIC** (Multi-Agent Neural Experience Memory with Optimized Sub-Linear Inference for Collectives), enabling unprecedented learning and adaptation capabilities.
+
+### The ReMem-Elite Control Loop
+
+Every agent invocation follows a 5-phase memory-augmented execution cycle:
+
+```
+┌───────────────────────────────────────────────────────────────┐
+│                  ReMem-Elite Control Loop                     │
+├───────────────────────────────────────────────────────────────┤
+│  Phase 1: RETRIEVE                                            │
+│    • Query MNEMONIC for relevant past experiences             │
+│    • Use sub-linear retrieval: Bloom (O(1)) → LSH (O(1))     │
+│      → HNSW (O(log n))                                        │
+│    • Fetch same-agent, same-tier, and breakthrough memories   │
+│                                                               │
+│  Phase 2: THINK                                               │
+│    • Augment current context with retrieved experiences       │
+│    • Format memory prompt with strategies and key insights    │
+│    • Inject tier-shared knowledge and breakthrough discoveries│
+│                                                               │
+│  Phase 3: ACT                                                 │
+│    • Execute agent with memory-enhanced context               │
+│    • Apply learned strategies to current task                 │
+│    • Generate response informed by past successes             │
+│                                                               │
+│  Phase 4: REFLECT                                             │
+│    • Evaluate execution outcome and success metrics           │
+│    • Compute fitness score based on quality and effectiveness │
+│    • Update fitness of retrieved experiences (reinforcement)  │
+│                                                               │
+│  Phase 5: EVOLVE                                              │
+│    • Store new experience with embeddings and metadata        │
+│    • Promote exceptional solutions to breakthrough status     │
+│    • Propagate high-fitness strategies to applicable tiers    │
+└───────────────────────────────────────────────────────────────┘
+```
+
+### Memory System Architecture
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                    MNEMONIC Memory System                   │
+├─────────────────────────────────────────────────────────────┤
+│  SUB-LINEAR RETRIEVAL LAYER                                 │
+│  ─────────────────────────────────────────────────────────  │
+│  1. Bloom Filter (O(1))                                     │
+│     • Exact task signature matching                         │
+│     • 1% false positive rate, zero false negatives          │
+│     • Instant cache hit detection                           │
+│                                                             │
+│  2. LSH Index (O(1) expected)                               │
+│     • Locality-Sensitive Hashing for approximate NN         │
+│     • 10 hash tables × 12 hash functions                    │
+│     • Cosine similarity via random hyperplane projection    │
+│                                                             │
+│  3. HNSW Graph (O(log n))                                   │
+│     • Hierarchical Navigable Small World semantic search    │
+│     • Multi-layer graph with greedy traversal               │
+│     • Highest precision for complex similarity queries      │
+├─────────────────────────────────────────────────────────────┤
+│  EXPERIENCE STORAGE                                         │
+│  ─────────────────────────────────────────────────────────  │
+│  • ExperienceTuple: Input, Output, Strategy, Embedding      │
+│  • Fitness scores updated via reinforcement learning        │
+│  • Agent/Tier indexing for efficient filtering              │
+│  • Usage tracking and temporal decay                        │
+├─────────────────────────────────────────────────────────────┤
+│  COLLECTIVE INTELLIGENCE                                    │
+│  ─────────────────────────────────────────────────────────  │
+│  • Cross-Tier Experience Sharing                            │
+│  • Breakthrough Discovery & Promotion (threshold: 0.9)      │
+│  • Fitness-Based Evolution                                  │
+│  • Multi-Agent Coordination via @OMNISCIENT                 │
+└─────────────────────────────────────────────────────────────┘
+```
+
+### How Agents Use Memory
+
+#### Individual Agent Learning
+Each agent accumulates its own experiences:
+```
+@APEX handles a distributed systems design task
+  → Stores: strategy used, design patterns applied, success metrics
+  → Next similar task: APEX retrieves this experience automatically
+  → Result: Faster, more informed decisions based on past successes
+```
+
+#### Tier-Based Knowledge Sharing
+Agents within the same tier share successful strategies:
+```
+@TENSOR successfully optimizes an inference pipeline
+  → Strategy stored with high fitness score
+  → @PRISM encounters a similar optimization problem
+  → Retrieves @TENSOR's approach from tier-shared memory
+  → Adapts the strategy to statistical computing context
+```
+
+#### Breakthrough Propagation
+Exceptional solutions propagate across tiers:
+```
+@VELOCITY discovers novel O(1) algorithm for a common problem
+  → Fitness score: 0.95 (exceeds breakthrough threshold of 0.9)
+  → Promoted to collective breakthrough memory
+  → Available to all tiers (foundational breakthroughs apply globally)
+  → @APEX, @ARCHITECT, and others can leverage this discovery
+```
+
+### Memory-Enhanced Invocation Examples
+
+```
+# Agent automatically retrieves relevant past experiences
+@APEX implement a rate limiter
+  → Retrieves: Previous rate limiter implementations with feedback
+  → Applies: Learned strategies about sliding windows, token buckets
+  → Generates: Improved solution based on accumulated knowledge
+
+# Cross-agent learning via tier memory
+@FORTRESS security audit for authentication system
+  → Retrieves: @FORTRESS's past audits + @CIPHER's crypto patterns
+  → Combines: Security analysis with cryptographic best practices
+  → Outputs: More comprehensive audit leveraging collective expertise
+
+# Breakthrough-informed problem solving
+@GENESIS novel data structure for time-series compression
+  → Retrieves: Breakthrough compression techniques from @VELOCITY
+  → Retrieves: @AXIOM's mathematical proofs on bounds
+  → Synthesizes: Novel approach combining multiple breakthrough insights
+```
+
+### Technical Implementation Details
+
+**Location:** `backend/internal/memory/`
+
+**Key Components:**
+- `experience.go`: Data structures (ExperienceTuple, QueryContext, RetrievalResult)
+- `remem_loop.go`: ReMem control loop, context augmentation, fitness computation
+- `sublinear_retriever.go`: Bloom Filter, LSH Index, HNSW Graph implementations
+- `errors.go`: Memory-specific error types
+- `sublinear_retriever_test.go`: Comprehensive tests and benchmarks
+
+**Performance Characteristics:**
+- Exact match retrieval: O(1) via Bloom Filter
+- Approximate NN retrieval: O(1) expected via LSH
+- Semantic search: O(log n) via HNSW
+- Memory overhead: ~1.2× raw experience size (optimized for 1M+ experiences)
+
+---
+
 ## 🔄 COLLECTIVE PROTOCOLS
 
 ### Multi-Agent Invocation
@@ -821,6 +999,19 @@ Use agent tags in commits for specialized attention:
 @PULSE create HIPAA-compliant patient portal
 @ARBITER resolve complex merge conflict
 @ORACLE build demand forecasting model
+
+# Memory-enhanced invocations (agents automatically retrieve relevant experiences):
+@APEX implement distributed rate limiter
+  # → Agent retrieves past rate limiter strategies automatically
+  # → Applies learned patterns about token buckets, sliding windows
+  
+@OMNISCIENT analyze memory system performance
+  # → Queries collective memory statistics across all agents
+  # → Reports on breakthrough discoveries and fitness evolution
+
+@VELOCITY analyze MNEMONIC retrieval performance
+  # → Reviews sub-linear algorithm implementations
+  # → Suggests optimizations based on usage patterns
 ```
 
 ---

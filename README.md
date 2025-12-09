@@ -7,7 +7,8 @@ A comprehensive system of specialized AI agents designed to provide expert-level
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Agents: 40](https://img.shields.io/badge/Agents-40-blue.svg)]()
 [![Status: Active](https://img.shields.io/badge/Status-Active-green.svg)]()
-[![Version: 1.0.0](https://img.shields.io/badge/Version-1.0.0-brightgreen.svg)](CHANGELOG.md)
+[![Version: 2.0.0](https://img.shields.io/badge/Version-2.0.0-brightgreen.svg)](CHANGELOG.md)
+[![Memory: MNEMONIC](https://img.shields.io/badge/Memory-MNEMONIC-purple.svg)]()
 [![GitHub Marketplace](https://img.shields.io/badge/Marketplace-Elite%20Agent%20Collective-blue?logo=github)](https://github.com/marketplace/elite-agent-collective)
 
 ---
@@ -227,6 +228,19 @@ elite-agent-collective/
 ├── LICENSE
 ├── .github/
 │   └── copilot-instructions.md      # GitHub Copilot instructions
+├── backend/
+│   ├── internal/
+│   │   ├── agents/                  # Agent registry and handlers
+│   │   ├── auth/                    # OIDC authentication
+│   │   ├── config/                  # Configuration management
+│   │   ├── copilot/                 # Copilot request/response handling
+│   │   └── memory/                  # MNEMONIC memory system
+│   │       ├── experience.go        # ExperienceTuple data structures
+│   │       ├── remem_loop.go        # ReMem-Elite control loop
+│   │       ├── sublinear_retriever.go   # Sub-linear retrieval (Bloom, LSH, HNSW)
+│   │       ├── errors.go            # Memory-specific error types
+│   │       └── sublinear_retriever_test.go   # Tests and benchmarks
+│   └── README.md
 ├── vscode-prompts/
 │   ├── ELITE_AGENT_COLLECTIVE.instructions.md
 │   └── agents/
@@ -289,6 +303,7 @@ elite-agent-collective/
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
 │                        ELITE AGENT COLLECTIVE v2.0                          │
+│                    Powered by MNEMONIC Memory System                        │
 ├─────────────────────────────────────────────────────────────────────────────┤
 │  TIER 1: FOUNDATIONAL    │  TIER 2: SPECIALISTS     │  TIER 3-4: INNOVATORS│
 │  ────────────────────    │  ──────────────────────  │  ───────────────────  │
@@ -317,8 +332,76 @@ elite-agent-collective/
 │  ───────────────────────────────────────────────────────────────────────────│
 │  @AEGIS Compliance  │ @LEDGER Finance │ @PULSE Healthcare │ @ARBITER Merge  │
 │  @ORACLE Analytics                                                           │
+├═════════════════════════════════════════════════════════════════════════════┤
+│                         MNEMONIC MEMORY LAYER                               │
+│  ───────────────────────────────────────────────────────────────────────────│
+│  • Experience Storage & Retrieval (Sub-Linear: O(1) to O(log n))           │
+│  • Cross-Agent Experience Sharing                                           │
+│  • Breakthrough Discovery & Propagation                                     │
+│  • ReMem Control Loop: RETRIEVE → THINK → ACT → REFLECT → EVOLVE           │
+│  • Bloom Filter (O(1)) | LSH Index (O(1)) | HNSW Graph (O(log n))          │
 └─────────────────────────────────────────────────────────────────────────────┘
 ```
+
+---
+
+## 🧠 Memory Architecture
+
+The Elite Agent Collective features **MNEMONIC** (Multi-Agent Neural Experience Memory with Optimized Sub-Linear Inference for Collectives), an advanced memory system that enables agents to accumulate knowledge, share experiences, and self-improve over time.
+
+### ReMem-Elite Control Loop
+
+Every agent invocation runs through a 5-phase control loop:
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                    ReMem-Elite Control Loop                 │
+├─────────────────────────────────────────────────────────────┤
+│  1. RETRIEVE → Sub-linear experience retrieval (O(1-log n)) │
+│  2. THINK    → Augment context with relevant memories       │
+│  3. ACT      → Execute agent with memory-enhanced context   │
+│  4. REFLECT  → Evaluate outcome and update fitness scores   │
+│  5. EVOLVE   → Store new experience and promote discoveries │
+└─────────────────────────────────────────────────────────────┘
+```
+
+### MNEMONIC Sub-Linear Retrieval
+
+The memory system uses three complementary data structures for efficient retrieval:
+
+| Technique | Complexity | Purpose | Trade-off |
+|-----------|------------|---------|-----------|
+| **Bloom Filter** | O(1) | Exact task signature matching | ~1% false positive rate |
+| **LSH Index** | O(1) expected | Approximate nearest neighbor search | Configurable recall/precision |
+| **HNSW Graph** | O(log n) | High-precision semantic search | Memory overhead for graph |
+
+### Memory-Enhanced Capabilities
+
+With MNEMONIC, agents can:
+
+- **Accumulate Strategies**: Learn from every task execution without retraining
+- **Share Cross-Agent Experiences**: Agents within the same tier share successful strategies
+- **Breakthrough Propagation**: Exceptional solutions are promoted to collective memory for all tiers
+- **Self-Improve at Inference**: Each invocation retrieves relevant past experiences to inform current decisions
+- **Fitness-Based Evolution**: Experiences are scored and refined based on real-world outcomes
+
+### ExperienceTuple Structure
+
+Each memory stores:
+- Task input/output and strategy used
+- Success metrics and fitness score
+- Semantic embeddings for similarity search
+- Agent ID, tier, and generation tracking
+- Usage statistics and access patterns
+
+### Implementation Details
+
+The memory system is implemented in `backend/internal/memory/`:
+- **experience.go**: Core data structures for experiences, queries, and results
+- **remem_loop.go**: ReMem control loop orchestration and context augmentation
+- **sublinear_retriever.go**: Combined sub-linear retrieval with Bloom Filter, LSH, and HNSW
+- **errors.go**: Memory-specific error types
+- Comprehensive tests and benchmarks included
 
 ---
 

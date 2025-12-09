@@ -20,6 +20,7 @@ A comprehensive system of specialized AI agents designed to provide expert-level
 | [Quick Start](docs/getting-started/quick-start.md) | Get started in 5 minutes |
 | [Agent Reference](docs/user-guide/agent-reference.md) | All 40 agents detailed |
 | [Best Practices](docs/user-guide/best-practices.md) | Tips for effective usage |
+| [Developer Guide (AGENTS.md)](AGENTS.md) | For GitHub Copilot and contributors |
 | [Contributing](CONTRIBUTING.md) | How to contribute |
 
 ---

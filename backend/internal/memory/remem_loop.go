@@ -753,7 +753,7 @@ func (c *ReMemController) IncrementGeneration(agentID string) {
 }
 
 // GetStats returns memory statistics.
-func (c *ReMemController) GetStats() MemoryStats {
+func (c *ReMemController) GetStats() *MemoryStats {
 	stats := c.retriever.GetStats()
 
 	c.breakthroughMu.RLock()

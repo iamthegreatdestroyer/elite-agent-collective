@@ -15,7 +15,7 @@ The Elite Agent Collective is a comprehensive system of 40 specialized AI agents
 ## Technology Stack
 
 ### Backend (Go)
-- **Language**: Go 1.21+
+- **Language**: Go 1.21 or later (CI uses 1.21, go.mod specifies 1.24.10)
 - **Framework**: Standard library HTTP server with custom middleware
 - **Architecture**: Clean architecture with separation of concerns
 - **Key Packages**:
@@ -73,7 +73,7 @@ elite-agent-collective/
 ### Backend Development
 
 #### Prerequisites
-- Go 1.21 or later
+- Go 1.21 or later (CI tests with 1.21, go.mod has 1.24.10)
 - Docker (optional)
 
 #### Common Commands
@@ -296,7 +296,7 @@ Environment variables:
 ## Troubleshooting
 
 ### Build Issues
-- Ensure Go 1.21+ is installed: `go version`
+- Ensure Go 1.21 or later is installed: `go version`
 - Clean and rebuild: `make clean && make build`
 - Check dependencies: `make deps`
 

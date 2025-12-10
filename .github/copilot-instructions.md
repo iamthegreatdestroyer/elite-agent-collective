@@ -47,7 +47,9 @@ You have access to the ELITE AGENT COLLECTIVE - a system of 40 specialized AI ag
 │  • Cross-Agent Experience Sharing                                           │
 │  • Breakthrough Discovery & Propagation                                     │
 │  • ReMem Control Loop: RETRIEVE → THINK → ACT → REFLECT → EVOLVE           │
-│  • Bloom Filter (O(1)) | LSH Index (O(1)) | HNSW Graph (O(log n))          │
+│  • Core: Bloom (O(1)) | LSH (O(1)) | HNSW (O(log n))                       │
+│  • Phase 1: Count-Min, Cuckoo, PQ, MinHash (4 structures)                  │
+│  • Phase 2: Agent-Aware Collaboration Structures (6 structures)            │
 └─────────────────────────────────────────────────────────────────────────────┘
 ```
 
@@ -784,22 +786,58 @@ Every agent invocation follows a 5-phase memory-augmented execution cycle:
 ┌─────────────────────────────────────────────────────────────┐
 │                    MNEMONIC Memory System                   │
 ├─────────────────────────────────────────────────────────────┤
-│  SUB-LINEAR RETRIEVAL LAYER                                 │
+│  SUB-LINEAR RETRIEVAL LAYER (13 structures total)          │
 │  ─────────────────────────────────────────────────────────  │
+│  CORE RETRIEVAL (original):                                 │
 │  1. Bloom Filter (O(1))                                     │
 │     • Exact task signature matching                         │
 │     • 1% false positive rate, zero false negatives          │
-│     • Instant cache hit detection                           │
 │                                                             │
 │  2. LSH Index (O(1) expected)                               │
 │     • Locality-Sensitive Hashing for approximate NN         │
 │     • 10 hash tables × 12 hash functions                    │
-│     • Cosine similarity via random hyperplane projection    │
 │                                                             │
 │  3. HNSW Graph (O(log n))                                   │
 │     • Hierarchical Navigable Small World semantic search    │
 │     • Multi-layer graph with greedy traversal               │
-│     • Highest precision for complex similarity queries      │
+│                                                             │
+│  PHASE 1: ADVANCED STRUCTURES (advanced_structures.go):     │
+│  4. Count-Min Sketch (O(1)) - 126 ns/op                    │
+│     • Frequency estimation for experience popularity        │
+│                                                             │
+│  5. Cuckoo Filter (O(1)) - 260 ns/op                       │
+│     • Set membership with deletion support                  │
+│                                                             │
+│  6. Product Quantizer (O(centroids)) - 110 μs/op           │
+│     • 192× compression for embeddings                       │
+│                                                             │
+│  7. MinHash + LSH (O(1)) - 176 ns/op                       │
+│     • Fast similarity estimation                            │
+│                                                             │
+│  PHASE 2: AGENT-AWARE (agent_aware_structures.go):         │
+│  8. AgentAffinityGraph (O(1)) - 141 ns/op                  │
+│     • Agent collaboration strength lookup                   │
+│     • Thompson-sampling affinity updates                    │
+│                                                             │
+│  9. TierResonanceFilter (O(tiers)) - 10.2 μs/op            │
+│     • Content-to-tier routing with TF-IDF                   │
+│     • Learning from feedback                                │
+│                                                             │
+│  10. SkillBloomCascade (O(skills)) - 15.6 μs/op            │
+│      • Hierarchical skill→agent matching                    │
+│      • Dynamic skill registration                           │
+│                                                             │
+│  11. TemporalDecaySketch (O(1)) - 1.2 μs/op                │
+│      • Recency-weighted frequency estimation                │
+│      • Exponential decay (λ=0.99)                           │
+│                                                             │
+│  12. CollaborativeAttentionIndex (O(agents)) - 20.8 μs/op  │
+│      • Softmax attention routing across agents              │
+│      • Feedback-driven weight updates                       │
+│                                                             │
+│  13. EmergentInsightDetector (O(1)) - 365 ns/op            │
+│      • Breakthrough discovery via entropy                   │
+│      • HyperLogLog for unique collaborations                │
 ├─────────────────────────────────────────────────────────────┤
 │  EXPERIENCE STORAGE                                         │
 │  ─────────────────────────────────────────────────────────  │
@@ -874,17 +912,22 @@ Exceptional solutions propagate across tiers:
 
 **Location:** `backend/internal/memory/`
 
-**Key Components:**
+**Key Components (~3,500+ lines):**
 - `experience.go`: Data structures (ExperienceTuple, QueryContext, RetrievalResult)
 - `remem_loop.go`: ReMem control loop, context augmentation, fitness computation
-- `sublinear_retriever.go`: Bloom Filter, LSH Index, HNSW Graph implementations
+- `sublinear_retriever.go`: Core retrieval (Bloom Filter, LSH Index, HNSW Graph)
+- `advanced_structures.go`: Phase 1 structures (Count-Min, Cuckoo, PQ, MinHash)
+- `agent_aware_structures.go`: Phase 2 structures (6 agent collaboration designs)
 - `errors.go`: Memory-specific error types
-- `sublinear_retriever_test.go`: Comprehensive tests and benchmarks
+- `*_test.go`: Comprehensive test suite (57 tests passing)
 
 **Performance Characteristics:**
 - Exact match retrieval: O(1) via Bloom Filter
 - Approximate NN retrieval: O(1) expected via LSH
 - Semantic search: O(log n) via HNSW
+- Agent collaboration lookup: O(1) via AgentAffinityGraph (141 ns/op)
+- Breakthrough detection: O(1) via EmergentInsightDetector (365 ns/op)
+- Temporal frequency: O(1) via TemporalDecaySketch (1.2 μs/op)
 - Memory overhead: ~1.2× raw experience size (optimized for 1M+ experiences)
 
 ---

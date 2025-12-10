@@ -33,6 +33,7 @@ ENV/
 *.swp
 *.swo
 *~
+.history/
 
 # Database
 *.db

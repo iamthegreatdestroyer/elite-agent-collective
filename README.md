@@ -15,14 +15,14 @@ A comprehensive system of specialized AI agents designed to provide expert-level
 
 ## 📚 Documentation
 
-| Section | Description |
-|---------|-------------|
-| [Installation Guide](docs/getting-started/installation.md) | How to install and set up |
-| [Quick Start](docs/getting-started/quick-start.md) | Get started in 5 minutes |
-| [Agent Reference](docs/user-guide/agent-reference.md) | All 40 agents detailed |
-| [Best Practices](docs/user-guide/best-practices.md) | Tips for effective usage |
-| [Developer Guide (AGENTS.md)](AGENTS.md) | For GitHub Copilot and contributors |
-| [Contributing](CONTRIBUTING.md) | How to contribute |
+| Section                                                    | Description                         |
+| ---------------------------------------------------------- | ----------------------------------- |
+| [Installation Guide](docs/getting-started/installation.md) | How to install and set up           |
+| [Quick Start](docs/getting-started/quick-start.md)         | Get started in 5 minutes            |
+| [Agent Reference](docs/user-guide/agent-reference.md)      | All 40 agents detailed              |
+| [Best Practices](docs/user-guide/best-practices.md)        | Tips for effective usage            |
+| [Developer Guide (AGENTS.md)](AGENTS.md)                   | For GitHub Copilot and contributors |
+| [Contributing](CONTRIBUTING.md)                            | How to contribute                   |
 
 ---
 
@@ -92,18 +92,21 @@ cp vscode-prompts/agents/*.instructions.md ~/Library/Application\ Support/Code/U
 After copying, verify the files are in place:
 
 **PowerShell:**
+
 ```powershell
 Get-ChildItem "$env:APPDATA\Code\User\prompts\" -Name
 Get-ChildItem "$env:APPDATA\Code\User\prompts\agents\" -Name
 ```
 
 **CMD:**
+
 ```cmd
 dir %APPDATA%\Code\User\prompts\
 dir %APPDATA%\Code\User\prompts\agents\
 ```
 
 **macOS/Linux:**
+
 ```bash
 ls ~/Library/Application\ Support/Code/User/prompts/
 ls ~/Library/Application\ Support/Code/User/prompts/agents/
@@ -157,43 +160,43 @@ You should see 1 file in the `prompts` directory and 40 agent files in the `agen
 
 ### Tier 5: Domain Specialists
 
-| ID  |   Codename   | Specialization                              | Invocation   |
-| :-: | :----------: | :------------------------------------------ | :----------- |
-| 21  |  **ATLAS**   | Cloud Infrastructure & Multi-Cloud          | `@ATLAS`     |
-| 22  |  **FORGE**   | Build Systems & Compilation Pipelines       | `@FORGE`     |
-| 23  | **SENTRY**   | Observability, Logging & Monitoring         | `@SENTRY`    |
-| 24  | **VERTEX**   | Graph Databases & Network Analysis          | `@VERTEX`    |
-| 25  | **STREAM**   | Real-Time Data Processing & Event Streaming | `@STREAM`    |
+| ID  |  Codename  | Specialization                              | Invocation |
+| :-: | :--------: | :------------------------------------------ | :--------- |
+| 21  | **ATLAS**  | Cloud Infrastructure & Multi-Cloud          | `@ATLAS`   |
+| 22  | **FORGE**  | Build Systems & Compilation Pipelines       | `@FORGE`   |
+| 23  | **SENTRY** | Observability, Logging & Monitoring         | `@SENTRY`  |
+| 24  | **VERTEX** | Graph Databases & Network Analysis          | `@VERTEX`  |
+| 25  | **STREAM** | Real-Time Data Processing & Event Streaming | `@STREAM`  |
 
 ### Tier 6: Emerging Tech Specialists
 
-| ID  |   Codename   | Specialization                              | Invocation   |
-| :-: | :----------: | :------------------------------------------ | :----------- |
-| 26  | **PHOTON**   | Edge Computing & IoT Systems                | `@PHOTON`    |
-| 27  | **LATTICE**  | Distributed Consensus & CRDT Systems        | `@LATTICE`   |
-| 28  |  **MORPH**   | Code Migration & Legacy Modernization       | `@MORPH`     |
-| 29  | **PHANTOM**  | Reverse Engineering & Binary Analysis       | `@PHANTOM`   |
-| 30  |  **ORBIT**   | Satellite & Embedded Systems Programming    | `@ORBIT`     |
+| ID  |  Codename   | Specialization                           | Invocation |
+| :-: | :---------: | :--------------------------------------- | :--------- |
+| 26  | **PHOTON**  | Edge Computing & IoT Systems             | `@PHOTON`  |
+| 27  | **LATTICE** | Distributed Consensus & CRDT Systems     | `@LATTICE` |
+| 28  |  **MORPH**  | Code Migration & Legacy Modernization    | `@MORPH`   |
+| 29  | **PHANTOM** | Reverse Engineering & Binary Analysis    | `@PHANTOM` |
+| 30  |  **ORBIT**  | Satellite & Embedded Systems Programming | `@ORBIT`   |
 
 ### Tier 7: Human-Centric Specialists
 
-| ID  |   Codename   | Specialization                              | Invocation   |
-| :-: | :----------: | :------------------------------------------ | :----------- |
-| 31  | **CANVAS**   | UI/UX Design Systems & Accessibility        | `@CANVAS`    |
-| 32  | **LINGUA**   | Natural Language Processing & LLM Fine-Tuning | `@LINGUA`  |
-| 33  | **SCRIBE**   | Technical Documentation & API Docs          | `@SCRIBE`    |
-| 34  | **MENTOR**   | Code Review & Developer Education           | `@MENTOR`    |
-| 35  | **BRIDGE**   | Cross-Platform & Mobile Development         | `@BRIDGE`    |
+| ID  |  Codename  | Specialization                                | Invocation |
+| :-: | :--------: | :-------------------------------------------- | :--------- |
+| 31  | **CANVAS** | UI/UX Design Systems & Accessibility          | `@CANVAS`  |
+| 32  | **LINGUA** | Natural Language Processing & LLM Fine-Tuning | `@LINGUA`  |
+| 33  | **SCRIBE** | Technical Documentation & API Docs            | `@SCRIBE`  |
+| 34  | **MENTOR** | Code Review & Developer Education             | `@MENTOR`  |
+| 35  | **BRIDGE** | Cross-Platform & Mobile Development           | `@BRIDGE`  |
 
 ### Tier 8: Enterprise & Compliance Specialists
 
-| ID  |   Codename   | Specialization                              | Invocation   |
-| :-: | :----------: | :------------------------------------------ | :----------- |
-| 36  |  **AEGIS**   | Compliance, GDPR & SOC2 Automation          | `@AEGIS`     |
-| 37  | **LEDGER**   | Financial Systems & Fintech Engineering     | `@LEDGER`    |
-| 38  |  **PULSE**   | Healthcare IT & HIPAA Compliance            | `@PULSE`     |
-| 39  | **ARBITER**  | Conflict Resolution & Merge Strategies      | `@ARBITER`   |
-| 40  | **ORACLE**   | Predictive Analytics & Forecasting Systems  | `@ORACLE`    |
+| ID  |  Codename   | Specialization                             | Invocation |
+| :-: | :---------: | :----------------------------------------- | :--------- |
+| 36  |  **AEGIS**  | Compliance, GDPR & SOC2 Automation         | `@AEGIS`   |
+| 37  | **LEDGER**  | Financial Systems & Fintech Engineering    | `@LEDGER`  |
+| 38  |  **PULSE**  | Healthcare IT & HIPAA Compliance           | `@PULSE`   |
+| 39  | **ARBITER** | Conflict Resolution & Merge Strategies     | `@ARBITER` |
+| 40  | **ORACLE**  | Predictive Analytics & Forecasting Systems | `@ORACLE`  |
 
 ---
 
@@ -374,31 +377,31 @@ The memory system implements **9 complementary sub-linear data structures** acro
 
 #### Core Retrieval Layer (Original)
 
-| Technique | Complexity | Purpose | Trade-off |
-|-----------|------------|---------|-----------|
-| **Bloom Filter** | O(1) | Exact task signature matching | ~1% false positive rate |
-| **LSH Index** | O(1) expected | Approximate nearest neighbor search | Configurable recall/precision |
-| **HNSW Graph** | O(log n) | High-precision semantic search | Memory overhead for graph |
+| Technique        | Complexity    | Purpose                             | Trade-off                     |
+| ---------------- | ------------- | ----------------------------------- | ----------------------------- |
+| **Bloom Filter** | O(1)          | Exact task signature matching       | ~1% false positive rate       |
+| **LSH Index**    | O(1) expected | Approximate nearest neighbor search | Configurable recall/precision |
+| **HNSW Graph**   | O(log n)      | High-precision semantic search      | Memory overhead for graph     |
 
 #### Phase 1: Advanced Probabilistic Structures
 
-| Structure | Complexity | Purpose | Performance |
-|-----------|------------|---------|-------------|
-| **Count-Min Sketch** | O(1) | Frequency estimation for experience popularity | 126 ns/op, 0.1% error |
-| **Cuckoo Filter** | O(1) | Set membership with deletion support | 260 ns/op, 2% false positive |
-| **Product Quantizer** | O(centroids) | 192× compression for embeddings | 110 μs/op encoding |
-| **MinHash + LSH** | O(1) expected | Fast similarity estimation | 176 ns/op similarity check |
+| Structure             | Complexity    | Purpose                                        | Performance                  |
+| --------------------- | ------------- | ---------------------------------------------- | ---------------------------- |
+| **Count-Min Sketch**  | O(1)          | Frequency estimation for experience popularity | 126 ns/op, 0.1% error        |
+| **Cuckoo Filter**     | O(1)          | Set membership with deletion support           | 260 ns/op, 2% false positive |
+| **Product Quantizer** | O(centroids)  | 192× compression for embeddings                | 110 μs/op encoding           |
+| **MinHash + LSH**     | O(1) expected | Fast similarity estimation                     | 176 ns/op similarity check   |
 
 #### Phase 2: Agent-Aware Collaboration Structures
 
-| Structure | Complexity | Purpose | Performance |
-|-----------|------------|---------|-------------|
-| **AgentAffinityGraph** | O(1) | Agent collaboration strength lookup | **141 ns/op** |
-| **TierResonanceFilter** | O(tiers) | Content-to-tier routing with learned weights | 10.2 μs/op |
-| **SkillBloomCascade** | O(skills) | Hierarchical skill→agent matching | 15.6 μs/op |
-| **TemporalDecaySketch** | O(1) | Recency-weighted frequency estimation | **1.2 μs/op** |
-| **CollaborativeAttentionIndex** | O(agents) | Attention-based query routing | 20.8 μs/op |
-| **EmergentInsightDetector** | O(1) | Breakthrough discovery via entropy | **365 ns/op** |
+| Structure                       | Complexity | Purpose                                      | Performance   |
+| ------------------------------- | ---------- | -------------------------------------------- | ------------- |
+| **AgentAffinityGraph**          | O(1)       | Agent collaboration strength lookup          | **141 ns/op** |
+| **TierResonanceFilter**         | O(tiers)   | Content-to-tier routing with learned weights | 10.2 μs/op    |
+| **SkillBloomCascade**           | O(skills)  | Hierarchical skill→agent matching            | 15.6 μs/op    |
+| **TemporalDecaySketch**         | O(1)       | Recency-weighted frequency estimation        | **1.2 μs/op** |
+| **CollaborativeAttentionIndex** | O(agents)  | Attention-based query routing                | 20.8 μs/op    |
+| **EmergentInsightDetector**     | O(1)       | Breakthrough discovery via entropy           | **365 ns/op** |
 
 ### Memory-Enhanced Capabilities
 
@@ -413,6 +416,7 @@ With MNEMONIC, agents can:
 ### ExperienceTuple Structure
 
 Each memory stores:
+
 - Task input/output and strategy used
 - Success metrics and fitness score
 - Semantic embeddings for similarity search
@@ -422,6 +426,7 @@ Each memory stores:
 ### Implementation Details
 
 The memory system is implemented in `backend/internal/memory/` (~3,500+ lines):
+
 - **experience.go**: Core data structures for experiences, queries, and results
 - **remem_loop.go**: ReMem control loop orchestration and context augmentation
 - **sublinear_retriever.go**: Core retrieval with Bloom Filter, LSH, and HNSW
@@ -436,37 +441,37 @@ The memory system is implemented in `backend/internal/memory/` (~3,500+ lines):
 
 Agents automatically activate based on context:
 
-| Context                   | Primary Agents          |
-| ------------------------- | ----------------------- |
-| Security files/code       | @CIPHER, @FORTRESS      |
-| Architecture discussions  | @ARCHITECT              |
-| Performance issues        | @VELOCITY               |
-| ML/AI code                | @TENSOR, @NEURAL        |
-| DevOps/infrastructure     | @FLUX, @ATLAS           |
-| Testing files             | @ECLIPSE                |
-| API design                | @SYNAPSE                |
-| Research questions        | @VANGUARD               |
-| Novel problems            | @GENESIS, @NEXUS        |
-| Cloud infrastructure      | @ATLAS                  |
-| Build systems             | @FORGE                  |
-| Monitoring/logging        | @SENTRY                 |
-| Graph databases           | @VERTEX                 |
-| Streaming data            | @STREAM                 |
-| IoT/edge computing        | @PHOTON                 |
-| Distributed systems       | @LATTICE                |
-| Code migration            | @MORPH                  |
-| Binary analysis           | @PHANTOM                |
-| Embedded systems          | @ORBIT                  |
-| UI/UX design              | @CANVAS                 |
-| NLP/LLM tasks             | @LINGUA                 |
-| Documentation             | @SCRIBE                 |
-| Code review               | @MENTOR                 |
-| Mobile development        | @BRIDGE                 |
-| Compliance                | @AEGIS                  |
-| Financial systems         | @LEDGER                 |
-| Healthcare IT             | @PULSE                  |
-| Merge conflicts           | @ARBITER                |
-| Predictive analytics      | @ORACLE                 |
+| Context                  | Primary Agents     |
+| ------------------------ | ------------------ |
+| Security files/code      | @CIPHER, @FORTRESS |
+| Architecture discussions | @ARCHITECT         |
+| Performance issues       | @VELOCITY          |
+| ML/AI code               | @TENSOR, @NEURAL   |
+| DevOps/infrastructure    | @FLUX, @ATLAS      |
+| Testing files            | @ECLIPSE           |
+| API design               | @SYNAPSE           |
+| Research questions       | @VANGUARD          |
+| Novel problems           | @GENESIS, @NEXUS   |
+| Cloud infrastructure     | @ATLAS             |
+| Build systems            | @FORGE             |
+| Monitoring/logging       | @SENTRY            |
+| Graph databases          | @VERTEX            |
+| Streaming data           | @STREAM            |
+| IoT/edge computing       | @PHOTON            |
+| Distributed systems      | @LATTICE           |
+| Code migration           | @MORPH             |
+| Binary analysis          | @PHANTOM           |
+| Embedded systems         | @ORBIT             |
+| UI/UX design             | @CANVAS            |
+| NLP/LLM tasks            | @LINGUA            |
+| Documentation            | @SCRIBE            |
+| Code review              | @MENTOR            |
+| Mobile development       | @BRIDGE            |
+| Compliance               | @AEGIS             |
+| Financial systems        | @LEDGER            |
+| Healthcare IT            | @PULSE             |
+| Merge conflicts          | @ARBITER           |
+| Predictive analytics     | @ORACLE            |
 
 ---
 
@@ -481,6 +486,7 @@ MIT License - feel free to use, modify, and distribute.
 Contributions welcome! See our [Contributing Guide](CONTRIBUTING.md) for details.
 
 Ways to contribute:
+
 - Report issues and bugs
 - Suggest new agents
 - Improve documentation

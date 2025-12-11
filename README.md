@@ -13,6 +13,17 @@ A comprehensive system of specialized AI agents designed to provide expert-level
 
 ---
 
+## � GitHub Marketplace
+
+**Elite Agent Collective is available on GitHub Marketplace!**
+
+- **[View on Marketplace](https://github.com/marketplace/elite-agent-collective)**
+- **[Submission Guide](GITHUB_MARKETPLACE_GUIDE.md)** - How we submitted to marketplace
+- **[Deployment Guide](DEPLOYMENT_GUIDE.md)** - Deploy to AWS, Azure, GCP, DigitalOcean, Heroku
+- **[Asset Validation](MARKETPLACE_ASSET_VALIDATION.md)** - Icon, banner, screenshots checklist
+
+---
+
 ## 📚 Documentation
 
 | Section                                                    | Description                         |
@@ -23,6 +34,16 @@ A comprehensive system of specialized AI agents designed to provide expert-level
 | [Best Practices](docs/user-guide/best-practices.md)        | Tips for effective usage            |
 | [Developer Guide (AGENTS.md)](AGENTS.md)                   | For GitHub Copilot and contributors |
 | [Contributing](CONTRIBUTING.md)                            | How to contribute                   |
+
+### 🚀 Deployment & Infrastructure
+
+| Guide                                      | Description                                          |
+| ------------------------------------------ | ---------------------------------------------------- |
+| [Deployment Guide](DEPLOYMENT_GUIDE.md)   | Deploy to Docker, Kubernetes, AWS, Azure, GCP, etc. |
+| [Testing Framework](TESTING_FRAMEWORK.md) | Unit, integration, E2E, and load testing            |
+| [Asset Validation](MARKETPLACE_ASSET_VALIDATION.md) | Validate marketplace assets before submission |
+| [MCP Server Config](MCP_SERVER_CONFIG.md) | Run as Model Context Protocol server                |
+| [Marketplace Guide](GITHUB_MARKETPLACE_GUIDE.md) | Complete submission and launch guide          |
 
 ---
 

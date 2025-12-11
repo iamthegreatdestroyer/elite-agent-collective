@@ -272,20 +272,20 @@ func (l *LSHIndex) Size() int {
 
 // HNSWNode represents a node in the HNSW graph.
 type HNSWNode struct {
-	ID         string
-	Vector     []float32
-	Level      int
-	Neighbors  [][]string // neighbors[level] = list of neighbor IDs
+	ID        string
+	Vector    []float32
+	Level     int
+	Neighbors [][]string // neighbors[level] = list of neighbor IDs
 }
 
 // HNSWGraph implements a Hierarchical Navigable Small World graph for
 // O(log n) approximate nearest neighbor search.
 type HNSWGraph struct {
 	maxLevel       int
-	efConstruction int // Size of dynamic candidate list during construction
-	efSearch       int // Size of dynamic candidate list during search
-	mMax           int // Maximum number of connections per element per layer
-	mMax0          int // Maximum number of connections for layer 0
+	efConstruction int     // Size of dynamic candidate list during construction
+	efSearch       int     // Size of dynamic candidate list during search
+	mMax           int     // Maximum number of connections per element per layer
+	mMax0          int     // Maximum number of connections for layer 0
 	ml             float64 // Level generation factor (1/ln(M))
 	nodes          map[string]*HNSWNode
 	entryPoint     string
@@ -741,12 +741,12 @@ type SubLinearRetriever struct {
 	expMu       sync.RWMutex
 
 	// Secondary indices for efficient filtering
-	agentIndex    map[string][]string // agent_id -> experience_ids
-	tierIndex     map[int][]string    // tier -> experience_ids
-	taskSigIndex  map[string]string   // task_signature -> experience_id (exact match)
-	agentMu       sync.RWMutex
-	tierMu        sync.RWMutex
-	taskSigMu     sync.RWMutex
+	agentIndex   map[string][]string // agent_id -> experience_ids
+	tierIndex    map[int][]string    // tier -> experience_ids
+	taskSigIndex map[string]string   // task_signature -> experience_id (exact match)
+	agentMu      sync.RWMutex
+	tierMu       sync.RWMutex
+	taskSigMu    sync.RWMutex
 
 	// Configuration
 	dimension int
@@ -758,8 +758,8 @@ type SubLinearRetriever struct {
 // NewSubLinearRetriever creates a new sub-linear retriever with the specified embedding dimension.
 func NewSubLinearRetriever(dimension int) *SubLinearRetriever {
 	return &SubLinearRetriever{
-		lsh:          NewLSHIndex(10, 12, dimension),      // 10 tables, 12 hash functions
-		hnsw:         NewHNSWGraph(dimension, 16, 200),    // M=16, efConstruction=200
+		lsh:          NewLSHIndex(10, 12, dimension),       // 10 tables, 12 hash functions
+		hnsw:         NewHNSWGraph(dimension, 16, 200),     // M=16, efConstruction=200
 		bloom:        NewBloomFilterOptimal(1000000, 0.01), // 1M items, 1% FP rate
 		experiences:  make(map[string]*ExperienceTuple),
 		agentIndex:   make(map[string][]string),

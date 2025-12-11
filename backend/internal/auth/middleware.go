@@ -26,7 +26,7 @@ type Middleware struct {
 func NewMiddleware(cfg *config.OIDCConfig) *Middleware {
 	// Enable auth only if OIDC client ID is configured
 	enabled := cfg.ClientID != ""
-	
+
 	return &Middleware{
 		validator: NewOIDCValidator(cfg),
 		enabled:   enabled,

@@ -15,10 +15,10 @@ func TestCountMinSketch_AddAndEstimate(t *testing.T) {
 
 	// Add items with known frequencies
 	items := map[string]int{
-		"strategy_caching":    100,
-		"strategy_parallel":   50,
-		"strategy_recursive":  25,
-		"strategy_iterative":  10,
+		"strategy_caching":   100,
+		"strategy_parallel":  50,
+		"strategy_recursive": 25,
+		"strategy_iterative": 10,
 	}
 
 	for item, count := range items {
@@ -351,7 +351,7 @@ func TestMinHash_ComputeSignature(t *testing.T) {
 	mh := NewMinHash(128)
 
 	tokens1 := []string{"hello", "world", "test"}
-	tokens2 := []string{"hello", "world", "test"} // Same tokens
+	tokens2 := []string{"hello", "world", "test"}    // Same tokens
 	tokens3 := []string{"goodbye", "earth", "check"} // Different tokens
 
 	sig1 := mh.ComputeSignature(tokens1)
@@ -564,7 +564,7 @@ func BenchmarkProductQuantizer_Encode(b *testing.B) {
 	pq := NewProductQuantizerDefault(dimension)
 
 	rng := rand.New(rand.NewSource(42))
-	
+
 	// Generate training data
 	trainingVectors := make([][]float32, 1000)
 	for i := range trainingVectors {
@@ -686,7 +686,7 @@ func TestAdvancedStructures_Integration(t *testing.T) {
 	// This guarantees we find at least one match
 	querySig := mh.ComputeSignatureFromText(strategies[0])
 	candidates := lsh.Query(querySig)
-	
+
 	// With exact query, we should find it
 	found := false
 	for _, c := range candidates {

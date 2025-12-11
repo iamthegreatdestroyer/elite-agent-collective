@@ -20,7 +20,7 @@ func WriteResponse(w http.ResponseWriter, resp *models.CopilotResponse) error {
 func WriteError(w http.ResponseWriter, message string, statusCode int) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(statusCode)
-	
+
 	resp := &models.CopilotResponse{
 		Choices: []models.Choice{
 			{
@@ -190,4 +190,3 @@ func WriteStreamingResponse(w http.ResponseWriter, content string) error {
 	// Write end
 	return sse.WriteEnd()
 }
-

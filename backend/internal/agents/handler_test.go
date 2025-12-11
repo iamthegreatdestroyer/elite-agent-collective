@@ -14,13 +14,13 @@ import (
 func setupTestHandler() (*Handler, *chi.Mux) {
 	registry := DefaultRegistry()
 	handler := NewHandler(registry)
-	
+
 	r := chi.NewRouter()
 	r.Get("/agents", handler.ListAgents)
 	r.Get("/agents/{codename}", handler.GetAgent)
 	r.Post("/agents/{codename}/invoke", handler.InvokeAgent)
 	r.Post("/copilot", handler.CopilotWebhook)
-	
+
 	return handler, r
 }
 

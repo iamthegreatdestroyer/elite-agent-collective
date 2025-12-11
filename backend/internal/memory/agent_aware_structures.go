@@ -328,14 +328,14 @@ func NewTierResonanceFilter() *TierResonanceFilter {
 	// Initialize tier keywords (domain knowledge)
 	f.tierKeywords = [9][]string{
 		{}, // Index 0 unused
-		{"algorithm", "code", "architecture", "security", "performance", "optimization"}, // Tier 1: Foundational
-		{"quantum", "ml", "neural", "blockchain", "devops", "data", "api", "compiler", "bio", "research", "testing"},  // Tier 2: Specialists
-		{"synthesis", "innovation", "cross-domain", "novel", "paradigm"},                   // Tier 3: Innovators
-		{"orchestrate", "collective", "meta", "coordinate", "evolve"},                      // Tier 4: Meta
-		{"cloud", "build", "monitor", "graph", "stream"},                                   // Tier 5: Domain
-		{"edge", "iot", "consensus", "migration", "reverse", "embedded"},                   // Tier 6: Emerging
-		{"ui", "ux", "nlp", "documentation", "education", "mobile"},                        // Tier 7: Human-Centric
-		{"compliance", "finance", "healthcare", "merge", "analytics"},                      // Tier 8: Enterprise
+		{"algorithm", "code", "architecture", "security", "performance", "optimization"},                             // Tier 1: Foundational
+		{"quantum", "ml", "neural", "blockchain", "devops", "data", "api", "compiler", "bio", "research", "testing"}, // Tier 2: Specialists
+		{"synthesis", "innovation", "cross-domain", "novel", "paradigm"},                                             // Tier 3: Innovators
+		{"orchestrate", "collective", "meta", "coordinate", "evolve"},                                                // Tier 4: Meta
+		{"cloud", "build", "monitor", "graph", "stream"},                                                             // Tier 5: Domain
+		{"edge", "iot", "consensus", "migration", "reverse", "embedded"},                                             // Tier 6: Emerging
+		{"ui", "ux", "nlp", "documentation", "education", "mobile"},                                                  // Tier 7: Human-Centric
+		{"compliance", "finance", "healthcare", "merge", "analytics"},                                                // Tier 8: Enterprise
 	}
 
 	// Seed the filters with initial keywords
@@ -460,11 +460,11 @@ type SkillBloomCascade struct {
 
 // SkillFilter is a Bloom filter for an agent's skills.
 type SkillFilter struct {
-	bits     []uint64
-	size     int
-	numHash  int
-	skills   []string
-	agentID  string
+	bits    []uint64
+	size    int
+	numHash int
+	skills  []string
+	agentID string
 }
 
 // NewSkillBloomCascade creates a new skill cascade.
@@ -476,46 +476,46 @@ func NewSkillBloomCascade() *SkillBloomCascade {
 
 	// Initialize with known agent skills
 	agentSkills := map[string][]string{
-		"APEX":      {"algorithm", "code", "system design", "clean code", "patterns", "python", "go", "rust", "java"},
-		"CIPHER":    {"cryptography", "encryption", "security", "tls", "pki", "authentication", "zero-knowledge"},
-		"ARCHITECT": {"architecture", "microservices", "ddd", "cqrs", "scalability", "distributed systems"},
-		"AXIOM":     {"mathematics", "proofs", "complexity", "algorithms", "formal verification", "logic"},
-		"VELOCITY":  {"performance", "optimization", "profiling", "caching", "simd", "concurrency", "sub-linear"},
-		"TENSOR":    {"machine learning", "deep learning", "neural networks", "pytorch", "tensorflow", "mlops"},
-		"QUANTUM":   {"quantum computing", "qiskit", "quantum algorithms", "error correction"},
-		"FORTRESS":  {"penetration testing", "security audit", "red team", "forensics", "incident response"},
-		"NEURAL":    {"agi", "cognitive", "neurosymbolic", "meta-learning", "alignment"},
-		"CRYPTO":    {"blockchain", "smart contracts", "solidity", "defi", "consensus"},
-		"FLUX":      {"devops", "kubernetes", "docker", "terraform", "ci/cd", "gitops"},
-		"PRISM":     {"data science", "statistics", "bayesian", "a/b testing", "visualization"},
-		"SYNAPSE":   {"api design", "rest", "graphql", "grpc", "integration", "kafka"},
-		"CORE":      {"systems", "compiler", "assembly", "kernel", "memory management"},
-		"HELIX":     {"bioinformatics", "genomics", "protein", "alphafold", "drug discovery"},
-		"VANGUARD":  {"research", "literature review", "meta-analysis", "academic writing"},
-		"ECLIPSE":   {"testing", "unit test", "integration test", "fuzzing", "formal methods", "tla+"},
-		"NEXUS":     {"synthesis", "cross-domain", "innovation", "paradigm", "biomimicry"},
-		"GENESIS":   {"first principles", "novel", "invention", "discovery", "zero-to-one"},
+		"APEX":       {"algorithm", "code", "system design", "clean code", "patterns", "python", "go", "rust", "java"},
+		"CIPHER":     {"cryptography", "encryption", "security", "tls", "pki", "authentication", "zero-knowledge"},
+		"ARCHITECT":  {"architecture", "microservices", "ddd", "cqrs", "scalability", "distributed systems"},
+		"AXIOM":      {"mathematics", "proofs", "complexity", "algorithms", "formal verification", "logic"},
+		"VELOCITY":   {"performance", "optimization", "profiling", "caching", "simd", "concurrency", "sub-linear"},
+		"TENSOR":     {"machine learning", "deep learning", "neural networks", "pytorch", "tensorflow", "mlops"},
+		"QUANTUM":    {"quantum computing", "qiskit", "quantum algorithms", "error correction"},
+		"FORTRESS":   {"penetration testing", "security audit", "red team", "forensics", "incident response"},
+		"NEURAL":     {"agi", "cognitive", "neurosymbolic", "meta-learning", "alignment"},
+		"CRYPTO":     {"blockchain", "smart contracts", "solidity", "defi", "consensus"},
+		"FLUX":       {"devops", "kubernetes", "docker", "terraform", "ci/cd", "gitops"},
+		"PRISM":      {"data science", "statistics", "bayesian", "a/b testing", "visualization"},
+		"SYNAPSE":    {"api design", "rest", "graphql", "grpc", "integration", "kafka"},
+		"CORE":       {"systems", "compiler", "assembly", "kernel", "memory management"},
+		"HELIX":      {"bioinformatics", "genomics", "protein", "alphafold", "drug discovery"},
+		"VANGUARD":   {"research", "literature review", "meta-analysis", "academic writing"},
+		"ECLIPSE":    {"testing", "unit test", "integration test", "fuzzing", "formal methods", "tla+"},
+		"NEXUS":      {"synthesis", "cross-domain", "innovation", "paradigm", "biomimicry"},
+		"GENESIS":    {"first principles", "novel", "invention", "discovery", "zero-to-one"},
 		"OMNISCIENT": {"orchestration", "coordination", "collective", "meta-learning", "evolution"},
-		"ATLAS":     {"cloud", "aws", "azure", "gcp", "multi-cloud", "infrastructure"},
-		"FORGE":     {"build systems", "bazel", "cmake", "gradle", "monorepo"},
-		"SENTRY":    {"observability", "monitoring", "logging", "prometheus", "grafana", "tracing"},
-		"VERTEX":    {"graph database", "neo4j", "cypher", "knowledge graph", "network analysis"},
-		"STREAM":    {"streaming", "kafka", "flink", "event sourcing", "real-time"},
-		"PHOTON":    {"edge computing", "iot", "mqtt", "embedded", "tinyml"},
-		"LATTICE":   {"consensus", "crdt", "distributed", "byzantine", "raft", "paxos"},
-		"MORPH":     {"migration", "legacy", "modernization", "refactoring", "monolith"},
-		"PHANTOM":   {"reverse engineering", "binary analysis", "malware", "ghidra", "ida"},
-		"ORBIT":     {"satellite", "rtos", "space", "fault tolerance", "radiation"},
-		"CANVAS":    {"ui", "ux", "design systems", "accessibility", "css", "frontend"},
-		"LINGUA":    {"nlp", "llm", "fine-tuning", "rag", "embeddings", "transformers"},
-		"SCRIBE":    {"documentation", "technical writing", "api docs", "tutorials"},
-		"MENTOR":    {"code review", "education", "teaching", "mentorship", "interview"},
-		"BRIDGE":    {"cross-platform", "mobile", "react native", "flutter", "electron"},
-		"AEGIS":     {"compliance", "gdpr", "soc2", "iso27001", "audit"},
-		"LEDGER":    {"finance", "accounting", "payment", "fintech", "trading"},
-		"PULSE":     {"healthcare", "hipaa", "hl7", "fhir", "medical devices"},
-		"ARBITER":   {"merge", "conflict", "git", "branching", "collaboration"},
-		"ORACLE":    {"analytics", "forecasting", "time series", "prediction", "business intelligence"},
+		"ATLAS":      {"cloud", "aws", "azure", "gcp", "multi-cloud", "infrastructure"},
+		"FORGE":      {"build systems", "bazel", "cmake", "gradle", "monorepo"},
+		"SENTRY":     {"observability", "monitoring", "logging", "prometheus", "grafana", "tracing"},
+		"VERTEX":     {"graph database", "neo4j", "cypher", "knowledge graph", "network analysis"},
+		"STREAM":     {"streaming", "kafka", "flink", "event sourcing", "real-time"},
+		"PHOTON":     {"edge computing", "iot", "mqtt", "embedded", "tinyml"},
+		"LATTICE":    {"consensus", "crdt", "distributed", "byzantine", "raft", "paxos"},
+		"MORPH":      {"migration", "legacy", "modernization", "refactoring", "monolith"},
+		"PHANTOM":    {"reverse engineering", "binary analysis", "malware", "ghidra", "ida"},
+		"ORBIT":      {"satellite", "rtos", "space", "fault tolerance", "radiation"},
+		"CANVAS":     {"ui", "ux", "design systems", "accessibility", "css", "frontend"},
+		"LINGUA":     {"nlp", "llm", "fine-tuning", "rag", "embeddings", "transformers"},
+		"SCRIBE":     {"documentation", "technical writing", "api docs", "tutorials"},
+		"MENTOR":     {"code review", "education", "teaching", "mentorship", "interview"},
+		"BRIDGE":     {"cross-platform", "mobile", "react native", "flutter", "electron"},
+		"AEGIS":      {"compliance", "gdpr", "soc2", "iso27001", "audit"},
+		"LEDGER":     {"finance", "accounting", "payment", "fintech", "trading"},
+		"PULSE":      {"healthcare", "hipaa", "hl7", "fhir", "medical devices"},
+		"ARBITER":    {"merge", "conflict", "git", "branching", "collaboration"},
+		"ORACLE":     {"analytics", "forecasting", "time series", "prediction", "business intelligence"},
 	}
 
 	for agent, skills := range agentSkills {
@@ -796,16 +796,16 @@ func NewCollaborativeAttentionIndex() *CollaborativeAttentionIndex {
 
 	// Initialize pattern categories
 	idx.patternCategories = map[string][]string{
-		"coding":       {"implement", "code", "function", "class", "algorithm", "fix", "debug"},
-		"architecture": {"design", "system", "architecture", "scale", "microservice", "pattern"},
-		"security":     {"secure", "encrypt", "vulnerability", "authentication", "audit"},
-		"performance":  {"optimize", "performance", "fast", "efficient", "cache", "benchmark"},
-		"ml":           {"model", "train", "neural", "learning", "predict", "classify"},
-		"data":         {"data", "analyze", "statistics", "query", "database", "sql"},
-		"devops":       {"deploy", "kubernetes", "docker", "ci/cd", "infrastructure"},
-		"testing":      {"test", "verify", "assert", "coverage", "unit", "integration"},
+		"coding":        {"implement", "code", "function", "class", "algorithm", "fix", "debug"},
+		"architecture":  {"design", "system", "architecture", "scale", "microservice", "pattern"},
+		"security":      {"secure", "encrypt", "vulnerability", "authentication", "audit"},
+		"performance":   {"optimize", "performance", "fast", "efficient", "cache", "benchmark"},
+		"ml":            {"model", "train", "neural", "learning", "predict", "classify"},
+		"data":          {"data", "analyze", "statistics", "query", "database", "sql"},
+		"devops":        {"deploy", "kubernetes", "docker", "ci/cd", "infrastructure"},
+		"testing":       {"test", "verify", "assert", "coverage", "unit", "integration"},
 		"documentation": {"document", "explain", "write", "tutorial", "readme"},
-		"research":     {"research", "paper", "literature", "survey", "study"},
+		"research":      {"research", "paper", "literature", "survey", "study"},
 	}
 
 	// Initialize attention weights uniformly
@@ -1003,11 +1003,11 @@ type OutcomeDistribution struct {
 
 // SurpriseEvent records an unexpectedly successful outcome.
 type SurpriseEvent struct {
-	Agents       []string
-	TaskType     string
+	Agents        []string
+	TaskType      string
 	SurpriseScore float64
-	Timestamp    time.Time
-	Strategy     string
+	Timestamp     time.Time
+	Strategy      string
 }
 
 // NewEmergentInsightDetector creates a new insight detector.
@@ -1114,7 +1114,7 @@ func (d *EmergentInsightDetector) GetUnexpectedPairs(minSamples int) []Unexpecte
 		if dist.TotalCount >= minSamples {
 			// Check if success rate is surprisingly high
 			observedRate := float64(dist.SuccessCount) / float64(dist.TotalCount)
-			expectedRate := 0.5 // Prior expectation
+			expectedRate := 0.5                  // Prior expectation
 			if observedRate > expectedRate+0.2 { // 20% higher than expected
 				parts := strings.Split(key, ":")
 				agents := strings.Split(parts[0], "+")
@@ -1123,10 +1123,10 @@ func (d *EmergentInsightDetector) GetUnexpectedPairs(minSamples int) []Unexpecte
 					taskType = parts[1]
 				}
 				pairs = append(pairs, UnexpectedPair{
-					Agents:       agents,
-					TaskType:     taskType,
-					SuccessRate:  observedRate,
-					SampleCount:  dist.TotalCount,
+					Agents:      agents,
+					TaskType:    taskType,
+					SuccessRate: observedRate,
+					SampleCount: dist.TotalCount,
 				})
 			}
 		}

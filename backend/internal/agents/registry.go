@@ -92,9 +92,13 @@ func (r *Registry) Count() int {
 }
 
 // DefaultRegistry creates a registry with all 40 agents registered.
+// It attempts to load from .github/agents/ first, falling back to hardcoded definitions.
 func DefaultRegistry() *Registry {
 	registry := NewRegistry()
-	RegisterAllAgents(registry)
+	if err := RegisterAllAgents(registry); err != nil {
+		// Log error but don't panic - we may have loaded agents via fallback
+		fmt.Fprintf(os.Stderr, "Warning: RegisterAllAgents returned error: %v\n", err)
+	}
 	return registry
 }
 

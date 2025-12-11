@@ -169,9 +169,9 @@ func extractKeyInsight(exp *ExperienceTuple) string {
 
 // MemoryUpdater handles updating memory after execution.
 type MemoryUpdater struct {
-	retriever   *SubLinearRetriever
-	evaluator   *OutcomeEvaluator
-	mu          sync.Mutex
+	retriever *SubLinearRetriever
+	evaluator *OutcomeEvaluator
+	mu        sync.Mutex
 }
 
 // NewMemoryUpdater creates a new memory updater.
@@ -432,7 +432,7 @@ type ReMemController struct {
 	agentTiers map[string]int // agent_id -> tier_id
 
 	// Breakthrough tracking
-	breakthroughs []*Breakthrough
+	breakthroughs  []*Breakthrough
 	breakthroughMu sync.RWMutex
 
 	// Evolution tracking
@@ -792,7 +792,7 @@ func (s *NoOpEmbeddingService) Embed(text string) ([]float32, error) {
 	hash := hashString(text)
 	for i := 0; i < s.dimension; i++ {
 		// Use different bits of the hash for each dimension
-		embedding[i] = float32((hash >> (uint(i) % 64)) & 0xFF) / 255.0
+		embedding[i] = float32((hash>>(uint(i)%64))&0xFF) / 255.0
 		hash = hash*6364136223846793005 + 1442695040888963407 // LCG
 	}
 

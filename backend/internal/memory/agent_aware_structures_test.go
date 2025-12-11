@@ -709,10 +709,10 @@ func TestIntegration_CrossTierCollaboration(t *testing.T) {
 
 	// Simulate cross-tier collaborations
 	crossTierPairs := [][2]string{
-		{"APEX", "TENSOR"},      // Tier 1 + Tier 2
-		{"ARCHITECT", "NEXUS"},  // Tier 1 + Tier 3
+		{"APEX", "TENSOR"},         // Tier 1 + Tier 2
+		{"ARCHITECT", "NEXUS"},     // Tier 1 + Tier 3
 		{"VELOCITY", "OMNISCIENT"}, // Tier 1 + Tier 4
-		{"TENSOR", "GENESIS"},   // Tier 2 + Tier 3
+		{"TENSOR", "GENESIS"},      // Tier 2 + Tier 3
 	}
 
 	// Record successful cross-tier collaborations
@@ -749,7 +749,7 @@ func FuzzTierResonanceFilter(f *testing.F) {
 	f.Fuzz(func(t *testing.T, content string) {
 		// Should not panic
 		tiers := filter.FindResonantTiers(content)
-		
+
 		// All tiers should be valid (1-8)
 		for _, tier := range tiers {
 			if tier < 1 || tier > 8 {
@@ -770,7 +770,7 @@ func FuzzSkillBloomCascade(f *testing.F) {
 	f.Fuzz(func(t *testing.T, skill string) {
 		// Should not panic
 		agents := cascade.FindAgentsWithSkills([]string{skill})
-		
+
 		// Should return valid agent names or empty
 		for _, agent := range agents {
 			if agent == "" {

@@ -38,7 +38,7 @@ type CountMinSketch struct {
 func NewCountMinSketch(epsilon, delta float64) *CountMinSketch {
 	width := int(math.Ceil(math.E / epsilon))
 	depth := int(math.Ceil(math.Log(1.0 / delta)))
-	
+
 	if width < 100 {
 		width = 100
 	}
@@ -157,12 +157,12 @@ type fingerprint uint16
 // CuckooFilter provides space-efficient set membership testing with deletion.
 // Unlike Bloom filters, Cuckoo filters support O(1) deletion operations.
 type CuckooFilter struct {
-	buckets     [][]fingerprint
-	numBuckets  int
-	bucketSize  int
-	maxKicks    int
-	count       int
-	mu          sync.RWMutex
+	buckets    [][]fingerprint
+	numBuckets int
+	bucketSize int
+	maxKicks   int
+	count      int
+	mu         sync.RWMutex
 }
 
 // NewCuckooFilter creates a new Cuckoo filter.
@@ -355,10 +355,10 @@ func (c *CuckooFilter) LoadFactor() float64 {
 // ProductQuantizer compresses high-dimensional vectors using codebook-based quantization.
 // Achieves ~32x compression with minimal accuracy loss.
 type ProductQuantizer struct {
-	numSubvectors int         // M: number of subvectors
-	codeSize      int         // K: number of centroids per subvector (usually 256)
-	dimension     int         // D: original vector dimension
-	subDim        int         // D/M: dimension per subvector
+	numSubvectors int           // M: number of subvectors
+	codeSize      int           // K: number of centroids per subvector (usually 256)
+	dimension     int           // D: original vector dimension
+	subDim        int           // D/M: dimension per subvector
 	codebooks     [][][]float32 // M codebooks, each with K centroids of subDim dimensions
 	trained       bool
 	mu            sync.RWMutex
@@ -509,7 +509,7 @@ func (pq *ProductQuantizer) Encode(vector []float32) []uint8 {
 	for m := 0; m < pq.numSubvectors; m++ {
 		startIdx := m * pq.subDim
 		endIdx := startIdx + pq.subDim
-		
+
 		subvector := vector[startIdx:endIdx]
 
 		// Find nearest centroid
@@ -560,7 +560,7 @@ func (pq *ProductQuantizer) AsymmetricDistance(query []float32, codes []uint8) f
 		startIdx := m * pq.subDim
 		subQuery := query[startIdx : startIdx+pq.subDim]
 		code := int(codes[m])
-		
+
 		if code < pq.codeSize {
 			totalDist += pq.l2Distance(subQuery, pq.codebooks[m][code])
 		}
@@ -604,7 +604,7 @@ func (pq *ProductQuantizer) DistanceWithTable(table [][]float32, codes []uint8) 
 
 // CompressionRatio returns the compression ratio achieved.
 func (pq *ProductQuantizer) CompressionRatio() float64 {
-	originalBytes := pq.dimension * 4 // float32 = 4 bytes
+	originalBytes := pq.dimension * 4   // float32 = 4 bytes
 	compressedBytes := pq.numSubvectors // 1 byte per subvector code
 	return float64(originalBytes) / float64(compressedBytes)
 }
@@ -616,9 +616,9 @@ func (pq *ProductQuantizer) CompressionRatio() float64 {
 // MinHash provides space-efficient similarity estimation using min-wise hashing.
 // Used for finding semantically similar strategies without full embedding comparison.
 type MinHash struct {
-	numHashes   int
-	hashSeeds   []uint64
-	mu          sync.RWMutex
+	numHashes int
+	hashSeeds []uint64
+	mu        sync.RWMutex
 }
 
 // MinHashSignature is a compact representation for similarity comparison.
@@ -690,7 +690,7 @@ func (m *MinHash) ComputeSignatureFromText(text string) MinHashSignature {
 func tokenize(text string) []string {
 	words := make([]string, 0)
 	current := make([]byte, 0, 32)
-	
+
 	for i := 0; i < len(text); i++ {
 		c := text[i]
 		if (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9') {
@@ -703,11 +703,11 @@ func tokenize(text string) []string {
 			current = current[:0]
 		}
 	}
-	
+
 	if len(current) > 0 {
 		words = append(words, string(current))
 	}
-	
+
 	return words
 }
 
@@ -748,10 +748,10 @@ func (m *MinHash) FindSimilar(query MinHashSignature, candidates map[string]MinH
 // MinHashLSH provides locality-sensitive hashing for MinHash signatures.
 // Splits signature into bands and hashes each band for fast candidate retrieval.
 type MinHashLSH struct {
-	numBands  int
+	numBands    int
 	rowsPerBand int
-	buckets   []map[uint64][]string // One hash table per band
-	mu        sync.RWMutex
+	buckets     []map[uint64][]string // One hash table per band
+	mu          sync.RWMutex
 }
 
 // NewMinHashLSH creates an LSH index for MinHash signatures.

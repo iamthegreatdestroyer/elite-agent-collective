@@ -2,11 +2,16 @@
 package agents
 
 import (
+	"log"
+	"os"
+	"path/filepath"
+
 	"github.com/iamthegreatdestroyer/elite-agent-collective/backend/internal/agents/handlers"
 	"github.com/iamthegreatdestroyer/elite-agent-collective/backend/pkg/models"
 )
 
-// AllAgentDefinitions contains metadata for all 40 agents.
+// AllAgentDefinitions is deprecated. Use LoadAllAgentsFromDirectory() instead.
+// This is kept for backward compatibility during migration.
 var AllAgentDefinitions = []models.Agent{
 	// Tier 1: Foundational Agents
 	{ID: "01", Codename: "APEX", Tier: 1, Specialty: "Elite Computer Science Engineering", Philosophy: "Every problem has an elegant solution waiting to be discovered.", Directives: []string{"Deliver production-grade, enterprise-quality code", "Apply computer science fundamentals at the deepest level", "Anticipate edge cases before they manifest", "Optimize for both performance and maintainability", "Evolve continuously through pattern recognition"}},
@@ -66,16 +71,91 @@ var AllAgentDefinitions = []models.Agent{
 }
 
 // RegisterAllAgents registers all 40 agents in the registry.
-func RegisterAllAgents(registry *Registry) {
+// It attempts to load agents from .github/agents/ directory first.
+// If loading fails or directory doesn't exist, it falls back to AllAgentDefinitions.
+func RegisterAllAgents(registry *Registry) error {
+	// Try to load agents from distributed .agent.md files
+	agentsDir := findAgentsDirectory()
+	if agentsDir != "" {
+		loadedAgents, err := LoadAllAgentsFromDirectory(agentsDir)
+		if err == nil && len(loadedAgents) > 0 {
+			log.Printf("Loaded %d agents from %s", len(loadedAgents), agentsDir)
+			return registerAgentsFromDirectory(registry, loadedAgents)
+		}
+		if err != nil {
+			log.Printf("Warning: Failed to load agents from directory: %v. Falling back to hardcoded definitions.", err)
+		}
+	}
+
+	// Fallback to hardcoded definitions
+	log.Println("Using hardcoded agent definitions (migration to .agent.md files recommended)")
+	return registerAgentsFromDefinitions(registry, AllAgentDefinitions)
+}
+
+// findAgentsDirectory attempts to locate the .github/agents directory
+func findAgentsDirectory() string {
+	// Try multiple possible paths
+	possiblePaths := []string{
+		"../.github/agents",
+		"../../.github/agents",
+		"../../../.github/agents",
+		"./.github/agents",
+		"/app/.github/agents", // Docker path
+		filepath.Join(os.Getenv("HOME"), "elite-agent-collective-1/.github/agents"),
+	}
+
+	for _, path := range possiblePaths {
+		if info, err := os.Stat(path); err == nil && info.IsDir() {
+			absPath, err := filepath.Abs(path)
+			if err == nil {
+				return absPath
+			}
+			return path
+		}
+	}
+
+	return ""
+}
+
+// registerAgentsFromDirectory registers agents loaded from .agent.md files
+func registerAgentsFromDirectory(registry *Registry, agents []models.Agent) error {
+	// Register APEX with custom handler if present
+	var apexAgent *models.Agent
+	for i := range agents {
+		if agents[i].Codename == "APEX" {
+			apexAgent = &agents[i]
+			break
+		}
+	}
+
+	if apexAgent != nil {
+		registry.Register(handlers.NewApexAgent())
+	}
+
+	// Register all other agents with base handlers
+	for _, agent := range agents {
+		if agent.Codename == "APEX" {
+			continue // Already registered with custom handler
+		}
+		registry.Register(handlers.NewBaseAgent(agent))
+	}
+
+	return nil
+}
+
+// registerAgentsFromDefinitions registers agents from the hardcoded AllAgentDefinitions
+func registerAgentsFromDefinitions(registry *Registry, agents []models.Agent) error {
 	// Register APEX with its custom handler
 	registry.Register(handlers.NewApexAgent())
-	
+
 	// Register all other agents with base handlers
-	for _, agentDef := range AllAgentDefinitions {
+	for _, agentDef := range agents {
 		// Skip APEX as it's already registered with its custom handler
 		if agentDef.Codename == "APEX" {
 			continue
 		}
 		registry.Register(handlers.NewBaseAgent(agentDef))
 	}
+
+	return nil
 }

@@ -30,7 +30,7 @@ func (a *BaseAgent) GetInfo() models.Agent {
 // Handle processes a Copilot request using the base implementation.
 func (a *BaseAgent) Handle(ctx context.Context, req *models.CopilotRequest) (*models.CopilotResponse, error) {
 	userMessage := copilot.GetLastUserMessage(req)
-	
+
 	response := fmt.Sprintf(`As %s, the %s Specialist, I'll help you with: %s
 
 My philosophy: %s
@@ -38,13 +38,13 @@ My philosophy: %s
 I'm ready to assist you with my expertise. Here are my core directives:
 %s
 
-How can I help you today?`, 
+How can I help you today?`,
 		a.info.Codename,
 		a.info.Specialty,
 		userMessage,
 		a.info.Philosophy,
 		formatDirectives(a.info.Directives))
-	
+
 	return copilot.NewResponse(response), nil
 }
 

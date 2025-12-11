@@ -20,10 +20,10 @@ func NewApexAgent() *ApexAgent {
 // GetInfo returns APEX agent metadata.
 func (a *ApexAgent) GetInfo() models.Agent {
 	return models.Agent{
-		ID:        "01",
-		Codename:  "APEX",
-		Tier:      1,
-		Specialty: "Elite Computer Science Engineering",
+		ID:         "01",
+		Codename:   "APEX",
+		Tier:       1,
+		Specialty:  "Elite Computer Science Engineering",
 		Philosophy: "Every problem has an elegant solution waiting to be discovered.",
 		Directives: []string{
 			"Deliver production-grade, enterprise-quality code",
@@ -38,7 +38,7 @@ func (a *ApexAgent) GetInfo() models.Agent {
 // Handle processes a Copilot request using APEX's methodology.
 func (a *ApexAgent) Handle(ctx context.Context, req *models.CopilotRequest) (*models.CopilotResponse, error) {
 	userMessage := copilot.GetLastUserMessage(req)
-	
+
 	response := fmt.Sprintf(`As APEX, the Elite Computer Science Engineering Specialist, I'll help you with: %s
 
 My approach follows these principles:

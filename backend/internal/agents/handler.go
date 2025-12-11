@@ -32,7 +32,7 @@ func NewHandler(registry *Registry) *Handler {
 // ListAgents handles GET /agents - returns all registered agents.
 func (h *Handler) ListAgents(w http.ResponseWriter, r *http.Request) {
 	agents := h.registry.List()
-	
+
 	w.Header().Set("Content-Type", "application/json")
 	if err := json.NewEncoder(w).Encode(agents); err != nil {
 		log.Printf("Error encoding agents list: %v", err)
@@ -44,13 +44,13 @@ func (h *Handler) ListAgents(w http.ResponseWriter, r *http.Request) {
 // GetAgent handles GET /agents/{codename} - returns a specific agent's info.
 func (h *Handler) GetAgent(w http.ResponseWriter, r *http.Request) {
 	codename := chi.URLParam(r, "codename")
-	
+
 	agent, err := h.registry.Get(codename)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusNotFound)
 		return
 	}
-	
+
 	w.Header().Set("Content-Type", "application/json")
 	if err := json.NewEncoder(w).Encode(agent.GetInfo()); err != nil {
 		log.Printf("Error encoding agent info: %v", err)
@@ -62,22 +62,22 @@ func (h *Handler) GetAgent(w http.ResponseWriter, r *http.Request) {
 // InvokeAgent handles POST /agents/{codename}/invoke - invokes a specific agent.
 func (h *Handler) InvokeAgent(w http.ResponseWriter, r *http.Request) {
 	codename := chi.URLParam(r, "codename")
-	
+
 	agent, err := h.registry.Get(codename)
 	if err != nil {
 		copilot.WriteError(w, err.Error(), http.StatusNotFound)
 		return
 	}
-	
+
 	req, err := copilot.ParseRequest(r)
 	if err != nil {
 		log.Printf("Error parsing request: %v", err)
 		copilot.WriteError(w, "Invalid request format", http.StatusBadRequest)
 		return
 	}
-	
+
 	log.Printf("Invoking agent %s with %d messages", codename, len(req.Messages))
-	
+
 	resp, err := agent.Handle(r.Context(), req)
 	if err != nil {
 		log.Printf("Error handling request: %v", err)
@@ -92,7 +92,7 @@ func (h *Handler) InvokeAgent(w http.ResponseWriter, r *http.Request) {
 		}
 		return
 	}
-	
+
 	if err := copilot.WriteResponse(w, resp); err != nil {
 		log.Printf("Error writing response: %v", err)
 	}
@@ -108,28 +108,28 @@ func (h *Handler) CopilotWebhook(w http.ResponseWriter, r *http.Request) {
 		copilot.WriteError(w, "Invalid request format", http.StatusBadRequest)
 		return
 	}
-	
+
 	// Get the last user message
 	userMessage := copilot.GetLastUserMessage(req)
 	if userMessage == "" {
 		copilot.WriteError(w, "No user message found", http.StatusBadRequest)
 		return
 	}
-	
+
 	// Extract all agent codenames from the message (supports multi-agent collaboration)
 	codenames := extractAllAgentCodenames(userMessage)
-	
+
 	// If no agents specified, default to APEX
 	if len(codenames) == 0 {
 		codenames = []string{"APEX"}
 	}
-	
+
 	// Handle multi-agent collaboration
 	if len(codenames) > 1 {
 		h.handleMultiAgentRequest(w, r, req, codenames)
 		return
 	}
-	
+
 	// Single agent invocation
 	codename := codenames[0]
 	agent, err := h.registry.Get(codename)
@@ -138,9 +138,9 @@ func (h *Handler) CopilotWebhook(w http.ResponseWriter, r *http.Request) {
 		agent, _ = h.registry.Get("APEX")
 		codename = "APEX"
 	}
-	
+
 	log.Printf("Copilot webhook: routing to agent %s", codename)
-	
+
 	resp, err := agent.Handle(r.Context(), req)
 	if err != nil {
 		log.Printf("Error handling Copilot request: %v", err)
@@ -155,7 +155,7 @@ func (h *Handler) CopilotWebhook(w http.ResponseWriter, r *http.Request) {
 		}
 		return
 	}
-	
+
 	if err := copilot.WriteResponse(w, resp); err != nil {
 		log.Printf("Error writing Copilot response: %v", err)
 	}
@@ -166,11 +166,11 @@ func (h *Handler) CopilotWebhook(w http.ResponseWriter, r *http.Request) {
 // If some agents are unavailable, they are skipped and noted in the response.
 func (h *Handler) handleMultiAgentRequest(w http.ResponseWriter, r *http.Request, req *models.CopilotRequest, codenames []string) {
 	log.Printf("Copilot webhook: multi-agent collaboration with agents: %v", codenames)
-	
+
 	var responses []string
 	var validAgents []string
 	var skippedAgents []string
-	
+
 	for _, codename := range codenames {
 		agent, err := h.registry.Get(codename)
 		if err != nil {
@@ -178,43 +178,43 @@ func (h *Handler) handleMultiAgentRequest(w http.ResponseWriter, r *http.Request
 			skippedAgents = append(skippedAgents, codename)
 			continue
 		}
-		
+
 		resp, err := agent.Handle(r.Context(), req)
 		if err != nil {
 			log.Printf("Error from agent %s: %v", codename, err)
 			skippedAgents = append(skippedAgents, codename)
 			continue
 		}
-		
+
 		if len(resp.Choices) > 0 {
 			responses = append(responses, resp.Choices[0].Message.Content)
 			validAgents = append(validAgents, codename)
 		}
 	}
-	
+
 	if len(responses) == 0 {
 		copilot.WriteError(w, "No valid agents could process the request", http.StatusInternalServerError)
 		return
 	}
-	
+
 	// Combine responses with clear separation
 	var combinedContent strings.Builder
 	combinedContent.WriteString(fmt.Sprintf("## Multi-Agent Collaboration: %s\n\n", strings.Join(validAgents, " + ")))
-	
+
 	// Note any skipped agents
 	if len(skippedAgents) > 0 {
 		combinedContent.WriteString(fmt.Sprintf("*Note: The following requested agents were unavailable: %s*\n\n", strings.Join(skippedAgents, ", ")))
 	}
-	
+
 	for i, content := range responses {
 		if i > 0 {
 			combinedContent.WriteString("\n---\n\n")
 		}
 		combinedContent.WriteString(content)
 	}
-	
+
 	combinedResp := copilot.NewResponse(combinedContent.String())
-	
+
 	// Support streaming responses if requested
 	if req.Stream {
 		if err := copilot.WriteStreamingResponse(w, combinedContent.String()); err != nil {
@@ -222,7 +222,7 @@ func (h *Handler) handleMultiAgentRequest(w http.ResponseWriter, r *http.Request
 		}
 		return
 	}
-	
+
 	if err := copilot.WriteResponse(w, combinedResp); err != nil {
 		log.Printf("Error writing multi-agent response: %v", err)
 	}
@@ -246,10 +246,10 @@ func extractAllAgentCodenames(message string) []string {
 	if len(matches) == 0 {
 		return nil
 	}
-	
+
 	seen := make(map[string]bool)
 	var codenames []string
-	
+
 	for _, match := range matches {
 		if len(match) >= 2 {
 			codename := strings.ToUpper(match[1])
@@ -259,6 +259,6 @@ func extractAllAgentCodenames(message string) []string {
 			}
 		}
 	}
-	
+
 	return codenames
 }

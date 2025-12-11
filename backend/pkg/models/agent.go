@@ -5,12 +5,18 @@ import "context"
 
 // Agent represents a single agent in the Elite Agent Collective.
 type Agent struct {
-	ID          string   `json:"id"`
-	Codename    string   `json:"codename"`
-	Tier        int      `json:"tier"`
-	Specialty   string   `json:"specialty"`
-	Philosophy  string   `json:"philosophy"`
-	Directives  []string `json:"directives"`
+	ID            string   `json:"id"`
+	Codename      string   `json:"codename"`
+	Tier          int      `json:"tier"`
+	Name          string   `json:"name"`
+	Specialty     string   `json:"specialty"`
+	Philosophy    string   `json:"philosophy"`
+	Directives    []string `json:"directives"`
+	Keywords      []string `json:"keywords"`
+	Examples      []string `json:"examples"`
+	Collaborators []string `json:"collaborators"`
+	Category      string   `json:"category"`
+	MarkdownPath  string   `json:"-"` // Internal: path to .agent.md file
 }
 
 // CopilotRequest represents a request from GitHub Copilot.

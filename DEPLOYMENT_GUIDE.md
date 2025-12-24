@@ -5,18 +5,21 @@ Complete guide for deploying the Elite Agent Collective to various platforms.
 ## 📋 Deployment Options
 
 ### Local Development
+
 - **Platform**: Windows/macOS/Linux
 - **Setup Time**: 5-10 minutes
 - **Cost**: Free
 - **Best For**: Development, testing, learning
 
 ### Docker (Local)
+
 - **Platform**: Any (with Docker installed)
 - **Setup Time**: 10-15 minutes
 - **Cost**: Free
 - **Best For**: Consistent environments, team development
 
 ### Cloud Platforms
+
 - **AWS (EC2, ECS, Fargate)**
 - **Azure (App Service, Container Instances)**
 - **Google Cloud (Cloud Run, Compute Engine)**
@@ -26,6 +29,7 @@ Complete guide for deploying the Elite Agent Collective to various platforms.
 ## 🏠 Local Development Setup
 
 ### Prerequisites
+
 - Go 1.21 or later
 - Git
 - VS Code (optional)
@@ -88,6 +92,7 @@ curl -X POST http://localhost:8080/agent \
 ## 🐳 Docker Deployment
 
 ### Prerequisites
+
 - Docker 20.10+
 - Docker Compose 1.29+ (optional)
 
@@ -126,7 +131,7 @@ docker-compose down
 **docker-compose.yml** (already exists in `backend/`):
 
 ```yaml
-version: '3.8'
+version: "3.8"
 
 services:
   elite-agents:
@@ -526,10 +531,10 @@ global:
   scrape_interval: 15s
 
 scrape_configs:
-  - job_name: 'elite-agents'
+  - job_name: "elite-agents"
     static_configs:
-      - targets: ['localhost:8080']
-    metrics_path: '/metrics'
+      - targets: ["localhost:8080"]
+    metrics_path: "/metrics"
 ```
 
 ### Grafana Dashboards
@@ -552,7 +557,7 @@ groups:
       - alert: HighErrorRate
         expr: rate(elite_http_errors_total[5m]) > 0.01
         for: 5m
-        
+
       - alert: HighLatency
         expr: histogram_quantile(0.99, elite_http_request_duration_seconds) > 5
         for: 5m
@@ -563,6 +568,7 @@ groups:
 ### Kubernetes Deployment
 
 See [backend/k8s/deployment.yaml](../backend/k8s/deployment.yaml) for:
+
 - Deployment manifests
 - Service configuration
 - ConfigMap for configuration

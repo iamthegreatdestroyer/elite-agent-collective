@@ -1,0 +1,124 @@
+# Git and VCS
+.git
+.gitignore
+.gitattributes
+.github
+
+# Build artifacts
+/build
+/bin
+/dist
+*.o
+*.so
+*.dylib
+*.exe
+
+# IDE and editor files
+.vscode
+.idea
+*.swp
+*.swo
+*~
+.DS_Store
+.project
+.classpath
+*.sublime-project
+*.sublime-workspace
+*.code-workspace
+
+# Dependencies
+vendor/
+node_modules/
+.bundle/
+Gemfile.lock
+package-lock.json
+yarn.lock
+go.sum
+
+# Test files and coverage
+*_test.go
+*.test
+coverage.out
+coverage.html
+*.cover
+.coverprofile
+
+# Documentation
+docs/
+README.md
+CHANGELOG.md
+LICENSE
+*.md
+
+# Docker build cache
+.dockerignore
+Dockerfile
+docker-compose.yml
+docker-compose.*.yml
+
+# Environment files
+.env
+.env.local
+.env.*.local
+.envrc
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+*.log
+
+# OS files
+.DS_Store
+Thumbs.db
+.AppleDouble
+.LSOverride
+
+# CI/CD
+.github/
+.gitlab-ci.yml
+.travis.yml
+Jenkinsfile
+
+# Kubernetes and infrastructure
+infrastructure/
+kubernetes/
+helm/
+k8s/
+
+# Cloud provider configs
+*.tf
+*.tfstate
+*.tfvars
+*.bicep
+
+# Monitoring and logging configs
+prometheus/
+grafana/
+jaeger/
+elk/
+
+# Development directories
+dev/
+local/
+scripts/
+
+# Large files
+*.tar.gz
+*.zip
+*.rar
+
+# Python
+__pycache__/
+*.py
+*.pyc
+.pytest_cache/
+venv/
+.venv/
+
+# Security
+*.pem
+*.key
+*.crt
+*.p12
+*.pfx

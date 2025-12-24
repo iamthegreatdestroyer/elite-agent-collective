@@ -1,0 +1,170 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: elite-agent-api
+  namespace: default
+  labels:
+    app: elite-agent-api
+    component: backend
+  annotations:
+    description: "Elite Agent Collective Backend API Service"
+    prometheus.io/scrape: "true"
+    prometheus.io/port: "8081"
+    prometheus.io/path: "/metrics"
+
+spec:
+  type: ClusterIP
+
+  selector:
+    app: elite-agent-api
+    component: backend
+
+  sessionAffinity: ClientIP
+  sessionAffinityConfig:
+    clientIP:
+      timeoutSeconds: 10800 # 3 hours
+
+  ports:
+    - name: http
+      port: 80
+      targetPort: http
+      protocol: TCP
+    - name: https
+      port: 443
+      targetPort: http
+      protocol: TCP
+    - name: metrics
+      port: 8081
+      targetPort: metrics
+      protocol: TCP
+
+  # DNS policy
+  publishNotReadyAddresses: false
+
+  # IP families
+  ipFamilies:
+    - IPv4
+  ipFamilyPolicy: SingleStack
+
+---
+# ServiceAccount for RBAC
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: elite-agent-api
+  namespace: default
+  labels:
+    app: elite-agent-api
+    component: backend
+
+---
+# ClusterRole for permissions
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: elite-agent-api
+  labels:
+    app: elite-agent-api
+    component: backend
+
+rules:
+  # Read configmaps and secrets (for env vars)
+  - apiGroups: [""]
+    resources: ["configmaps", "secrets"]
+    verbs: ["get", "list", "watch"]
+
+  # Read pod information
+  - apiGroups: [""]
+    resources: ["pods"]
+    verbs: ["get", "list", "watch"]
+
+  # Read endpoints for service discovery
+  - apiGroups: [""]
+    resources: ["endpoints"]
+    verbs: ["get", "list", "watch"]
+
+  # Read service information
+  - apiGroups: [""]
+    resources: ["services"]
+    verbs: ["get", "list", "watch"]
+
+---
+# ClusterRoleBinding to associate role with service account
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: elite-agent-api
+  labels:
+    app: elite-agent-api
+    component: backend
+
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: elite-agent-api
+
+subjects:
+  - kind: ServiceAccount
+    name: elite-agent-api
+    namespace: default
+
+---
+# ConfigMap for configuration
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: elite-agent-config
+  namespace: default
+  labels:
+    app: elite-agent-api
+    component: backend
+
+data:
+  log-level: "info"
+  environment: "production"
+  database-name: "elite_agents"
+  metrics-enabled: "true"
+  tracing-enabled: "true"
+  cache-ttl: "3600"
+  max-request-size: "10485760" # 10MB
+
+---
+# Secret for sensitive data
+apiVersion: v1
+kind: Secret
+metadata:
+  name: elite-agent-secrets
+  namespace: default
+  labels:
+    app: elite-agent-api
+    component: backend
+
+type: Opaque
+stringData:
+  db-user: "postgres"
+  db-password: "CHANGE_ME_IN_PRODUCTION"
+  jwt-secret: "CHANGE_ME_IN_PRODUCTION"
+  api-key: "CHANGE_ME_IN_PRODUCTION"
+  encryption-key: "CHANGE_ME_IN_PRODUCTION"
+
+---
+# PodMonitor for Prometheus (if using Prometheus Operator)
+apiVersion: monitoring.coreos.com/v1
+kind: PodMonitor
+metadata:
+  name: elite-agent-api
+  namespace: default
+  labels:
+    app: elite-agent-api
+    prometheus: kube-prometheus
+
+spec:
+  selector:
+    matchLabels:
+      app: elite-agent-api
+      component: backend
+
+  podMetricsEndpoints:
+    - port: metrics
+      interval: 30s
+      path: /metrics

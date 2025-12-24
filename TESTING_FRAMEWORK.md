@@ -73,15 +73,15 @@ func TestAgentRegistry(t *testing.T) {
     for _, tt := range tests {
         t.Run(tt.name, func(t *testing.T) {
             agent := GetAgent(tt.codename)
-            
+
             if tt.shouldExist && agent == nil {
                 t.Errorf("Expected agent %s to exist", tt.codename)
             }
-            
+
             if !tt.shouldExist && agent != nil {
                 t.Errorf("Expected agent %s to not exist", tt.codename)
             }
-            
+
             if agent != nil && agent.Tier != tt.expectedTier {
                 t.Errorf("Expected tier %d, got %d", tt.expectedTier, agent.Tier)
             }
@@ -91,17 +91,17 @@ func TestAgentRegistry(t *testing.T) {
 
 func TestGetAllAgents(t *testing.T) {
     agents := GetAllAgents()
-    
+
     if len(agents) != 40 {
         t.Errorf("Expected 40 agents, got %d", len(agents))
     }
-    
+
     // Verify each tier has correct number of agents
     tierCounts := make(map[int]int)
     for _, agent := range agents {
         tierCounts[agent.Tier]++
     }
-    
+
     expectedCounts := map[int]int{
         1: 5,  // APEX, CIPHER, ARCHITECT, AXIOM, VELOCITY
         2: 12, // Specialists
@@ -112,7 +112,7 @@ func TestGetAllAgents(t *testing.T) {
         7: 5,  // Human-centric
         8: 5,  // Enterprise
     }
-    
+
     for tier, expected := range expectedCounts {
         if tierCounts[tier] != expected {
             t.Errorf("Tier %d: expected %d agents, got %d",
@@ -208,7 +208,7 @@ func TestIntegrationMultiAgentCollaboration(t *testing.T) {
     defer server.Close()
 
     agents := []string{"APEX", "ARCHITECT", "ECLIPSE"}
-    
+
     for _, agent := range agents {
         requestBody := map[string]interface{}{
             "agent": agent,
@@ -265,60 +265,60 @@ Test complete workflows across platforms.
 
 ```typescript
 // tests/e2e/vs-code-extension.test.ts
-import * as vscode from 'vscode';
-import * as assert from 'assert';
+import * as vscode from "vscode";
+import * as assert from "assert";
 
-suite('Elite Agent Collective Extension', () => {
-    suite('Agent Invocation', () => {
-        test('should invoke APEX agent', async () => {
-            const extension = vscode.extensions.getExtension(
-                'elite-agent-collective.elite-agents'
-            );
-            
-            assert.ok(extension, 'Extension should be installed');
-            
-            await extension?.activate();
-            assert.ok(extension?.isActive, 'Extension should be active');
-        });
+suite("Elite Agent Collective Extension", () => {
+  suite("Agent Invocation", () => {
+    test("should invoke APEX agent", async () => {
+      const extension = vscode.extensions.getExtension(
+        "elite-agent-collective.elite-agents"
+      );
 
-        test('should list all 40 agents', async () => {
-            const agents = await vscode.commands.executeCommand(
-                'elite-agents.listAgents'
-            );
-            
-            assert.strictEqual((agents as any[]).length, 40);
-        });
+      assert.ok(extension, "Extension should be installed");
 
-        test('should respond to agent query', async () => {
-            const result = await vscode.commands.executeCommand(
-                'elite-agents.invoke',
-                {
-                    agent: 'APEX',
-                    task: 'implement binary search'
-                }
-            );
-            
-            assert.ok(result, 'Should return response');
-            assert.ok((result as string).length > 0);
-        });
+      await extension?.activate();
+      assert.ok(extension?.isActive, "Extension should be active");
     });
 
-    suite('Multi-Agent Collaboration', () => {
-        test('should coordinate APEX + ARCHITECT', async () => {
-            const apexResponse = await vscode.commands.executeCommand(
-                'elite-agents.invoke',
-                { agent: 'APEX', task: 'design cache' }
-            );
-            
-            const architectResponse = await vscode.commands.executeCommand(
-                'elite-agents.invoke',
-                { agent: 'ARCHITECT', task: 'review design' }
-            );
-            
-            assert.ok(apexResponse);
-            assert.ok(architectResponse);
-        });
+    test("should list all 40 agents", async () => {
+      const agents = await vscode.commands.executeCommand(
+        "elite-agents.listAgents"
+      );
+
+      assert.strictEqual((agents as any[]).length, 40);
     });
+
+    test("should respond to agent query", async () => {
+      const result = await vscode.commands.executeCommand(
+        "elite-agents.invoke",
+        {
+          agent: "APEX",
+          task: "implement binary search",
+        }
+      );
+
+      assert.ok(result, "Should return response");
+      assert.ok((result as string).length > 0);
+    });
+  });
+
+  suite("Multi-Agent Collaboration", () => {
+    test("should coordinate APEX + ARCHITECT", async () => {
+      const apexResponse = await vscode.commands.executeCommand(
+        "elite-agents.invoke",
+        { agent: "APEX", task: "design cache" }
+      );
+
+      const architectResponse = await vscode.commands.executeCommand(
+        "elite-agents.invoke",
+        { agent: "ARCHITECT", task: "review design" }
+      );
+
+      assert.ok(apexResponse);
+      assert.ok(architectResponse);
+    });
+  });
 });
 ```
 
@@ -326,56 +326,56 @@ suite('Elite Agent Collective Extension', () => {
 
 ```javascript
 // tests/e2e/github-web.test.js
-describe('Elite Agents on GitHub.com', () => {
-    beforeEach(async () => {
-        // Navigate to GitHub.com
-        await page.goto('https://github.com');
-        
-        // Open Copilot Chat
-        await page.click('[aria-label="GitHub Copilot"]');
-    });
+describe("Elite Agents on GitHub.com", () => {
+  beforeEach(async () => {
+    // Navigate to GitHub.com
+    await page.goto("https://github.com");
 
-    it('should show agent list in Copilot', async () => {
-        // Type @ to trigger agent menu
-        await page.type('[data-testid="chat-input"]', '@');
-        
-        // Wait for agents dropdown
-        const agents = await page.$$('[data-agent-codename]');
-        
-        expect(agents.length).toBe(40);
-    });
+    // Open Copilot Chat
+    await page.click('[aria-label="GitHub Copilot"]');
+  });
 
-    it('should invoke agent and show response', async () => {
-        // Type agent invocation
-        await page.type(
-            '[data-testid="chat-input"]',
-            '@APEX implement a rate limiter'
-        );
-        
-        // Send message
-        await page.click('[aria-label="Send"]');
-        
-        // Wait for response
-        await page.waitForSelector('[data-message-role="assistant"]');
-        
-        const response = await page.$eval(
-            '[data-message-role="assistant"]',
-            el => el.textContent
-        );
-        
-        expect(response.length).toBeGreaterThan(100);
-    });
+  it("should show agent list in Copilot", async () => {
+    // Type @ to trigger agent menu
+    await page.type('[data-testid="chat-input"]', "@");
 
-    it('should handle multi-agent requests', async () => {
-        const task = '@APEX design cache, @ARCHITECT review, @ECLIPSE test';
-        
-        await page.type('[data-testid="chat-input"]', task);
-        await page.click('[aria-label="Send"]');
-        
-        // Verify all three agents responded
-        const messages = await page.$$('[data-message-role="assistant"]');
-        expect(messages.length).toBeGreaterThanOrEqual(3);
-    });
+    // Wait for agents dropdown
+    const agents = await page.$$("[data-agent-codename]");
+
+    expect(agents.length).toBe(40);
+  });
+
+  it("should invoke agent and show response", async () => {
+    // Type agent invocation
+    await page.type(
+      '[data-testid="chat-input"]',
+      "@APEX implement a rate limiter"
+    );
+
+    // Send message
+    await page.click('[aria-label="Send"]');
+
+    // Wait for response
+    await page.waitForSelector('[data-message-role="assistant"]');
+
+    const response = await page.$eval(
+      '[data-message-role="assistant"]',
+      (el) => el.textContent
+    );
+
+    expect(response.length).toBeGreaterThan(100);
+  });
+
+  it("should handle multi-agent requests", async () => {
+    const task = "@APEX design cache, @ARCHITECT review, @ECLIPSE test";
+
+    await page.type('[data-testid="chat-input"]', task);
+    await page.click('[aria-label="Send"]');
+
+    // Verify all three agents responded
+    const messages = await page.$$('[data-message-role="assistant"]');
+    expect(messages.length).toBeGreaterThanOrEqual(3);
+  });
 });
 ```
 
@@ -395,7 +395,7 @@ public class EliteAgentJetbrainsTest {
     public void testAgentMenuAppears() {
         // Open intention menu
         editor.invokeAction("ShowIntentionActions");
-        
+
         // Agents should appear in menu
         MenuItemFixture agentMenu = editor.findMenuItem("Elite Agents");
         assertThat(agentMenu.isVisible()).isTrue();
@@ -405,10 +405,10 @@ public class EliteAgentJetbrainsTest {
     public void testInvokeAgent() {
         String selectedCode = "public int[] merge(int[] nums) { ... }";
         editor.select(selectedCode);
-        
+
         // Invoke APEX agent
         editor.runAgent("APEX", "Optimize this merge algorithm");
-        
+
         String suggestion = editor.getLastContextMenuAction();
         assertThat(suggestion).contains("time complexity");
     }
@@ -436,40 +436,40 @@ k6 run tests/load/agent-load-test.js
 **k6 Load Test** (`tests/load/agent-load-test.js`):
 
 ```javascript
-import http from 'k6/http';
-import { check } from 'k6';
+import http from "k6/http";
+import { check } from "k6";
 
 export let options = {
-  vus: 100,  // Virtual users
-  duration: '5m',
+  vus: 100, // Virtual users
+  duration: "5m",
   thresholds: {
-    http_req_duration: ['p(95)<500'],  // 95th percentile < 500ms
-    http_req_failed: ['rate<0.01'],     // Error rate < 1%
+    http_req_duration: ["p(95)<500"], // 95th percentile < 500ms
+    http_req_failed: ["rate<0.01"], // Error rate < 1%
   },
 };
 
 export default function () {
-  const agents = ['APEX', 'CIPHER', 'ARCHITECT', 'TENSOR', 'FORTRESS'];
+  const agents = ["APEX", "CIPHER", "ARCHITECT", "TENSOR", "FORTRESS"];
   const agent = agents[Math.floor(Math.random() * agents.length)];
 
   let response = http.post(
     `${__ENV.BASE_URL}/agent`,
     JSON.stringify({
       agent: agent,
-      task: 'analyze this code: function sort(arr) { return arr.sort(); }',
+      task: "analyze this code: function sort(arr) { return arr.sort(); }",
     }),
     {
       headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${__ENV.API_TOKEN}`,
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${__ENV.API_TOKEN}`,
       },
     }
   );
 
   check(response, {
-    'status is 200': (r) => r.status === 200,
-    'response time < 1s': (r) => r.timings.duration < 1000,
-    'has response text': (r) => r.body.length > 0,
+    "status is 200": (r) => r.status === 200,
+    "response time < 1s": (r) => r.timings.duration < 1000,
+    "has response text": (r) => r.body.length > 0,
   });
 }
 ```
@@ -495,7 +495,7 @@ gosec ./...
 ## ✅ Test Coverage Requirements
 
 | Component | Target Coverage |
-|-----------|-----------------|
+| --------- | --------------- |
 | agents/   | 90%+            |
 | auth/     | 95%+            |
 | copilot/  | 85%+            |

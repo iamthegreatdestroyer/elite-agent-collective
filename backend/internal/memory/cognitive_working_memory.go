@@ -105,6 +105,9 @@ const (
 	ContentTypeContext      WorkingMemoryContentType = "context"
 	ContentTypeIntermediate WorkingMemoryContentType = "intermediate"
 	ContentTypeChunk        WorkingMemoryContentType = "chunk"
+	ContentTypeTask         WorkingMemoryContentType = "task"
+	ContentTypeAgent        WorkingMemoryContentType = "agent"
+	ContentTypeGeneral      WorkingMemoryContentType = "general"
 )
 
 // WorkingMemorySource indicates the origin of an item.
@@ -115,6 +118,7 @@ const (
 	SourcePerception  WorkingMemorySource = "perception"  // From input
 	SourceGoal        WorkingMemorySource = "goal"        // From goal stack
 	SourceComputation WorkingMemorySource = "computation" // Generated during processing
+	SourceAttention   WorkingMemorySource = "attention"   // From attention controller
 )
 
 // ============================================================================

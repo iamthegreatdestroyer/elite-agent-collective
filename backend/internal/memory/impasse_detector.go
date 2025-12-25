@@ -17,8 +17,12 @@ import (
 	"fmt"
 	"math"
 	"sync"
+	"sync/atomic"
 	"time"
 )
+
+// impasseIDCounter provides unique IDs for impasses
+var impasseIDCounter uint64
 
 // ============================================================================
 // Impasse Types
@@ -480,7 +484,7 @@ func (d *ImpasseDetector) createImpasse(impasseType ImpasseType, goalID, descrip
 		if impasseType != ImpasseCapacity {
 			// Avoid infinite recursion
 			cap := &Impasse{
-				ID:          fmt.Sprintf("imp-capacity-%d", time.Now().UnixNano()),
+				ID:          fmt.Sprintf("imp-capacity-%d", atomic.AddUint64(&impasseIDCounter, 1)),
 				Type:        ImpasseCapacity,
 				GoalID:      goalID,
 				Description: "too many active impasses",
@@ -499,7 +503,7 @@ func (d *ImpasseDetector) createImpasse(impasseType ImpasseType, goalID, descrip
 	}
 
 	imp := &Impasse{
-		ID:          fmt.Sprintf("imp-%s-%d", impasseType.String(), time.Now().UnixNano()),
+		ID:          fmt.Sprintf("imp-%s-%d", impasseType.String(), atomic.AddUint64(&impasseIDCounter, 1)),
 		Type:        impasseType,
 		GoalID:      goalID,
 		Description: description,

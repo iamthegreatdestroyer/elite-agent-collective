@@ -426,6 +426,8 @@ type ReMemController struct {
 	contextBuilder   *ContextConstructor
 	updater          *MemoryUpdater
 	evaluator        *OutcomeEvaluator
+	impasseDetector  *ImpasseDetector
+	consolidator     *MemoryConsolidator
 	embeddingService EmbeddingService
 
 	// Agent registry for tier lookups
@@ -475,12 +477,17 @@ func NewReMemController(config *ReMemConfig, embeddingService EmbeddingService) 
 	}
 
 	retriever := NewSubLinearRetriever(config.EmbeddingDimension)
+	goalStack := NewGoalStack(DefaultGoalStackConfig()) // Initialize goal stack for impasse resolution
+	impasseDetector := NewImpasseDetector(DefaultImpasseDetectorConfig(), goalStack)
+	consolidator := NewMemoryConsolidator(DefaultConsolidatorConfig())
 
 	return &ReMemController{
 		retriever:         retriever,
 		contextBuilder:    NewContextConstructor(),
 		updater:           NewMemoryUpdater(retriever),
 		evaluator:         NewOutcomeEvaluator(),
+		impasseDetector:   impasseDetector,
+		consolidator:      consolidator,
 		embeddingService:  embeddingService,
 		agentTiers:        initializeAgentTiers(),
 		breakthroughs:     make([]*Breakthrough, 0),
@@ -532,6 +539,32 @@ func (c *ReMemController) ExecuteWithMemory(
 		retrievalResult = &RetrievalResult{Experiences: []*ExperienceTuple{}}
 	}
 
+	// Detect retrieval-based impasses
+	goalID := fmt.Sprintf("goal-%s-%d", agentID, time.Now().UnixNano())
+	if len(retrievalResult.Experiences) == 0 {
+		// No match impasse
+		impasse := c.impasseDetector.DetectNoMatch(goalID, "No relevant experiences found")
+		if impasse != nil {
+			// Attempt to resolve
+			if _, err := c.impasseDetector.Resolve(impasse.ID); err == nil {
+				// Resolution successful - could modify retrieval strategy
+			}
+		}
+	} else if len(retrievalResult.Experiences) >= 2 {
+		// Check for tie
+		scores := make([]float64, len(retrievalResult.Experiences))
+		candidates := make([]string, len(retrievalResult.Experiences))
+		for i, exp := range retrievalResult.Experiences {
+			scores[i] = exp.FitnessScore
+			candidates[i] = exp.AgentID
+		}
+		// Tie detection is handled internally by DetectTie
+		if impasse := c.impasseDetector.DetectTie(goalID, candidates, scores); impasse != nil {
+			// Resolution will select among candidates
+			c.impasseDetector.Resolve(impasse.ID)
+		}
+	}
+
 	// Get tier-shared experiences
 	tierExperiences := c.getTierExperiences(agentID, tierID, queryCtx)
 
@@ -554,6 +587,18 @@ func (c *ReMemController) ExecuteWithMemory(
 	// =========================================================================
 	response, trace, err := executor.Execute(ctx, augmentedCtx)
 	if err != nil {
+		// Detect execution failure impasse
+		goalID := fmt.Sprintf("goal-%s-%d", agentID, time.Now().UnixNano())
+		impasse := c.impasseDetector.DetectFailure(goalID, agentID, err.Error())
+		if impasse != nil {
+			// Attempt to resolve the failure
+			if resolution, resolveErr := c.impasseDetector.Resolve(impasse.ID); resolveErr == nil {
+				if resolution.Success {
+					// Learn from the resolution
+					// Could potentially retry with different strategy
+				}
+			}
+		}
 		return nil, fmt.Errorf("agent execution failed: %w", err)
 	}
 
@@ -566,6 +611,11 @@ func (c *ReMemController) ExecuteWithMemory(
 	// Phase 5: EVOLVE - Update memory based on outcome
 	// =========================================================================
 	newExperience := c.createExperience(agentID, tierID, request, response, trace, retrievalResult)
+
+	// Add to consolidation buffer for offline processing
+	c.consolidator.AddToBuffer(newExperience)
+
+	// Store in primary memory
 	if err := c.updater.AddAndEvolve(newExperience, evaluation); err != nil {
 		// Log but don't fail the request
 		// In production, this should be logged properly
@@ -761,6 +811,31 @@ func (c *ReMemController) GetStats() *MemoryStats {
 	c.breakthroughMu.RUnlock()
 
 	return stats
+}
+
+// GetImpasseStats returns impasse detection statistics.
+func (c *ReMemController) GetImpasseStats() *ImpasseStats {
+	return c.impasseDetector.GetStats()
+}
+
+// GetActiveImpasses returns all currently active impasses.
+func (c *ReMemController) GetActiveImpasses() []*Impasse {
+	return c.impasseDetector.GetActive()
+}
+
+// TriggerConsolidation manually triggers memory consolidation.
+func (c *ReMemController) TriggerConsolidation() (*ConsolidationResult, error) {
+	return c.consolidator.Consolidate()
+}
+
+// GetConsolidationStats returns memory consolidation statistics.
+func (c *ReMemController) GetConsolidationStats() *ConsolidationStats {
+	return c.consolidator.GetStats()
+}
+
+// GetConsolidatedMemories returns all consolidated memories/schemas.
+func (c *ReMemController) GetConsolidatedMemories() map[string]*ConsolidatedMemory {
+	return c.consolidator.GetConsolidated()
 }
 
 // GetRetriever returns the underlying retriever for direct access if needed.

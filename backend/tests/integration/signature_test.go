@@ -25,7 +25,7 @@ func TestSignatureVerification(t *testing.T) {
 
 	t.Run("compute and validate signature", func(t *testing.T) {
 		signature := auth.ComputeSignature(secret, body)
-		
+
 		// Verify the signature format
 		if !strings.HasPrefix(signature, "sha256=") {
 			t.Errorf("expected signature to start with sha256=, got: %s", signature)

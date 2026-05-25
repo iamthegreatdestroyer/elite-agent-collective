@@ -153,7 +153,7 @@ func TestRegistryFromManifest(t *testing.T) {
 		t.Skip("manifest file not found, skipping test")
 	}
 
-	registry, err := RegistryFromManifest(manifestPath)
+	registry, err := RegistryFromManifest(manifestPath, nil)
 	if err != nil {
 		t.Fatalf("failed to create registry from manifest: %v", err)
 	}

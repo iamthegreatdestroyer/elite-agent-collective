@@ -503,4 +503,3 @@ func BenchmarkPerformanceTracker_Add(b *testing.B) {
 		pt.Add(record)
 	}
 }
-

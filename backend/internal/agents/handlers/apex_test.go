@@ -8,7 +8,7 @@ import (
 )
 
 func TestApexAgentGetInfo(t *testing.T) {
-	agent := NewApexAgent()
+	agent := NewApexAgent(nil)
 	info := agent.GetInfo()
 
 	if info.Codename != "APEX" {
@@ -29,7 +29,7 @@ func TestApexAgentGetInfo(t *testing.T) {
 }
 
 func TestApexAgentHandle(t *testing.T) {
-	agent := NewApexAgent()
+	agent := NewApexAgent(nil)
 	req := &models.CopilotRequest{
 		Messages: []models.Message{
 			{Role: "user", Content: "Help me design an algorithm"},

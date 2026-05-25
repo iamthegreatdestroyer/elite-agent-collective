@@ -17,6 +17,7 @@ import (
 	"github.com/iamthegreatdestroyer/elite-agent-collective/backend/internal/agents"
 	"github.com/iamthegreatdestroyer/elite-agent-collective/backend/internal/auth"
 	"github.com/iamthegreatdestroyer/elite-agent-collective/backend/internal/config"
+	"github.com/iamthegreatdestroyer/elite-agent-collective/backend/internal/copilot"
 )
 
 // corsMiddleware creates CORS middleware with configurable allowed origins.
@@ -51,8 +52,16 @@ func main() {
 	// Load configuration
 	cfg := config.Load()
 
+	// Initialize upstream proxy client
+	upstreamClient := copilot.NewUpstreamClient()
+	if upstreamClient.Enabled() {
+		log.Printf("Upstream proxy enabled: forwarding to %s", os.Getenv("COPILOT_UPSTREAM_URL"))
+	} else {
+		log.Printf("Upstream proxy disabled (set COPILOT_UPSTREAM_URL to enable)")
+	}
+
 	// Initialize agent registry
-	registry := agents.DefaultRegistry()
+	registry := agents.DefaultRegistryWithUpstream(upstreamClient)
 	log.Printf("Registered %d agents", registry.Count())
 
 	// Initialize handlers

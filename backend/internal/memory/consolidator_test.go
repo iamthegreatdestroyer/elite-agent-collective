@@ -30,7 +30,7 @@ func TestMemoryConsolidator_AddToBuffer(t *testing.T) {
 		AgentID:        "TEST-01",
 		TierID:         1,
 		FitnessScore:   0.8,
-		Timestamp: time.Now().UnixNano(),
+		Timestamp:      time.Now().UnixNano(),
 		LastAccessTime: time.Now().Add(-1 * time.Hour).UnixNano(),
 	}
 
@@ -74,7 +74,7 @@ func TestMemoryConsolidator_ConsolidateSimple(t *testing.T) {
 			AgentID:        "APEX",
 			TierID:         1,
 			FitnessScore:   0.8 + float64(i)*0.01,
-			Timestamp: baseTime.UnixNano(),
+			Timestamp:      baseTime.UnixNano(),
 			LastAccessTime: baseTime.UnixNano(),
 			Embedding:      []float32{0.1, 0.2, 0.3, 0.4},
 		}
@@ -116,7 +116,7 @@ func TestMemoryConsolidator_ClusteringSimilar(t *testing.T) {
 			AgentID:        "APEX",
 			TierID:         1,
 			FitnessScore:   0.8,
-			Timestamp: baseTime.UnixNano(),
+			Timestamp:      baseTime.UnixNano(),
 			LastAccessTime: baseTime.UnixNano(),
 			Embedding:      []float32{1.0, 0.0, 0.0},
 		}
@@ -130,7 +130,7 @@ func TestMemoryConsolidator_ClusteringSimilar(t *testing.T) {
 			AgentID:        "TENSOR",
 			TierID:         2,
 			FitnessScore:   0.7,
-			Timestamp: baseTime.UnixNano(),
+			Timestamp:      baseTime.UnixNano(),
 			LastAccessTime: baseTime.UnixNano(),
 			Embedding:      []float32{0.0, 1.0, 0.0},
 		}
@@ -509,7 +509,7 @@ func BenchmarkConsolidator_Consolidate(b *testing.B) {
 			AgentID:        "APEX",
 			TierID:         1,
 			FitnessScore:   0.8,
-			Timestamp: baseTime.UnixNano(),
+			Timestamp:      baseTime.UnixNano(),
 			LastAccessTime: baseTime.UnixNano(),
 			Embedding:      make([]float32, 384),
 		}
@@ -529,7 +529,7 @@ func BenchmarkConsolidator_Consolidate(b *testing.B) {
 				AgentID:        "APEX",
 				TierID:         1,
 				FitnessScore:   0.8,
-				Timestamp: baseTime.UnixNano(),
+				Timestamp:      baseTime.UnixNano(),
 				LastAccessTime: baseTime.UnixNano(),
 				Embedding:      make([]float32, 384),
 			}

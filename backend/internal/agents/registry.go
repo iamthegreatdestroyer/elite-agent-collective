@@ -7,6 +7,7 @@ import (
 	"sync"
 
 	"github.com/iamthegreatdestroyer/elite-agent-collective/backend/internal/agents/handlers"
+	"github.com/iamthegreatdestroyer/elite-agent-collective/backend/internal/copilot"
 	"github.com/iamthegreatdestroyer/elite-agent-collective/backend/pkg/models"
 	"gopkg.in/yaml.v3"
 )
@@ -91,13 +92,22 @@ func (r *Registry) Count() int {
 	return len(r.agents)
 }
 
-// DefaultRegistry creates a registry with all 40 agents registered.
+// DefaultRegistry creates a registry with all 40 agents registered (no upstream client).
 // It attempts to load from .github/agents/ first, falling back to hardcoded definitions.
 func DefaultRegistry() *Registry {
 	registry := NewRegistry()
 	if err := RegisterAllAgents(registry); err != nil {
-		// Log error but don't panic - we may have loaded agents via fallback
 		fmt.Fprintf(os.Stderr, "Warning: RegisterAllAgents returned error: %v\n", err)
+	}
+	return registry
+}
+
+// DefaultRegistryWithUpstream creates a registry with all 40 agents registered,
+// wired to the given upstream client.
+func DefaultRegistryWithUpstream(uc *copilot.UpstreamClient) *Registry {
+	registry := NewRegistry()
+	if err := RegisterAllAgentsWithUpstream(registry, uc); err != nil {
+		fmt.Fprintf(os.Stderr, "Warning: RegisterAllAgentsWithUpstream returned error: %v\n", err)
 	}
 	return registry
 }
@@ -119,7 +129,7 @@ func LoadManifest(path string) (*ManifestConfig, error) {
 
 // RegistryFromManifest creates a registry by loading agents from a manifest file.
 // It registers handlers for all agents defined in the manifest.
-func RegistryFromManifest(manifestPath string) (*Registry, error) {
+func RegistryFromManifest(manifestPath string, uc *copilot.UpstreamClient) (*Registry, error) {
 	manifest, err := LoadManifest(manifestPath)
 	if err != nil {
 		return nil, err
@@ -139,9 +149,9 @@ func RegistryFromManifest(manifestPath string) (*Registry, error) {
 
 		// Use custom handler for APEX, base handler for others
 		if agentConfig.Codename == "APEX" {
-			registry.Register(handlers.NewApexAgent())
+			registry.Register(handlers.NewApexAgent(uc))
 		} else {
-			registry.Register(handlers.NewBaseAgent(agent))
+			registry.Register(handlers.NewBaseAgent(agent, uc))
 		}
 	}
 

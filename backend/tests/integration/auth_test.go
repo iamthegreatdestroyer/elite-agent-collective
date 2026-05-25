@@ -13,21 +13,16 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/iamthegreatdestroyer/elite-agent-collective/backend/internal/agents"
 	"github.com/iamthegreatdestroyer/elite-agent-collective/backend/internal/auth"
-	"github.com/iamthegreatdestroyer/elite-agent-collective/backend/internal/config"
 	"github.com/iamthegreatdestroyer/elite-agent-collective/backend/pkg/models"
 )
 
-// setupAuthEnabledServer creates a test server with authentication enabled.
+// setupAuthEnabledServer creates a test server with authentication enabled using a stub validator.
 func setupAuthEnabledServer() *httptest.Server {
 	registry := agents.DefaultRegistry()
 	agentHandler := agents.NewHandler(registry)
 
-	// Enable authentication
-	cfg := &config.OIDCConfig{
-		Issuer:   "https://token.actions.githubusercontent.com",
-		ClientID: "test-client-id", // Non-empty = auth enabled
-	}
-	authMiddleware := auth.NewMiddleware(cfg)
+	// Use stub validator so any non-empty token is accepted without real OIDC.
+	authMiddleware := auth.NewMiddlewareWithValidator(&auth.StubValidator{}, true)
 
 	r := chi.NewRouter()
 	r.Route("/agents", func(r chi.Router) {

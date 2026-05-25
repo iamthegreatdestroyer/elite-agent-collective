@@ -52,6 +52,11 @@ type cachedJWKS struct {
 	expiresAt time.Time
 }
 
+// TokenValidator is the interface for validating bearer tokens.
+type TokenValidator interface {
+	ValidateToken(tokenString string) (*Claims, error)
+}
+
 // OIDCValidator validates OIDC tokens.
 type OIDCValidator struct {
 	config     *config.OIDCConfig

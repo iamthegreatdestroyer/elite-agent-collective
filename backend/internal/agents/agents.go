@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 
 	"github.com/iamthegreatdestroyer/elite-agent-collective/backend/internal/agents/handlers"
+	"github.com/iamthegreatdestroyer/elite-agent-collective/backend/internal/copilot"
 	"github.com/iamthegreatdestroyer/elite-agent-collective/backend/pkg/models"
 )
 
@@ -70,37 +71,42 @@ var AllAgentDefinitions = []models.Agent{
 	{ID: "40", Codename: "ORACLE", Tier: 8, Specialty: "Predictive Analytics & Forecasting Systems", Philosophy: "The best way to predict the future is to compute it—data-driven foresight enables decisive action.", Directives: []string{"Build forecasting models", "Analyze trends", "Predict outcomes", "Enable data-driven decisions", "Quantify uncertainty"}},
 }
 
-// RegisterAllAgents registers all 40 agents in the registry.
+// RegisterAllAgents registers all 40 agents in the registry (no upstream client).
 // It attempts to load agents from .github/agents/ directory first.
 // If loading fails or directory doesn't exist, it falls back to AllAgentDefinitions.
 func RegisterAllAgents(registry *Registry) error {
-	// Try to load agents from distributed .agent.md files
+	return RegisterAllAgentsWithUpstream(registry, nil)
+}
+
+// RegisterAllAgentsWithUpstream registers all 40 agents, wiring up the upstream client
+// so agents forward to the GitHub Copilot API when COPILOT_UPSTREAM_URL is set.
+// It attempts to load agents from .github/agents/ directory first, falling back to
+// the hardcoded AllAgentDefinitions.
+func RegisterAllAgentsWithUpstream(registry *Registry, uc *copilot.UpstreamClient) error {
 	agentsDir := findAgentsDirectory()
 	if agentsDir != "" {
 		loadedAgents, err := LoadAllAgentsFromDirectory(agentsDir)
 		if err == nil && len(loadedAgents) > 0 {
 			log.Printf("Loaded %d agents from %s", len(loadedAgents), agentsDir)
-			return registerAgentsFromDirectory(registry, loadedAgents)
+			return registerAgentsFromDirectory(registry, loadedAgents, uc)
 		}
 		if err != nil {
 			log.Printf("Warning: Failed to load agents from directory: %v. Falling back to hardcoded definitions.", err)
 		}
 	}
 
-	// Fallback to hardcoded definitions
 	log.Println("Using hardcoded agent definitions (migration to .agent.md files recommended)")
-	return registerAgentsFromDefinitions(registry, AllAgentDefinitions)
+	return registerAgentsFromDefinitions(registry, AllAgentDefinitions, uc)
 }
 
-// findAgentsDirectory attempts to locate the .github/agents directory
+// findAgentsDirectory attempts to locate the .github/agents directory.
 func findAgentsDirectory() string {
-	// Try multiple possible paths
 	possiblePaths := []string{
 		"../.github/agents",
 		"../../.github/agents",
 		"../../../.github/agents",
 		"./.github/agents",
-		"/app/.github/agents", // Docker path
+		"/app/.github/agents",
 		filepath.Join(os.Getenv("HOME"), "elite-agent-collective-1/.github/agents"),
 	}
 
@@ -117,45 +123,26 @@ func findAgentsDirectory() string {
 	return ""
 }
 
-// registerAgentsFromDirectory registers agents loaded from .agent.md files
-func registerAgentsFromDirectory(registry *Registry, agents []models.Agent) error {
-	// Register APEX with custom handler if present
-	var apexAgent *models.Agent
-	for i := range agents {
-		if agents[i].Codename == "APEX" {
-			apexAgent = &agents[i]
-			break
-		}
-	}
-
-	if apexAgent != nil {
-		registry.Register(handlers.NewApexAgent())
-	}
-
-	// Register all other agents with base handlers
-	for _, agent := range agents {
+// registerAgentsFromDirectory registers agents loaded from .agent.md files.
+func registerAgentsFromDirectory(registry *Registry, agentList []models.Agent, uc *copilot.UpstreamClient) error {
+	for _, agent := range agentList {
 		if agent.Codename == "APEX" {
-			continue // Already registered with custom handler
+			registry.Register(handlers.NewApexAgent(uc))
+		} else {
+			registry.Register(handlers.NewBaseAgent(agent, uc))
 		}
-		registry.Register(handlers.NewBaseAgent(agent))
 	}
-
 	return nil
 }
 
-// registerAgentsFromDefinitions registers agents from the hardcoded AllAgentDefinitions
-func registerAgentsFromDefinitions(registry *Registry, agents []models.Agent) error {
-	// Register APEX with its custom handler
-	registry.Register(handlers.NewApexAgent())
-
-	// Register all other agents with base handlers
-	for _, agentDef := range agents {
-		// Skip APEX as it's already registered with its custom handler
+// registerAgentsFromDefinitions registers agents from the hardcoded AllAgentDefinitions.
+func registerAgentsFromDefinitions(registry *Registry, agentList []models.Agent, uc *copilot.UpstreamClient) error {
+	registry.Register(handlers.NewApexAgent(uc))
+	for _, agentDef := range agentList {
 		if agentDef.Codename == "APEX" {
 			continue
 		}
-		registry.Register(handlers.NewBaseAgent(agentDef))
+		registry.Register(handlers.NewBaseAgent(agentDef, uc))
 	}
-
 	return nil
 }

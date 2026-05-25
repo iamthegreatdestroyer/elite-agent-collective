@@ -16,19 +16,30 @@ type contextKey string
 // ClaimsContextKey is the context key for storing claims.
 const ClaimsContextKey contextKey = "claims"
 
+// GitHubTokenContextKey is the context key for storing the raw GitHub token.
+const GitHubTokenContextKey contextKey = "github_token"
+
 // Middleware creates authentication middleware for protecting routes.
 type Middleware struct {
-	validator *OIDCValidator
+	validator TokenValidator
 	enabled   bool
 }
 
-// NewMiddleware creates a new authentication middleware.
+// NewMiddleware creates a new authentication middleware using the real OIDC validator.
 func NewMiddleware(cfg *config.OIDCConfig) *Middleware {
 	// Enable auth only if OIDC client ID is configured
 	enabled := cfg.ClientID != ""
-
 	return &Middleware{
 		validator: NewOIDCValidator(cfg),
+		enabled:   enabled,
+	}
+}
+
+// NewMiddlewareWithValidator creates a new authentication middleware with a custom validator.
+// Use this in tests to inject a StubValidator.
+func NewMiddlewareWithValidator(validator TokenValidator, enabled bool) *Middleware {
+	return &Middleware{
+		validator: validator,
 		enabled:   enabled,
 	}
 }
@@ -68,8 +79,9 @@ func (m *Middleware) Authenticate(next http.Handler) http.Handler {
 		// Log successful authentication
 		log.Printf("Authenticated user: %s", claims.Subject)
 
-		// Add claims to request context
+		// Add claims and raw token to request context
 		ctx := context.WithValue(r.Context(), ClaimsContextKey, claims)
+		ctx = context.WithValue(ctx, GitHubTokenContextKey, token)
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }
@@ -112,10 +124,18 @@ func (m *Middleware) OptionalAuth(next http.Handler) http.Handler {
 		// Log successful authentication
 		log.Printf("Authenticated user: %s", claims.Subject)
 
-		// Add claims to request context
+		// Add claims and raw token to request context
 		ctx := context.WithValue(r.Context(), ClaimsContextKey, claims)
+		ctx = context.WithValue(ctx, GitHubTokenContextKey, token)
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
+}
+
+// GetGitHubToken retrieves the raw GitHub bearer token from the request context.
+// Returns empty string if no token is present.
+func GetGitHubToken(ctx context.Context) string {
+	token, _ := ctx.Value(GitHubTokenContextKey).(string)
+	return token
 }
 
 // GetClaims retrieves claims from the request context.

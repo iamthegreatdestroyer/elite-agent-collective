@@ -6,7 +6,9 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/iamthegreatdestroyer/elite-agent-collective/backend/internal/auth"
 	"github.com/iamthegreatdestroyer/elite-agent-collective/backend/internal/copilot"
+	"github.com/iamthegreatdestroyer/elite-agent-collective/backend/internal/memory"
 	"github.com/iamthegreatdestroyer/elite-agent-collective/backend/pkg/models"
 )
 
@@ -14,14 +16,17 @@ import (
 type BaseAgent struct {
 	info     models.Agent
 	upstream *copilot.UpstreamClient
+	mem      *memory.Store
 }
 
 // NewBaseAgent creates a new base agent with the given info.
 func NewBaseAgent(info models.Agent, upstream *copilot.UpstreamClient) *BaseAgent {
-	return &BaseAgent{
-		info:     info,
-		upstream: upstream,
-	}
+	return &BaseAgent{info: info, upstream: upstream}
+}
+
+// SetMemory attaches a persistent memory store to the agent.
+func (a *BaseAgent) SetMemory(m *memory.Store) {
+	a.mem = m
 }
 
 // GetInfo returns the agent's metadata.
@@ -33,8 +38,18 @@ func (a *BaseAgent) GetInfo() models.Agent {
 // It tries to forward to the upstream Copilot API with a system prompt; on failure
 // or when upstream is disabled, it falls back to a template response.
 func (a *BaseAgent) Handle(ctx context.Context, req *models.CopilotRequest) (*models.CopilotResponse, error) {
+	userID := memory.UserID(auth.GetGitHubToken(ctx))
+	userMsg := copilot.GetLastUserMessage(req)
+
+	// Store facts extracted from the user's message before responding.
+	if a.mem != nil && userMsg != "" {
+		for _, f := range memory.ExtractFacts(a.info.Codename, userMsg) {
+			_ = a.mem.Remember(userID, a.info.Codename, f.Key, f.Value)
+		}
+	}
+
 	if a.upstream != nil {
-		systemPrompt := a.buildSystemPrompt()
+		systemPrompt := a.buildSystemPrompt(userID)
 		if resp, _ := a.upstream.Forward(ctx, systemPrompt, req); resp != nil {
 			return resp, nil
 		}
@@ -42,9 +57,18 @@ func (a *BaseAgent) Handle(ctx context.Context, req *models.CopilotRequest) (*mo
 	return a.templateResponse(req), nil
 }
 
-// buildSystemPrompt constructs the agent's system prompt from its metadata.
-func (a *BaseAgent) buildSystemPrompt() string {
+// buildSystemPrompt constructs the agent's system prompt, prepending any
+// remembered context for the current user.
+func (a *BaseAgent) buildSystemPrompt(userID string) string {
 	var sb strings.Builder
+
+	if a.mem != nil {
+		if ctx := a.mem.FormatContext(userID, 5); ctx != "" {
+			sb.WriteString(ctx)
+			sb.WriteString("\n")
+		}
+	}
+
 	fmt.Fprintf(&sb, "You are %s, the %s Specialist in the Elite Agent Collective.\n", a.info.Codename, a.info.Specialty)
 	fmt.Fprintf(&sb, "Philosophy: %s\n", a.info.Philosophy)
 	sb.WriteString("Core Directives:\n")

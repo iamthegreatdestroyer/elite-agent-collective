@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"path/filepath"
 	"syscall"
 	"time"
 
@@ -18,6 +19,7 @@ import (
 	"github.com/iamthegreatdestroyer/elite-agent-collective/backend/internal/auth"
 	"github.com/iamthegreatdestroyer/elite-agent-collective/backend/internal/config"
 	"github.com/iamthegreatdestroyer/elite-agent-collective/backend/internal/copilot"
+	"github.com/iamthegreatdestroyer/elite-agent-collective/backend/internal/memory"
 )
 
 // corsMiddleware creates CORS middleware with configurable allowed origins.
@@ -60,12 +62,35 @@ func main() {
 		log.Printf("Upstream proxy disabled (set COPILOT_UPSTREAM_URL to enable)")
 	}
 
+	// Initialize persistent memory store (Mem0 pattern).
+	dataDir := envStr("MEMORY_DATA_DIR", filepath.Join("data", "memories"))
+	memStore, err := memory.NewStore(dataDir)
+	if err != nil {
+		log.Printf("Warning: could not initialize memory store (%v) — running without persistence", err)
+		memStore = nil
+	} else {
+		log.Printf("Memory store initialized at %s", dataDir)
+	}
+
 	// Initialize agent registry
 	registry := agents.DefaultRegistryWithUpstream(upstreamClient)
+	if memStore != nil {
+		registry.InjectMemory(memStore)
+	}
 	log.Printf("Registered %d agents", registry.Count())
 
+	// Initialize crew registry (CrewAI pattern).
+	crewsPath := envStr("CREWS_CONFIG", filepath.Join("..", "..", "config", "crews.yaml"))
+	crewRegistry, err := agents.NewCrewRegistry(crewsPath)
+	if err != nil {
+		log.Printf("Warning: could not load crews from %s (%v)", crewsPath, err)
+		crewRegistry, _ = agents.NewCrewRegistry("") // empty registry
+	} else {
+		log.Printf("Loaded %d crew definitions from %s", crewRegistry.Count(), crewsPath)
+	}
+
 	// Initialize handlers
-	agentHandler := agents.NewHandler(registry)
+	agentHandler := agents.NewHandler(registry).WithCrews(crewRegistry)
 
 	// Initialize authentication middleware
 	authMiddleware := auth.NewMiddleware(&cfg.OIDC)
@@ -158,7 +183,16 @@ func healthCheckHandler(w http.ResponseWriter, r *http.Request) {
 		"status":    "healthy",
 		"timestamp": time.Now().UTC().Format(time.RFC3339),
 		"service":   "elite-agent-collective",
-		"version":   "2.0.0",
+		"version":   "3.0.0",
 	}
 	json.NewEncoder(w).Encode(response)
+}
+
+// envStr reads a string env var, returning def if not set.
+func envStr(key, def string) string {
+	v := os.Getenv(key)
+	if v == "" {
+		return def
+	}
+	return v
 }

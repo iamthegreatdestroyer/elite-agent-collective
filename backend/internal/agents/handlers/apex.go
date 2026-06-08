@@ -6,18 +6,26 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/iamthegreatdestroyer/elite-agent-collective/backend/internal/auth"
 	"github.com/iamthegreatdestroyer/elite-agent-collective/backend/internal/copilot"
+	"github.com/iamthegreatdestroyer/elite-agent-collective/backend/internal/memory"
 	"github.com/iamthegreatdestroyer/elite-agent-collective/backend/pkg/models"
 )
 
 // ApexAgent is the Elite Computer Science Engineering Specialist.
 type ApexAgent struct {
 	upstream *copilot.UpstreamClient
+	mem      *memory.Store
 }
 
 // NewApexAgent creates a new APEX agent.
 func NewApexAgent(upstream *copilot.UpstreamClient) *ApexAgent {
 	return &ApexAgent{upstream: upstream}
+}
+
+// SetMemory attaches a persistent memory store to APEX.
+func (a *ApexAgent) SetMemory(m *memory.Store) {
+	a.mem = m
 }
 
 // GetInfo returns APEX agent metadata.
@@ -41,17 +49,35 @@ func (a *ApexAgent) GetInfo() models.Agent {
 // Handle processes a Copilot request using APEX's methodology.
 // Forwards to upstream with APEX's system prompt; falls back to template response.
 func (a *ApexAgent) Handle(ctx context.Context, req *models.CopilotRequest) (*models.CopilotResponse, error) {
+	userID := memory.UserID(auth.GetGitHubToken(ctx))
+	userMsg := copilot.GetLastUserMessage(req)
+
+	if a.mem != nil && userMsg != "" {
+		for _, f := range memory.ExtractFacts("APEX", userMsg) {
+			_ = a.mem.Remember(userID, "APEX", f.Key, f.Value)
+		}
+	}
+
 	if a.upstream != nil {
-		if resp, _ := a.upstream.Forward(ctx, apexSystemPrompt(), req); resp != nil {
+		if resp, _ := a.upstream.Forward(ctx, a.buildSystemPrompt(userID), req); resp != nil {
 			return resp, nil
 		}
 	}
 	return a.templateResponse(req), nil
 }
 
-func apexSystemPrompt() string {
-	info := (&ApexAgent{}).GetInfo()
+// buildSystemPrompt constructs APEX's system prompt, prepending remembered context.
+func (a *ApexAgent) buildSystemPrompt(userID string) string {
+	info := a.GetInfo()
 	var sb strings.Builder
+
+	if a.mem != nil {
+		if ctx := a.mem.FormatContext(userID, 5); ctx != "" {
+			sb.WriteString(ctx)
+			sb.WriteString("\n")
+		}
+	}
+
 	fmt.Fprintf(&sb, "You are %s, the %s Specialist in the Elite Agent Collective.\n", info.Codename, info.Specialty)
 	fmt.Fprintf(&sb, "Philosophy: %s\n", info.Philosophy)
 	sb.WriteString("Core Directives:\n")

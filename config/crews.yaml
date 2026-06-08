@@ -1,0 +1,35 @@
+# Elite Agent Collective — Crew Definitions (CrewAI pattern)
+# Invoke a crew with @CREW:name or @CREW name in your message.
+# Agents execute sequentially; each agent sees prior agents' reasoning.
+crews:
+  code_review:
+    description: "Comprehensive code review: correctness, test coverage, performance"
+    agents: [APEX, ECLIPSE, VELOCITY]
+
+  security_audit:
+    description: "Security-focused audit: vulnerabilities, crypto correctness, auth flows"
+    agents: [CIPHER, FORTRESS, ECLIPSE]
+
+  full_stack:
+    description: "Full-stack feature design: architecture, implementation, deployment"
+    agents: [ARCHITECT, APEX, FLUX]
+
+  performance_optimization:
+    description: "Profile, benchmark, and optimize a system or algorithm"
+    agents: [VELOCITY, APEX, PRISM]
+
+  devops_setup:
+    description: "CI/CD and infrastructure configuration review"
+    agents: [FLUX, FORGE, ATLAS]
+
+  ml_pipeline:
+    description: "Machine learning system design and data pipeline review"
+    agents: [TENSOR, PRISM, APEX]
+
+  blockchain_review:
+    description: "Smart contract and on-chain code review"
+    agents: [CRYPTO, CIPHER, APEX]
+
+  observability:
+    description: "Instrumentation, logging, alerting, and monitoring strategy"
+    agents: [SENTRY, FLUX, PRISM]

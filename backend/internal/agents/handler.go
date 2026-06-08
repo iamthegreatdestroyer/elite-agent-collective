@@ -3,7 +3,6 @@ package agents
 
 import (
 	"encoding/json"
-	"fmt"
 	"log"
 	"net/http"
 	"regexp"
@@ -15,18 +14,30 @@ import (
 )
 
 // agentMentionPattern matches @AGENT_NAME patterns in messages.
-var agentMentionPattern = regexp.MustCompile(`@([A-Za-z]+)`)
+var agentMentionPattern = regexp.MustCompile(`@([A-Za-z_]+)`)
+
+// crewMentionPattern matches @CREW:name or @CREW name patterns.
+var crewMentionPattern = regexp.MustCompile(`(?i)@CREW[:\s]+(\w+)`)
 
 // Handler provides HTTP handlers for agent endpoints.
 type Handler struct {
 	registry *Registry
+	crews    *CrewRegistry
+	pipeline *AgentPipeline
 }
 
 // NewHandler creates a new agent handler.
 func NewHandler(registry *Registry) *Handler {
 	return &Handler{
 		registry: registry,
+		pipeline: NewAgentPipeline(registry),
 	}
+}
+
+// WithCrews attaches a crew registry so @CREW:name mentions are expanded.
+func (h *Handler) WithCrews(crews *CrewRegistry) *Handler {
+	h.crews = crews
+	return h
 }
 
 // ListAgents handles GET /agents - returns all registered agents.
@@ -99,8 +110,7 @@ func (h *Handler) InvokeAgent(w http.ResponseWriter, r *http.Request) {
 }
 
 // CopilotWebhook handles POST /copilot - main Copilot webhook endpoint.
-// This endpoint parses the agent codename from the message content.
-// Supports multi-agent collaboration when multiple @AGENT_NAME mentions are found.
+// Supports single agent, crew invocation (@CREW:name), and multi-agent pipelines.
 func (h *Handler) CopilotWebhook(w http.ResponseWriter, r *http.Request) {
 	req, err := copilot.ParseRequest(r)
 	if err != nil {
@@ -109,46 +119,40 @@ func (h *Handler) CopilotWebhook(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Get the last user message
 	userMessage := copilot.GetLastUserMessage(req)
 	if userMessage == "" {
 		copilot.WriteError(w, "No user message found", http.StatusBadRequest)
 		return
 	}
 
-	// Extract all agent codenames from the message (supports multi-agent collaboration)
-	codenames := extractAllAgentCodenames(userMessage)
-
-	// If no agents specified, default to APEX
+	// Check for @CREW:name mentions first.
+	codenames := h.resolveCodenames(userMessage)
 	if len(codenames) == 0 {
 		codenames = []string{"APEX"}
 	}
 
-	// Handle multi-agent collaboration
+	var resp *models.CopilotResponse
 	if len(codenames) > 1 {
-		h.handleMultiAgentRequest(w, r, req, codenames)
-		return
+		// Sequential pipeline — each agent sees prior agents' reasoning.
+		log.Printf("Copilot webhook: pipeline %v", codenames)
+		resp, err = h.pipeline.Execute(r.Context(), req, codenames)
+	} else {
+		codename := codenames[0]
+		agent, agentErr := h.registry.Get(codename)
+		if agentErr != nil {
+			agent, _ = h.registry.Get("APEX")
+			codename = "APEX"
+		}
+		log.Printf("Copilot webhook: routing to agent %s", codename)
+		resp, err = agent.Handle(r.Context(), req)
 	}
 
-	// Single agent invocation
-	codename := codenames[0]
-	agent, err := h.registry.Get(codename)
-	if err != nil {
-		// Fall back to APEX if agent not found
-		agent, _ = h.registry.Get("APEX")
-		codename = "APEX"
-	}
-
-	log.Printf("Copilot webhook: routing to agent %s", codename)
-
-	resp, err := agent.Handle(r.Context(), req)
 	if err != nil {
 		log.Printf("Error handling Copilot request: %v", err)
 		copilot.WriteError(w, "Error processing request", http.StatusInternalServerError)
 		return
 	}
 
-	// Support streaming responses if requested
 	if req.Stream {
 		if err := copilot.WriteStreamingResponse(w, resp.Choices[0].Message.Content); err != nil {
 			log.Printf("Error writing streaming response: %v", err)
@@ -161,71 +165,19 @@ func (h *Handler) CopilotWebhook(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// handleMultiAgentRequest handles requests that invoke multiple agents.
-// It combines responses from all specified agents into a single response.
-// If some agents are unavailable, they are skipped and noted in the response.
-func (h *Handler) handleMultiAgentRequest(w http.ResponseWriter, r *http.Request, req *models.CopilotRequest, codenames []string) {
-	log.Printf("Copilot webhook: multi-agent collaboration with agents: %v", codenames)
-
-	var responses []string
-	var validAgents []string
-	var skippedAgents []string
-
-	for _, codename := range codenames {
-		agent, err := h.registry.Get(codename)
-		if err != nil {
-			log.Printf("Agent %s not found, skipping", codename)
-			skippedAgents = append(skippedAgents, codename)
-			continue
-		}
-
-		resp, err := agent.Handle(r.Context(), req)
-		if err != nil {
-			log.Printf("Error from agent %s: %v", codename, err)
-			skippedAgents = append(skippedAgents, codename)
-			continue
-		}
-
-		if len(resp.Choices) > 0 {
-			responses = append(responses, resp.Choices[0].Message.Content)
-			validAgents = append(validAgents, codename)
+// resolveCodenames extracts agent codenames from a message, expanding @CREW:name
+// references into their agent lists. Returns unique codenames in order.
+func (h *Handler) resolveCodenames(message string) []string {
+	// Check for @CREW:name or @CREW name pattern.
+	if h.crews != nil {
+		if m := crewMentionPattern.FindStringSubmatch(message); len(m) == 2 {
+			if crew, ok := h.crews.Get(m[1]); ok {
+				log.Printf("Copilot webhook: expanding crew %q → %v", m[1], crew.Agents)
+				return crew.Agents
+			}
 		}
 	}
-
-	if len(responses) == 0 {
-		copilot.WriteError(w, "No valid agents could process the request", http.StatusInternalServerError)
-		return
-	}
-
-	// Combine responses with clear separation
-	var combinedContent strings.Builder
-	combinedContent.WriteString(fmt.Sprintf("## Multi-Agent Collaboration: %s\n\n", strings.Join(validAgents, " + ")))
-
-	// Note any skipped agents
-	if len(skippedAgents) > 0 {
-		combinedContent.WriteString(fmt.Sprintf("*Note: The following requested agents were unavailable: %s*\n\n", strings.Join(skippedAgents, ", ")))
-	}
-
-	for i, content := range responses {
-		if i > 0 {
-			combinedContent.WriteString("\n---\n\n")
-		}
-		combinedContent.WriteString(content)
-	}
-
-	combinedResp := copilot.NewResponse(combinedContent.String())
-
-	// Support streaming responses if requested
-	if req.Stream {
-		if err := copilot.WriteStreamingResponse(w, combinedContent.String()); err != nil {
-			log.Printf("Error writing streaming response: %v", err)
-		}
-		return
-	}
-
-	if err := copilot.WriteResponse(w, combinedResp); err != nil {
-		log.Printf("Error writing multi-agent response: %v", err)
-	}
+	return extractAllAgentCodenames(message)
 }
 
 // extractAgentCodename extracts the first agent codename from a message.

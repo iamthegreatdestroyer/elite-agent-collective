@@ -8,6 +8,7 @@ import (
 
 	"github.com/iamthegreatdestroyer/elite-agent-collective/backend/internal/agents/handlers"
 	"github.com/iamthegreatdestroyer/elite-agent-collective/backend/internal/copilot"
+	"github.com/iamthegreatdestroyer/elite-agent-collective/backend/internal/memory"
 	"github.com/iamthegreatdestroyer/elite-agent-collective/backend/pkg/models"
 	"gopkg.in/yaml.v3"
 )
@@ -110,6 +111,18 @@ func DefaultRegistryWithUpstream(uc *copilot.UpstreamClient) *Registry {
 		fmt.Fprintf(os.Stderr, "Warning: RegisterAllAgentsWithUpstream returned error: %v\n", err)
 	}
 	return registry
+}
+
+// InjectMemory attaches mem to every agent handler that supports persistent memory.
+// Call this after creating the registry and before serving requests.
+func (r *Registry) InjectMemory(mem *memory.Store) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	for _, handler := range r.agents {
+		if ms, ok := handler.(interface{ SetMemory(*memory.Store) }); ok {
+			ms.SetMemory(mem)
+		}
+	}
 }
 
 // LoadManifest reads and parses the agents manifest YAML file.

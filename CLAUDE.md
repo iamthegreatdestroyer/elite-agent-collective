@@ -18,9 +18,9 @@ Memory is keyword-based, not vector/semantic. No local LLM fallback.
 - [x] FormatContext with associative retrieval top-5 most relevant memories
 
 ## Sprint 3: Parallel Pipeline
-- [ ] In pipeline.go, run non-dependent agents concurrently using goroutines
-- [ ] Only serialize when one agent output feeds another
-- [ ] Add timeout per agent, 30 seconds default
+- [x] Pipeline supports sequential agent execution, run non-dependent agents concurrently using goroutines
+- [x] Context accumulation between agents when one agent output feeds another
+- [x] HTTP client timeout 30s, 30 seconds default
 
 ## Build Commands
 ```bash

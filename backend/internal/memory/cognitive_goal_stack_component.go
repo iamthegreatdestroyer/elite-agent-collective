@@ -71,9 +71,19 @@ func (cgsc *CognitiveGoalStackComponent) Process(
 	ctx context.Context,
 	request *CognitiveProcessRequest,
 ) (*CognitiveProcessResult, error) {
+	// The entire method reads and mutates shared component state (goalTree,
+	// activatedGoals, the counters, and the underlying goalStack), and this
+	// method is invoked concurrently by callers (see
+	// TestCognitiveGoalStackComponent_ConcurrentAccess). Previously only the
+	// requestCount/successCount increments were locked, leaving
+	// processGoalActivation's writes to goalTree/activatedGoals/goalsProcessed
+	// (and the reads in getActiveGoals/calculateConfidence) to race against
+	// each other across goroutines. Hold the lock for the full critical
+	// section instead of just the counters.
 	cgsc.mu.Lock()
+	defer cgsc.mu.Unlock()
+
 	cgsc.requestCount++
-	cgsc.mu.Unlock()
 
 	startTime := time.Now()
 	result := &CognitiveProcessResult{
@@ -85,12 +95,12 @@ func (cgsc *CognitiveGoalStackComponent) Process(
 
 	// Process current goal and manage goal stack
 	if request.CurrentGoal != nil {
-		step := cgsc.processGoalActivation(ctx, request)
+		step := cgsc.processGoalActivationLocked(ctx, request)
 		result.ExecutionSteps = append(result.ExecutionSteps, step)
 	}
 
 	// Get active goal stack
-	activeGoals := cgsc.getActiveGoals()
+	activeGoals := cgsc.getActiveGoalsLocked()
 	result.Output = activeGoals
 
 	// Build decision trace
@@ -120,7 +130,7 @@ func (cgsc *CognitiveGoalStackComponent) Process(
 		},
 	}
 
-	result.Confidence = cgsc.calculateConfidence()
+	result.Confidence = cgsc.calculateConfidenceLocked()
 	result.ProcessingTime = time.Since(startTime)
 	result.Explanation = fmt.Sprintf(
 		"Goal stack managed with %d active goals out of %d total",
@@ -128,15 +138,14 @@ func (cgsc *CognitiveGoalStackComponent) Process(
 		stackSize,
 	)
 
-	cgsc.mu.Lock()
 	cgsc.successCount++
-	cgsc.mu.Unlock()
 
 	return result, nil
 }
 
-// processGoalActivation activates a goal and manages the goal stack
-func (cgsc *CognitiveGoalStackComponent) processGoalActivation(
+// processGoalActivationLocked activates a goal and manages the goal stack.
+// Caller must hold cgsc.mu (write lock).
+func (cgsc *CognitiveGoalStackComponent) processGoalActivationLocked(
 	ctx context.Context,
 	request *CognitiveProcessRequest,
 ) *ExecutionStep {
@@ -299,6 +308,12 @@ func (cgsc *CognitiveGoalStackComponent) getActiveGoals() []*Goal {
 	cgsc.mu.RLock()
 	defer cgsc.mu.RUnlock()
 
+	return cgsc.getActiveGoalsLocked()
+}
+
+// getActiveGoalsLocked returns all currently active goals.
+// Caller must hold cgsc.mu (read or write lock).
+func (cgsc *CognitiveGoalStackComponent) getActiveGoalsLocked() []*Goal {
 	activeGoals := make([]*Goal, 0)
 	for _, goalID := range cgsc.activatedGoals {
 		if goal, ok := cgsc.goalTree[goalID]; ok && goal.Status != GoalCompleted && goal.Status != GoalFailed {
@@ -319,6 +334,12 @@ func (cgsc *CognitiveGoalStackComponent) calculateConfidence() float64 {
 	cgsc.mu.RLock()
 	defer cgsc.mu.RUnlock()
 
+	return cgsc.calculateConfidenceLocked()
+}
+
+// calculateConfidenceLocked calculates confidence based on goal stack state.
+// Caller must hold cgsc.mu (read or write lock).
+func (cgsc *CognitiveGoalStackComponent) calculateConfidenceLocked() float64 {
 	if cgsc.goalsProcessed == 0 {
 		return 0.5 // Default confidence when no goals processed
 	}

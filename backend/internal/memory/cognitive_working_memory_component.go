@@ -70,9 +70,18 @@ func (cwmc *CognitiveWorkingMemoryComponent) Process(
 	ctx context.Context,
 	request *CognitiveProcessRequest,
 ) (*CognitiveProcessResult, error) {
+	// The entire method reads and mutates the shared workingMemory (via
+	// processGoal -> workingMemory.Add, and via retrieveRelevantItems'
+	// GetAll+sort), and this method is invoked concurrently by callers (see
+	// TestCognitiveWorkingMemoryComponent_ConcurrentAccess). Previously only
+	// the requestCount/successCount increments were locked, leaving
+	// processGoal's unlocked workingMemory.Add call to race against
+	// retrieveRelevantItems' RLock-protected read of the same items. Hold the
+	// lock for the full critical section instead of just the counters.
 	cwmc.mu.Lock()
+	defer cwmc.mu.Unlock()
+
 	cwmc.requestCount++
-	cwmc.mu.Unlock()
 
 	startTime := time.Now()
 	result := &CognitiveProcessResult{
@@ -84,14 +93,14 @@ func (cwmc *CognitiveWorkingMemoryComponent) Process(
 
 	// Process the current goal to extract and store items in working memory
 	if request.CurrentGoal != nil {
-		step := cwmc.processGoal(ctx, request)
+		step := cwmc.processGoalLocked(ctx, request)
 		result.ExecutionSteps = append(result.ExecutionSteps, step)
 	}
 
 	// Retrieve items most relevant to the current goal
 	var retrieved []*WorkingMemoryItem
 	if request.CurrentGoal != nil {
-		retrieved = cwmc.retrieveRelevantItems(request.CurrentGoal)
+		retrieved = cwmc.retrieveRelevantItemsLocked(request.CurrentGoal)
 		result.Output = retrieved
 		result.SelectedAgents = cwmc.extractAgentIDs(retrieved)
 	}
@@ -126,7 +135,7 @@ func (cwmc *CognitiveWorkingMemoryComponent) Process(
 		},
 	}
 
-	result.Confidence = cwmc.calculateConfidence()
+	result.Confidence = cwmc.calculateConfidenceLocked()
 	result.ProcessingTime = time.Since(startTime)
 	result.Explanation = fmt.Sprintf(
 		"Working memory processed with %d items at %.1f%% capacity",
@@ -134,15 +143,25 @@ func (cwmc *CognitiveWorkingMemoryComponent) Process(
 		load*100,
 	)
 
-	cwmc.mu.Lock()
 	cwmc.successCount++
-	cwmc.mu.Unlock()
 
 	return result, nil
 }
 
 // processGoal extracts and processes goal information into working memory
 func (cwmc *CognitiveWorkingMemoryComponent) processGoal(
+	ctx context.Context,
+	request *CognitiveProcessRequest,
+) *ExecutionStep {
+	cwmc.mu.Lock()
+	defer cwmc.mu.Unlock()
+
+	return cwmc.processGoalLocked(ctx, request)
+}
+
+// processGoalLocked extracts and processes goal information into working
+// memory. Caller must hold cwmc.mu (write lock).
+func (cwmc *CognitiveWorkingMemoryComponent) processGoalLocked(
 	ctx context.Context,
 	request *CognitiveProcessRequest,
 ) *ExecutionStep {
@@ -199,6 +218,12 @@ func (cwmc *CognitiveWorkingMemoryComponent) retrieveRelevantItems(goal *Goal) [
 	cwmc.mu.RLock()
 	defer cwmc.mu.RUnlock()
 
+	return cwmc.retrieveRelevantItemsLocked(goal)
+}
+
+// retrieveRelevantItemsLocked retrieves items most relevant to the goal.
+// Caller must hold cwmc.mu (read or write lock).
+func (cwmc *CognitiveWorkingMemoryComponent) retrieveRelevantItemsLocked(goal *Goal) []*WorkingMemoryItem {
 	items := cwmc.workingMemory.GetAll()
 
 	// Sort by activation (higher first)
@@ -233,6 +258,12 @@ func (cwmc *CognitiveWorkingMemoryComponent) calculateConfidence() float64 {
 	cwmc.mu.RLock()
 	defer cwmc.mu.RUnlock()
 
+	return cwmc.calculateConfidenceLocked()
+}
+
+// calculateConfidenceLocked calculates confidence based on working memory
+// state. Caller must hold cwmc.mu (read or write lock).
+func (cwmc *CognitiveWorkingMemoryComponent) calculateConfidenceLocked() float64 {
 	// Confidence increases with load (more relevant items in WM)
 	load := float64(cwmc.workingMemory.Size()) / float64(cwmc.workingMemory.Capacity())
 	// Load ranges 0-1, so confidence is directly proportional

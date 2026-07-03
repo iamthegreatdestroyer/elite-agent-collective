@@ -459,6 +459,18 @@ func (wm *CognitiveWorkingMemory) Clear() {
 // Activation Management
 // ============================================================================
 
+// minDecayAge is the minimum time an item must have existed in working
+// memory before it becomes eligible for decay-based forgetting. This
+// prevents an item from being forgotten the instant it is added just
+// because its as-given initial Activation happens to start below the
+// forgetting threshold (e.g. a freshly-added low-salience item) — decay
+// models activation fading away *over time*, so forgetting must wait for
+// real time to actually elapse, not merely for another Add/TriggerDecay
+// call to occur. Capacity-based eviction (evictLowestActivationLocked)
+// still applies to such items immediately; only decay-based forgetting is
+// deferred.
+const minDecayAge = 50 * time.Millisecond
+
 // applyDecayLocked applies time-based decay to all items.
 // Must be called with lock held.
 func (wm *CognitiveWorkingMemory) applyDecayLocked() {
@@ -479,8 +491,9 @@ func (wm *CognitiveWorkingMemory) applyDecayLocked() {
 		// Apply decay: A(t) = A(0) * e^(-d*t)
 		item.Activation = item.BaseActivation + (item.Activation-item.BaseActivation)*decayFactor
 
-		// Mark for removal if below threshold
-		if item.Activation < wm.activationThreshold {
+		// Mark for removal if below threshold, but only once the item has
+		// actually existed long enough for decay to meaningfully apply.
+		if item.Activation < wm.activationThreshold && now.Sub(item.CreatedAt) >= minDecayAge {
 			toRemove = append(toRemove, id)
 		}
 	}

@@ -188,9 +188,14 @@ func (s *TeamArchitectureSearch) generateRandomArchitecture(generation int) *Tea
 	})
 
 	selectedAgents := agents[:teamSize]
+	remainder := agents[teamSize:]
 
-	// Validate no forbidden pairs
+	// Validate no forbidden pairs. Removing a member of a forbidden pair can
+	// drop the team below MinTeamSize, so backfill from the unselected
+	// remainder (skipping any candidate that would reintroduce a forbidden
+	// pair) until the minimum is met or candidates run out.
 	selectedAgents = s.removeForbiddenPairs(selectedAgents)
+	selectedAgents = s.backfillToMinSize(selectedAgents, remainder, minSize)
 
 	// Assign random structure
 	structures := []TeamStructure{StructureHierarchical, StructureFlat, StructureSpecialized, StructureHybrid}
@@ -246,6 +251,53 @@ func (s *TeamArchitectureSearch) removeForbiddenPairs(agents []string) []string 
 	for agent := range agentSet {
 		result = append(result, agent)
 	}
+	return result
+}
+
+// backfillToMinSize tops selected back up to minSize using agents from
+// candidates (agents not already selected), skipping any candidate that
+// would form a forbidden pair with an agent already on the team. Used after
+// removeForbiddenPairs, which can otherwise leave a team below
+// AgentSearchSpace.MinTeamSize. If candidates run out before minSize is
+// reached, the smaller (but forbidden-pair-free) team is returned as-is.
+func (s *TeamArchitectureSearch) backfillToMinSize(selected, candidates []string, minSize int) []string {
+	if len(selected) >= minSize {
+		return selected
+	}
+
+	forbidsWith := func(agent string, team []string) bool {
+		for _, pair := range s.searchSpace.ForbiddenPairs {
+			var other string
+			switch agent {
+			case pair[0]:
+				other = pair[1]
+			case pair[1]:
+				other = pair[0]
+			default:
+				continue
+			}
+			for _, t := range team {
+				if t == other {
+					return true
+				}
+			}
+		}
+		return false
+	}
+
+	result := make([]string, len(selected), minSize)
+	copy(result, selected)
+
+	for _, candidate := range candidates {
+		if len(result) >= minSize {
+			break
+		}
+		if forbidsWith(candidate, result) {
+			continue
+		}
+		result = append(result, candidate)
+	}
+
 	return result
 }
 

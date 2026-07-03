@@ -9,8 +9,8 @@ A comprehensive system of specialized AI agents designed to provide expert-level
 [![Status: Active](https://img.shields.io/badge/Status-Active-green.svg)]()
 [![Version: 2.0.0](https://img.shields.io/badge/Version-2.0.0-brightgreen.svg)](CHANGELOG.md)
 [![Memory: MNEMONIC](https://img.shields.io/badge/Memory-MNEMONIC-purple.svg)]()
-[![Tests: 350+](https://img.shields.io/badge/Tests-350%2B-brightgreen.svg)]()
-[![Coverage: 95%](https://img.shields.io/badge/Coverage-95%25-brightgreen.svg)]()
+[![Tests: 580+](https://img.shields.io/badge/Tests-580%2B-brightgreen.svg)]()
+[![Coverage: 78%](https://img.shields.io/badge/Coverage-78%25-yellow.svg)]()
 [![Phase: 5.4/10](https://img.shields.io/badge/Phase-5.4%2F10-orange.svg)]()
 [![GitHub Marketplace](https://img.shields.io/badge/Marketplace-Elite%20Agent%20Collective-blue?logo=github)](https://github.com/marketplace/elite-agent-collective)
 
@@ -23,9 +23,9 @@ A comprehensive system of specialized AI agents designed to provide expert-level
 | **Phases Complete** | 5 of 10          | ✅ Phase 6 (40% complete)      |
 | **Agents Defined**  | 40 / 40          | ✅ Complete                    |
 | **Production Code** | 25,000+ lines    | ✅ Go backend + Infrastructure |
-| **Test Coverage**   | 95%+             | ✅ 350+ tests passing          |
-| **Tests Passing**   | 100% (350+)      | ✅ All passing                 |
-| **Backend Status**  | Production-Ready | ✅ API server operational      |
+| **Test Coverage**   | ~78%             | ✅ 580+ tests, 0 failures      |
+| **Tests Passing**   | 100% (580+)      | ✅ All passing (`go test ./...`) |
+| **Backend Status**  | Active Development | ⚠️ Real LLM fallback (Ollama), not yet production-hardened |
 | **Memory System**   | 21,807 lines     | ✅ MNEMONIC fully implemented  |
 | **Documentation**   | 80+ files        | ✅ Comprehensive               |
 

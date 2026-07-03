@@ -20,9 +20,9 @@ type OllamaClient struct {
 }
 
 type ollamaChatRequest struct {
-	Model    string            `json:"model"`
-	Messages []ollamaChatMsg   `json:"messages"`
-	Stream   bool              `json:"stream"`
+	Model    string          `json:"model"`
+	Messages []ollamaChatMsg `json:"messages"`
+	Stream   bool            `json:"stream"`
 }
 
 type ollamaChatMsg struct {
@@ -57,6 +57,18 @@ func (c *OllamaClient) Enabled() bool {
 	}
 	defer resp.Body.Close()
 	return resp.StatusCode == 200
+}
+
+// BaseURL returns the configured Ollama endpoint (from OLLAMA_URL, or the
+// http://localhost:11434 default).
+func (c *OllamaClient) BaseURL() string {
+	return c.baseURL
+}
+
+// Model returns the configured chat model name (from OLLAMA_MODEL, or the
+// phi4-mini default).
+func (c *OllamaClient) Model() string {
+	return c.model
 }
 
 func (c *OllamaClient) Forward(ctx context.Context, systemPrompt string, req *models.CopilotRequest) (*models.CopilotResponse, error) {

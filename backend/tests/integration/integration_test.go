@@ -15,6 +15,7 @@ import (
 	"github.com/iamthegreatdestroyer/elite-agent-collective/backend/internal/agents"
 	"github.com/iamthegreatdestroyer/elite-agent-collective/backend/internal/auth"
 	"github.com/iamthegreatdestroyer/elite-agent-collective/backend/internal/config"
+	"github.com/iamthegreatdestroyer/elite-agent-collective/backend/internal/copilot"
 )
 
 // testServer is the shared test server for all integration tests.
@@ -27,6 +28,15 @@ var testRegistry *agents.Registry
 func TestMain(m *testing.M) {
 	// Initialize agent registry
 	testRegistry = agents.DefaultRegistry()
+
+	// Inject the local Ollama fallback client so agents can be exercised
+	// through their real second-tier fallback path (upstream is nil in this
+	// test registry, so upstream never intercepts). Tests that depend on
+	// Ollama actually being reachable should check ollamaClient.Enabled()
+	// themselves and skip if it is not, since it requires a real local
+	// Ollama server (see TestOllamaFallback*, backend/tests/integration/ollama_fallback_test.go).
+	testOllamaClient := copilot.NewOllamaClient()
+	testRegistry.InjectOllama(testOllamaClient)
 
 	// Initialize handlers
 	agentHandler := agents.NewHandler(testRegistry)

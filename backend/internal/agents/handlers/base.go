@@ -16,6 +16,7 @@ import (
 type BaseAgent struct {
 	info     models.Agent
 	upstream *copilot.UpstreamClient
+	ollama   *copilot.OllamaClient
 	mem      *memory.Store
 }
 
@@ -27,6 +28,13 @@ func NewBaseAgent(info models.Agent, upstream *copilot.UpstreamClient) *BaseAgen
 // SetMemory attaches a persistent memory store to the agent.
 func (a *BaseAgent) SetMemory(m *memory.Store) {
 	a.mem = m
+}
+
+// SetOllama attaches a local Ollama fallback client to the agent. When set,
+// Handle uses it as a second-tier fallback (after upstream Copilot, before
+// the canned template response).
+func (a *BaseAgent) SetOllama(o *copilot.OllamaClient) {
+	a.ollama = o
 }
 
 // GetInfo returns the agent's metadata.
@@ -48,12 +56,23 @@ func (a *BaseAgent) Handle(ctx context.Context, req *models.CopilotRequest) (*mo
 		}
 	}
 
+	systemPrompt := a.buildSystemPrompt(userID)
+
 	if a.upstream != nil {
-		systemPrompt := a.buildSystemPrompt(userID)
 		if resp, _ := a.upstream.Forward(ctx, systemPrompt, req); resp != nil {
 			return resp, nil
 		}
 	}
+
+	// Second-tier fallback: local Ollama model. Only attempt this when the
+	// client is configured and its endpoint is actually reachable, so we
+	// don't pay the request timeout on every call when Ollama isn't running.
+	if a.ollama != nil && a.ollama.Enabled() {
+		if resp, err := a.ollama.Forward(ctx, systemPrompt, req); err == nil && resp != nil {
+			return resp, nil
+		}
+	}
+
 	return a.templateResponse(req), nil
 }
 

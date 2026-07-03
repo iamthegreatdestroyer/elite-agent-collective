@@ -62,6 +62,16 @@ func main() {
 		log.Printf("Upstream proxy disabled (set COPILOT_UPSTREAM_URL to enable)")
 	}
 
+	// Initialize local Ollama fallback client (second-tier, used when upstream
+	// Copilot is disabled or fails). Configured via OLLAMA_URL (default
+	// http://localhost:11434) and OLLAMA_MODEL (default phi4-mini).
+	ollamaClient := copilot.NewOllamaClient()
+	if ollamaClient.Enabled() {
+		log.Printf("Ollama fallback enabled: %s (model %s)", ollamaClient.BaseURL(), ollamaClient.Model())
+	} else {
+		log.Printf("Ollama fallback unavailable at %s (agents will use template responses if upstream is also unavailable)", ollamaClient.BaseURL())
+	}
+
 	// Initialize persistent memory store (Mem0 pattern).
 	dataDir := envStr("MEMORY_DATA_DIR", filepath.Join("data", "memories"))
 	memStore, err := memory.NewStore(dataDir)
@@ -74,6 +84,7 @@ func main() {
 
 	// Initialize agent registry
 	registry := agents.DefaultRegistryWithUpstream(upstreamClient)
+	registry.InjectOllama(ollamaClient)
 	if memStore != nil {
 		registry.InjectMemory(memStore)
 	}

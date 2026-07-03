@@ -56,6 +56,30 @@ func TestApexAgentHandle(t *testing.T) {
 	}
 }
 
+func TestApexAgentHandle_OllamaFallback(t *testing.T) {
+	agent := NewApexAgent(nil) // upstream nil -> must fall through
+	agent.SetOllama(newMockOllamaClient(t, "This is a real Ollama-generated reply for APEX."))
+
+	req := &models.CopilotRequest{
+		Messages: []models.Message{
+			{Role: "user", Content: "Help me design an algorithm"},
+		},
+	}
+
+	resp, err := agent.Handle(context.Background(), req)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if len(resp.Choices) == 0 {
+		t.Fatal("expected at least one choice")
+	}
+
+	content := resp.Choices[0].Message.Content
+	if content != "This is a real Ollama-generated reply for APEX." {
+		t.Errorf("expected Ollama-generated content, got template/other content: %q", content)
+	}
+}
+
 func containsString(s, substr string) bool {
 	return len(s) >= len(substr) && (s == substr || len(s) > 0 && containsStringHelper(s, substr))
 }

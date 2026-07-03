@@ -125,6 +125,20 @@ func (r *Registry) InjectMemory(mem *memory.Store) {
 	}
 }
 
+// InjectOllama attaches oc to every agent handler that supports a local
+// Ollama fallback. Call this after creating the registry and before serving
+// requests. Handlers use it as a second-tier fallback: upstream Copilot
+// first, then Ollama, then the canned template response.
+func (r *Registry) InjectOllama(oc *copilot.OllamaClient) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	for _, handler := range r.agents {
+		if oi, ok := handler.(interface{ SetOllama(*copilot.OllamaClient) }); ok {
+			oi.SetOllama(oc)
+		}
+	}
+}
+
 // LoadManifest reads and parses the agents manifest YAML file.
 func LoadManifest(path string) (*ManifestConfig, error) {
 	data, err := os.ReadFile(path)

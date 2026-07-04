@@ -64,7 +64,7 @@ func main() {
 
 	// Initialize local Ollama fallback client (second-tier, used when upstream
 	// Copilot is disabled or fails). Configured via OLLAMA_URL (default
-	// http://localhost:11434) and OLLAMA_MODEL (default phi4-mini).
+	// http://localhost:8000) and OLLAMA_MODEL (default phi4-mini).
 	ollamaClient := copilot.NewOllamaClient()
 	if ollamaClient.Enabled() {
 		log.Printf("Ollama fallback enabled: %s (model %s)", ollamaClient.BaseURL(), ollamaClient.Model())

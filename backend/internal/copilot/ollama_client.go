@@ -37,7 +37,7 @@ type ollamaChatResponse struct {
 func NewOllamaClient() *OllamaClient {
 	baseURL := os.Getenv("OLLAMA_URL")
 	if baseURL == "" {
-		baseURL = "http://localhost:11434"
+		baseURL = "http://localhost:8000"
 	}
 	model := os.Getenv("OLLAMA_MODEL")
 	if model == "" {
@@ -60,7 +60,7 @@ func (c *OllamaClient) Enabled() bool {
 }
 
 // BaseURL returns the configured Ollama endpoint (from OLLAMA_URL, or the
-// http://localhost:11434 default).
+// http://localhost:8000 default).
 func (c *OllamaClient) BaseURL() string {
 	return c.baseURL
 }

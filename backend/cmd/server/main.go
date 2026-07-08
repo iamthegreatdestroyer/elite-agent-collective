@@ -82,6 +82,25 @@ func main() {
 		log.Printf("Memory store initialized at %s", dataDir)
 	}
 
+	// Initialize agentmem MCP client (real semantic-memory backend for
+	// Remember/Recall - github.com/iamthegreatdestroyer/agentmem - replacing
+	// the local per-user JSON files when configured). Configured via
+	// AGENTMEM_MCP_URL; unset means Remember/Recall keep using the local
+	// JSON files exactly as before.
+	agentMemClient := memory.NewAgentMemClient(envStr("AGENTMEM_MCP_URL", ""))
+	if agentMemClient.Enabled() {
+		if agentMemClient.Healthy() {
+			log.Printf("agentmem semantic memory enabled: %s", agentMemClient.BaseURL())
+		} else {
+			log.Printf("Warning: AGENTMEM_MCP_URL=%s is set but not responding — Remember/Recall will error until it is reachable", agentMemClient.BaseURL())
+		}
+	} else {
+		log.Printf("agentmem not configured (set AGENTMEM_MCP_URL to enable); using local JSON fact store")
+	}
+	if memStore != nil {
+		memStore.SetAgentMem(agentMemClient)
+	}
+
 	// Initialize agent registry
 	registry := agents.DefaultRegistryWithUpstream(upstreamClient)
 	registry.InjectOllama(ollamaClient)

@@ -28,12 +28,15 @@ type userMemory struct {
 	Facts []Fact `json:"facts"`
 }
 
-// Store is a persistent memory store backed by per-user JSON files.
+// Store is a persistent memory store backed by per-user JSON files, or by
+// a real agentmem semantic-memory backend when one is configured via
+// SetAgentMem.
 // Thread-safe for concurrent agent access.
 type Store struct {
-	dataDir string
-	mu      sync.Mutex
-	cache   map[string]*userMemory
+	dataDir  string
+	mu       sync.Mutex
+	cache    map[string]*userMemory
+	agentMem *AgentMemClient
 }
 
 // NewStore creates a Store backed by dataDir.
@@ -48,14 +51,32 @@ func NewStore(dataDir string) (*Store, error) {
 	}, nil
 }
 
-// Remember stores a fact for a user. Keeps the most recent 100 facts.
+// SetAgentMem attaches a real agentmem backend. When client.Enabled() is
+// true, Remember/Recall delegate to it instead of the local JSON files.
+// Passing a disabled (empty baseURL) client - or never calling this at all
+// - preserves the exact original local-JSON-file behavior.
+func (s *Store) SetAgentMem(client *AgentMemClient) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	s.agentMem = client
+}
+
+// Remember stores a fact for a user. Keeps the most recent 100 facts when
+// using the local JSON backend (agentmem has no such cap).
 func (s *Store) Remember(userID, agentID, key, value string) error {
 	if userID == "" || key == "" || value == "" {
 		return nil
 	}
+
+	s.mu.Lock()
+	agentMem := s.agentMem
+	s.mu.Unlock()
+	if agentMem.Enabled() {
+		return agentMem.Remember(userID, agentID, key, value)
+	}
+
 	s.mu.Lock()
 	defer s.mu.Unlock()
-
 	mem := s.load(userID)
 	mem.Facts = append(mem.Facts, Fact{
 		Key:       key,
@@ -69,8 +90,17 @@ func (s *Store) Remember(userID, agentID, key, value string) error {
 	return s.save(userID, mem)
 }
 
-// Recall returns all facts for a user sorted by recency (newest first).
+// Recall returns all facts for a user. Local-JSON results are sorted
+// newest-first; agentmem results come back in the order agentmem's
+// semantic search returns them.
 func (s *Store) Recall(userID string) []Fact {
+	s.mu.Lock()
+	agentMem := s.agentMem
+	s.mu.Unlock()
+	if agentMem.Enabled() {
+		return agentMem.Recall(userID)
+	}
+
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	mem := s.load(userID)

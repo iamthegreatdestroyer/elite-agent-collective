@@ -24,6 +24,7 @@ type Handler struct {
 	registry *Registry
 	crews    *CrewRegistry
 	pipeline *AgentPipeline
+	router   *SemanticRouter
 }
 
 // NewHandler creates a new agent handler.
@@ -31,6 +32,7 @@ func NewHandler(registry *Registry) *Handler {
 	return &Handler{
 		registry: registry,
 		pipeline: NewAgentPipeline(registry),
+		router:   NewSemanticRouter(registry),
 	}
 }
 
@@ -177,7 +179,22 @@ func (h *Handler) resolveCodenames(message string) []string {
 			}
 		}
 	}
-	return extractAllAgentCodenames(message)
+
+	// Explicit @AGENT mentions always win.
+	if names := extractAllAgentCodenames(message); len(names) > 0 {
+		return names
+	}
+
+	// No explicit mention: fall back to semantic auto-routing (the woken
+	// Bloom skill-cascade) so a bare prompt reaches a relevant specialist
+	// instead of the blind APEX default. Returns nil when nothing resonates.
+	if h.router != nil {
+		if routed := h.router.Route(message); len(routed) > 0 {
+			log.Printf("Copilot webhook: semantic routing \u2192 %v", routed)
+			return routed
+		}
+	}
+	return nil
 }
 
 // extractAgentCodename extracts the first agent codename from a message.

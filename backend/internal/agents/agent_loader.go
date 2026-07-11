@@ -51,7 +51,7 @@ func LoadAgentFromFile(filePath string) (*models.Agent, error) {
 		Name:          metadata.Name,
 		Specialty:     metadata.Description,
 		Philosophy:    philosophy,
-		Keywords:      []string{}, // Can be extracted from markdown if needed
+		Keywords:      extractKeywords(metadata.Description, directives),
 		Directives:    directives,
 		Examples:      examples,
 		Collaborators: collaborators,
@@ -60,6 +60,17 @@ func LoadAgentFromFile(filePath string) (*models.Agent, error) {
 	}
 
 	return agent, nil
+}
+
+// extractKeywords derives routing keywords for an agent from its
+// description and Core Capabilities directives. This field was previously
+// always empty; populating it lets the semantic router match agents loaded
+// from .agent.md files even when they are absent from the cascade's
+// built-in skill map.
+func extractKeywords(description string, directives []string) []string {
+	parts := []string{description}
+	parts = append(parts, directives...)
+	return tokenizeText(strings.Join(parts, " "))
 }
 
 // LoadAllAgentsFromDirectory loads all agent definitions from .github/agents/ directory.

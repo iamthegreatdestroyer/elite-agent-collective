@@ -552,6 +552,19 @@ func (c *SkillBloomCascade) AddAgent(agentID string, skills []string) {
 	c.agentFilters[agentID] = filter
 }
 
+// KnownAgents returns the codenames of all agents currently registered in
+// the cascade. Used by routers to reconcile the curated skill map with a
+// live agent registry.
+func (c *SkillBloomCascade) KnownAgents() []string {
+	c.mu.RLock()
+	defer c.mu.RUnlock()
+	ids := make([]string, 0, len(c.agentFilters))
+	for id := range c.agentFilters {
+		ids = append(ids, id)
+	}
+	return ids
+}
+
 // addSkill adds a skill to the filter.
 func (f *SkillFilter) addSkill(skill string) {
 	for i := 0; i < f.numHash; i++ {

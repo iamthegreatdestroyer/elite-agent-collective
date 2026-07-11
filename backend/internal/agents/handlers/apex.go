@@ -77,17 +77,23 @@ func (a *ApexAgent) Handle(ctx context.Context, req *models.CopilotRequest) (*mo
 
 	systemPrompt := a.buildSystemPrompt(userID, userMsg)
 
-	// Augment the system prompt with knowledge retrieved from in-my-head
-	// (via sigma-index hybrid RRF). Fail-open: any error leaves the prompt
-	// unchanged.
+	// Augment with knowledge retrieved from in-my-head (via sigma-index hybrid
+	// RRF). Default delivery is point-of-need: a reference message next to the
+	// user's turn (EAC_RETRIEVER_INJECT=system restores prepend-to-system).
+	// Fail-open: any error leaves the request unchanged.
+	reqForLLM := req
 	if a.retriever != nil && a.retriever.Enabled() {
 		if block, err := a.retriever.Retrieve(ctx, a.GetInfo().Specialty, userMsg); err == nil && block != "" {
-			systemPrompt = block + "\n" + systemPrompt
+			if retrievalInjectMode() == "system" {
+				systemPrompt = block + "\n" + systemPrompt
+			} else {
+				reqForLLM = withRetrievedContext(req, block)
+			}
 		}
 	}
 
 	if a.upstream != nil {
-		if resp, _ := a.upstream.Forward(ctx, systemPrompt, req); resp != nil {
+		if resp, _ := a.upstream.Forward(ctx, systemPrompt, reqForLLM); resp != nil {
 			metrics.UpstreamTotal.Add(1)
 			return resp, nil
 		}
@@ -97,7 +103,7 @@ func (a *ApexAgent) Handle(ctx context.Context, req *models.CopilotRequest) (*mo
 	// client is configured and its endpoint is actually reachable, so we
 	// don't pay the request timeout on every call when Ollama isn't running.
 	if a.ollama != nil && a.ollama.Enabled() {
-		if resp, err := a.ollama.Forward(ctx, systemPrompt, req); err == nil && resp != nil {
+		if resp, err := a.ollama.Forward(ctx, systemPrompt, reqForLLM); err == nil && resp != nil {
 			metrics.OllamaFallbackTotal.Add(1)
 			return resp, nil
 		}

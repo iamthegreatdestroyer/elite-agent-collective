@@ -66,7 +66,7 @@ func (a *ApexAgent) Handle(ctx context.Context, req *models.CopilotRequest) (*mo
 		}
 	}
 
-	systemPrompt := a.buildSystemPrompt(userID)
+	systemPrompt := a.buildSystemPrompt(userID, userMsg)
 
 	if a.upstream != nil {
 		if resp, _ := a.upstream.Forward(ctx, systemPrompt, req); resp != nil {
@@ -87,12 +87,12 @@ func (a *ApexAgent) Handle(ctx context.Context, req *models.CopilotRequest) (*mo
 }
 
 // buildSystemPrompt constructs APEX's system prompt, prepending remembered context.
-func (a *ApexAgent) buildSystemPrompt(userID string) string {
+func (a *ApexAgent) buildSystemPrompt(userID, query string) string {
 	info := a.GetInfo()
 	var sb strings.Builder
 
 	if a.mem != nil {
-		if ctx := a.mem.FormatContext(userID, 5); ctx != "" {
+		if ctx := a.mem.FormatContextRelevant(userID, query, 5); ctx != "" {
 			sb.WriteString(ctx)
 			sb.WriteString("\n")
 		}

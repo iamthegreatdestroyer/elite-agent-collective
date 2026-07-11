@@ -21,6 +21,9 @@ type Fact struct {
 	Value     string `json:"value"`
 	AgentID   string `json:"agent_id"`
 	Timestamp int64  `json:"timestamp"`
+	// Vector is the nomic embedding of "key: value", cached once at Remember
+	// time for semantic recall. Absent for pre-feature or fail-open records.
+	Vector    []float32 `json:"vector,omitempty"`
 }
 
 // userMemory holds all facts for one user.
@@ -37,6 +40,7 @@ type Store struct {
 	mu       sync.Mutex
 	cache    map[string]*userMemory
 	agentMem *AgentMemClient
+	embedder *EmbedClient
 }
 
 // NewStore creates a Store backed by dataDir.
@@ -61,6 +65,14 @@ func (s *Store) SetAgentMem(client *AgentMemClient) {
 	s.agentMem = client
 }
 
+// SetEmbedder attaches an embedding client so RecallRelevant can rank facts by
+// semantic similarity. A nil or disabled embedder preserves recency behavior.
+func (s *Store) SetEmbedder(c *EmbedClient) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	s.embedder = c
+}
+
 // Remember stores a fact for a user. Keeps the most recent 100 facts when
 // using the local JSON backend (agentmem has no such cap).
 func (s *Store) Remember(userID, agentID, key, value string) error {
@@ -70,9 +82,20 @@ func (s *Store) Remember(userID, agentID, key, value string) error {
 
 	s.mu.Lock()
 	agentMem := s.agentMem
+	embedder := s.embedder
 	s.mu.Unlock()
 	if agentMem.Enabled() {
 		return agentMem.Remember(userID, agentID, key, value)
+	}
+
+	// Embed the fact once, outside the write lock, so a slow gateway can't
+	// serialize concurrent Remember calls. Fail-open: on any error the fact is
+	// stored without a vector and falls back to recency at recall time.
+	var vec []float32
+	if embedder.Enabled() {
+		if v, err := embedder.Embed(key + ": " + value); err == nil {
+			vec = v
+		}
 	}
 
 	s.mu.Lock()
@@ -83,6 +106,7 @@ func (s *Store) Remember(userID, agentID, key, value string) error {
 		Value:     value,
 		AgentID:   agentID,
 		Timestamp: time.Now().UnixNano(),
+		Vector:    vec,
 	})
 	if len(mem.Facts) > 100 {
 		mem.Facts = mem.Facts[len(mem.Facts)-100:]
@@ -129,6 +153,102 @@ func (s *Store) FormatContext(userID string, maxFacts int) string {
 		sb.WriteString(fmt.Sprintf("- %s: %s\n", f.Key, f.Value))
 	}
 	return sb.String()
+}
+
+// relevanceThreshold is the minimum cosine similarity for a stored fact to
+// be treated as semantically relevant to the current query. Facts scoring
+// below it are only included as recency backfill. Tunable; 0.55 suits short
+// "key: value" facts embedded with nomic-embed-text.
+const relevanceThreshold = 0.55
+
+// RecallRelevant returns up to k facts for a user, ranked by semantic
+// similarity to query when an embedder is configured, and by newest-first
+// recency otherwise. It never returns fewer facts than the recency path:
+// facts scoring above relevanceThreshold come first, then the newest
+// remaining facts backfill to k. Fully fail-open — a disabled/unreachable
+// embedder, an empty query, or vectorless (pre-feature) facts all degrade to
+// recency.
+func (s *Store) RecallRelevant(userID, query string, k int) []Fact {
+	s.mu.Lock()
+	agentMem := s.agentMem
+	embedder := s.embedder
+	s.mu.Unlock()
+	if agentMem.Enabled() {
+		return truncateFacts(agentMem.Recall(userID), k)
+	}
+
+	recency := s.Recall(userID)
+	if len(recency) == 0 {
+		return nil
+	}
+	if !embedder.Enabled() || query == "" {
+		return truncateFacts(recency, k)
+	}
+	qvec, err := embedder.Embed(query)
+	if err != nil || len(qvec) == 0 {
+		return truncateFacts(recency, k)
+	}
+
+	type scored struct {
+		idx   int
+		score float64
+	}
+	var ranked []scored
+	for i, f := range recency {
+		if len(f.Vector) == len(qvec) && len(f.Vector) > 0 {
+			ranked = append(ranked, scored{i, cosineSimilarityFloat32(qvec, f.Vector)})
+		}
+	}
+	sort.SliceStable(ranked, func(i, j int) bool { return ranked[i].score > ranked[j].score })
+
+	included := make([]bool, len(recency))
+	out := make([]Fact, 0, len(recency))
+	for _, r := range ranked {
+		if r.score < relevanceThreshold {
+			break
+		}
+		out = append(out, recency[r.idx])
+		included[r.idx] = true
+		if k > 0 && len(out) >= k {
+			return out
+		}
+	}
+	// Backfill with the newest facts not already included.
+	for i, f := range recency {
+		if k > 0 && len(out) >= k {
+			break
+		}
+		if included[i] {
+			continue
+		}
+		out = append(out, f)
+		included[i] = true
+	}
+	return out
+}
+
+// FormatContextRelevant is FormatContext but query-relevant: it injects the
+// facts most semantically related to query (with recency fallback) instead
+// of merely the newest.
+func (s *Store) FormatContextRelevant(userID, query string, maxFacts int) string {
+	facts := s.RecallRelevant(userID, query, maxFacts)
+	if len(facts) == 0 {
+		return ""
+	}
+	var sb strings.Builder
+	sb.WriteString("Previously established context:\n")
+	for _, f := range facts {
+		sb.WriteString(fmt.Sprintf("- %s: %s\n", f.Key, f.Value))
+	}
+	return sb.String()
+}
+
+// truncateFacts caps facts to at most k entries (k<=0 means no cap).
+func truncateFacts(facts []Fact, k int) []Fact {
+	if k > 0 && len(facts) > k {
+		return facts[:k]
+	}
+	return facts
 }
 
 // ExtractFacts scans a user message for project/technology declarations

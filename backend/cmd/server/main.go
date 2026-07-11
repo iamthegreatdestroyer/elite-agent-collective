@@ -104,6 +104,19 @@ func main() {
 		memStore.SetAgentMem(agentMemClient)
 	}
 
+	// Embedding client for semantic memory recall (gateway /api/embed,
+	// nomic-embed-text). Default-on but fully fail-open: if the gateway is
+	// down, RecallRelevant silently degrades to recency ordering.
+	embedClient := memory.NewEmbedClient(envStr("EMBED_URL", "http://localhost:8000"), envStr("EMBED_MODEL", "nomic-embed-text"))
+	if embedClient.Enabled() {
+		log.Printf("Semantic memory recall enabled via %s", embedClient.BaseURL())
+	} else {
+		log.Printf("Semantic memory recall disabled (set EMBED_URL); using recency ordering")
+	}
+	if memStore != nil {
+		memStore.SetEmbedder(embedClient)
+	}
+
 	// Initialize agent registry
 	registry := agents.DefaultRegistryWithUpstream(upstreamClient)
 	registry.InjectOllama(ollamaClient)

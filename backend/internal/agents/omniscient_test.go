@@ -43,8 +43,8 @@ func TestOmniscientAgent_Orchestrates(t *testing.T) {
 	if !strings.Contains(body, "[OMNISCIENT]") {
 		t.Fatalf("expected an [OMNISCIENT] header, got: %q", body[:min(120, len(body))])
 	}
-	if !strings.Contains(body, "feasible=") {
-		t.Fatalf("expected the planner summary in the header, got: %q", body[:min(120, len(body))])
+	if !strings.Contains(body, "Decomposition:") {
+		t.Fatalf("expected the decomposition breakdown in the header, got: %q", body[:min(200, len(body))])
 	}
 }
 

@@ -171,16 +171,20 @@ func (o *OmniscientAgent) fallbackAPEX(ctx context.Context, req *models.CopilotR
 func (o *OmniscientAgent) planHeader(codenames []string, plan *memory.Plan) string {
 	var sb strings.Builder
 	fmt.Fprintf(&sb, "[OMNISCIENT] Orchestrated %d specialist(s): %s\n", len(codenames), strings.Join(codenames, " -> "))
-	if plan != nil {
-		score := 0.0
-		if best := o.planner.GetBestStrategy(o.planner.GetLookaheadTree()); best != nil {
-			score = best.Score
+	// Show the real, request-derived decomposition (subtask -> routed agent).
+	// We deliberately do NOT surface the planner feasibility/lookahead score:
+	// on this path they are structural constants, not analysis of the request.
+	if plan != nil && len(plan.Actions) > 0 {
+		sb.WriteString("[OMNISCIENT] Decomposition:\n")
+		for i, a := range plan.Actions {
+			agent := a.AgentRequired
+			if agent == "" {
+				agent = "(unrouted)"
+			}
+			fmt.Fprintf(&sb, "[OMNISCIENT]   %d. %s -> %s\n", i+1, a.Name, agent)
 		}
-		fmt.Fprintf(&sb, "[OMNISCIENT] Plan: %d action(s), feasible=%t, cost=%.2f, lookahead-score=%.2f\n\n",
-			len(plan.Actions), plan.Feasible, plan.TotalCost, score)
-	} else {
-		sb.WriteString("\n")
 	}
+	sb.WriteString("\n")
 	return sb.String()
 }
 

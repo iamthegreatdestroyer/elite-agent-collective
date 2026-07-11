@@ -254,8 +254,11 @@ func truncateFacts(facts []Fact, k int) []Fact {
 // ExtractFacts scans a user message for project/technology declarations
 // and returns key-value facts worth remembering.
 // Pure string matching — no LLM call required.
-func ExtractFacts(agentID, message string) []Fact {
-	var facts []Fact
+func ExtractFacts(agentID, message string) (facts []Fact) {
+	// Fail-open: fact extraction is best-effort and must never crash the
+	// request, so recover from any panic and return what was gathered.
+	defer func() { _ = recover() }()
+
 	lower := strings.ToLower(message)
 
 	// Detect language/technology declarations.
@@ -277,6 +280,11 @@ func ExtractFacts(agentID, message string) []Fact {
 	for _, lp := range langPhrases {
 		if strings.Contains(lower, lp.pattern) {
 			idx := strings.Index(lower, lp.pattern) + len(lp.pattern)
+			// strings.ToLower can widen the byte length, pushing idx past the
+			// original message; skip rather than slice out of range.
+			if idx > len(message) {
+				break
+			}
 			suffix := strings.TrimSpace(strings.SplitN(message[idx:], "\n", 2)[0])
 			lang := strings.TrimRight(lp.pattern[strings.LastIndex(lp.pattern, " ")+1:], " ")
 			if suffix != "" {
@@ -294,7 +302,7 @@ func ExtractFacts(agentID, message string) []Fact {
 		"i'm developing ", "we're developing ", "i am developing ",
 	}
 	for _, pp := range projectPhrases {
-		if idx := strings.Index(lower, pp); idx >= 0 {
+		if idx := strings.Index(lower, pp); idx >= 0 && idx+len(pp) <= len(message) {
 			rest := message[idx+len(pp):]
 			end := strings.IndexAny(rest, ".\n,;")
 			if end > 0 {

@@ -151,6 +151,11 @@ func (sp *StrategicPlanner) CreatePlan(ctx context.Context, goal *Goal) (*Plan, 
 	return plan, nil
 }
 
+// maxRetainedPlans bounds the plans/planCache maps on a long-lived planner
+// (e.g. the process-lifetime OMNISCIENT planner) so they cannot grow without
+// limit on the RAM-constrained box.
+const maxRetainedPlans = 256
+
 // CreatePlanForSubtasks builds a strategic plan whose actions map one-to-one
 // to caller-provided subtasks, tagging each action with the agent chosen by
 // agentFor. Unlike CreatePlan (whose generateInitialActions caps at one action
@@ -203,6 +208,14 @@ func (sp *StrategicPlanner) CreatePlanForSubtasks(ctx context.Context, goal *Goa
 		plan = sp.optimizePlan(plan)
 	}
 
+	// Keep retention bounded: this planner outlives the request on OMNISCIENT
+	// and never reads plans back by ID, so cap both maps.
+	if len(sp.planCache) >= maxRetainedPlans {
+		sp.planCache = make(map[string]*Plan)
+	}
+	if len(sp.plans) >= maxRetainedPlans {
+		sp.plans = make(map[string]*Plan)
+	}
 	if sp.config.PlanCachingEnabled {
 		sp.planCache[goal.ID] = plan
 	}

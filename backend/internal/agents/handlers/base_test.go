@@ -23,15 +23,20 @@ func newMockOllamaClient(t *testing.T, replyContent string) *copilot.OllamaClien
 
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
-		case "/api/tags":
+		case "/v1/models":
 			w.WriteHeader(http.StatusOK)
-			w.Write([]byte(`{"models":[]}`))
-		case "/api/chat":
+			w.Write([]byte(`{"object":"list","data":[]}`))
+		case "/v1/chat/completions":
 			w.Header().Set("Content-Type", "application/json")
 			json.NewEncoder(w).Encode(map[string]interface{}{
-				"message": map[string]string{
-					"role":    "assistant",
-					"content": replyContent,
+				"choices": []map[string]interface{}{
+					{
+						"message": map[string]string{
+							"role":    "assistant",
+							"content": replyContent,
+						},
+						"finish_reason": "stop",
+					},
 				},
 			})
 		default:

@@ -126,9 +126,12 @@ func findAgentsDirectory() string {
 // registerAgentsFromDirectory registers agents loaded from .agent.md files.
 func registerAgentsFromDirectory(registry *Registry, agentList []models.Agent, uc *copilot.UpstreamClient) error {
 	for _, agent := range agentList {
-		if agent.Codename == "APEX" {
+		switch agent.Codename {
+		case "APEX":
 			registry.Register(handlers.NewApexAgent(uc))
-		} else {
+		case "OMNISCIENT":
+			registry.Register(NewOmniscientAgent(agent, uc, registry))
+		default:
 			registry.Register(handlers.NewBaseAgent(agent, uc))
 		}
 	}
@@ -139,10 +142,14 @@ func registerAgentsFromDirectory(registry *Registry, agentList []models.Agent, u
 func registerAgentsFromDefinitions(registry *Registry, agentList []models.Agent, uc *copilot.UpstreamClient) error {
 	registry.Register(handlers.NewApexAgent(uc))
 	for _, agentDef := range agentList {
-		if agentDef.Codename == "APEX" {
+		switch agentDef.Codename {
+		case "APEX":
 			continue
+		case "OMNISCIENT":
+			registry.Register(NewOmniscientAgent(agentDef, uc, registry))
+		default:
+			registry.Register(handlers.NewBaseAgent(agentDef, uc))
 		}
-		registry.Register(handlers.NewBaseAgent(agentDef, uc))
 	}
 	return nil
 }

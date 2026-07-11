@@ -151,6 +151,68 @@ func (sp *StrategicPlanner) CreatePlan(ctx context.Context, goal *Goal) (*Plan, 
 	return plan, nil
 }
 
+// CreatePlanForSubtasks builds a strategic plan whose actions map one-to-one
+// to caller-provided subtasks, tagging each action with the agent chosen by
+// agentFor. Unlike CreatePlan (whose generateInitialActions caps at one action
+// for a dependency-less goal and never assigns an agent), this lets the planner
+// represent a genuine multi-agent decomposition. It reuses the same
+// feasibility, lookahead, caching, and metrics machinery.
+func (sp *StrategicPlanner) CreatePlanForSubtasks(ctx context.Context, goal *Goal, subtasks []string, agentFor func(subtask string) string) (*Plan, error) {
+	sp.mu.Lock()
+	defer sp.mu.Unlock()
+
+	startTime := time.Now()
+	sp.requestCount++
+
+	if sp.config.PlanCachingEnabled {
+		if cached, ok := sp.planCache[goal.ID]; ok {
+			sp.successCount++
+			return cached, nil
+		}
+	}
+
+	plan := &Plan{
+		ID:          fmt.Sprintf("plan-%s-%d", goal.ID, time.Now().Unix()),
+		Actions:     make([]*PlannerAction, 0, len(subtasks)),
+		TotalCost:   0.0,
+		CreatedAt:   time.Now(),
+		Feasible:    true,
+		Explanation: "Strategic plan created from subtask decomposition",
+	}
+
+	for i, st := range subtasks {
+		agent := ""
+		if agentFor != nil {
+			agent = agentFor(st)
+		}
+		action := &PlannerAction{
+			ID:            fmt.Sprintf("action-%s-%d", goal.ID, i),
+			Name:          st,
+			Cost:          0.5 + float64(i)*0.1,
+			Preconditions: make([]*Precondition, 0),
+			Effects:       make([]*Effect, 0),
+			AgentRequired: agent,
+		}
+		plan.Actions = append(plan.Actions, action)
+		plan.TotalCost += action.Cost
+	}
+
+	plan.Feasible = sp.evaluatePlan(plan)
+	sp.buildLookaheadTree(ctx, goal, plan)
+	if !plan.Feasible {
+		plan = sp.optimizePlan(plan)
+	}
+
+	if sp.config.PlanCachingEnabled {
+		sp.planCache[goal.ID] = plan
+	}
+	sp.plans[plan.ID] = plan
+
+	sp.updateMetrics(time.Since(startTime), true)
+	sp.successCount++
+	return plan, nil
+}
+
 // generateInitialActions generates the first actions toward a goal
 func (sp *StrategicPlanner) generateInitialActions(goal *Goal) []*PlannerAction {
 	actions := make([]*PlannerAction, 0)

@@ -139,6 +139,19 @@ func (r *Registry) InjectOllama(oc *copilot.OllamaClient) {
 	}
 }
 
+// InjectCrews attaches the crew registry to every agent handler that supports
+// it (currently OMNISCIENT), so the meta-orchestrator can fall back to a
+// configured crew. Call after creating the registry and loading crews.
+func (r *Registry) InjectCrews(c *CrewRegistry) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	for _, handler := range r.agents {
+		if ci, ok := handler.(interface{ SetCrews(*CrewRegistry) }); ok {
+			ci.SetCrews(c)
+		}
+	}
+}
+
 // LoadManifest reads and parses the agents manifest YAML file.
 func LoadManifest(path string) (*ManifestConfig, error) {
 	data, err := os.ReadFile(path)
@@ -174,9 +187,12 @@ func RegistryFromManifest(manifestPath string, uc *copilot.UpstreamClient) (*Reg
 			Directives: agentConfig.Directives,
 		}
 
-		// Use custom handler for APEX, base handler for others
+		// Custom handler for APEX, dedicated orchestrator for OMNISCIENT,
+		// base handler for others.
 		if agentConfig.Codename == "APEX" {
 			registry.Register(handlers.NewApexAgent(uc))
+		} else if agentConfig.Codename == "OMNISCIENT" {
+			registry.Register(NewOmniscientAgent(agent, uc, registry))
 		} else {
 			registry.Register(handlers.NewBaseAgent(agent, uc))
 		}

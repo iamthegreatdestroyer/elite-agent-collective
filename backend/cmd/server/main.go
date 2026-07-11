@@ -138,6 +138,7 @@ func main() {
 
 	// Initialize handlers
 	agentHandler := agents.NewHandler(registry).WithCrews(crewRegistry)
+	registry.InjectCrews(crewRegistry)
 
 	// Initialize authentication middleware
 	authMiddleware := auth.NewMiddleware(&cfg.OIDC)

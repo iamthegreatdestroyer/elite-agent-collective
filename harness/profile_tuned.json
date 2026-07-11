@@ -1,0 +1,6 @@
+{
+  "inject_mode": "message",
+  "correct_tool_calls": true,
+  "prompt_suffix": "",
+  "per_model_suffix": {}
+}

@@ -21,6 +21,7 @@ import (
 	"github.com/iamthegreatdestroyer/elite-agent-collective/backend/internal/copilot"
 	"github.com/iamthegreatdestroyer/elite-agent-collective/backend/internal/memory"
 	"github.com/iamthegreatdestroyer/elite-agent-collective/backend/internal/metrics"
+	"github.com/iamthegreatdestroyer/elite-agent-collective/backend/internal/retrieval"
 )
 
 // corsMiddleware creates CORS middleware with configurable allowed origins.
@@ -121,6 +122,16 @@ func main() {
 	// Initialize agent registry
 	registry := agents.DefaultRegistryWithUpstream(upstreamClient)
 	registry.InjectOllama(ollamaClient)
+	if retriever := retrieval.NewSigmaIndexRetriever(); retriever != nil {
+		registry.InjectRetriever(retriever)
+		if retriever.Enabled() {
+			log.Printf("Retriever enabled: sigma-index %s", retriever.IndexURL())
+		} else {
+			log.Printf("Retriever configured but sigma-index %s not reachable yet (fail-open per request)", retriever.IndexURL())
+		}
+	} else {
+		log.Printf("Retriever disabled (set EAC_RETRIEVER=1 to augment prompts from in-my-head via sigma-index)")
+	}
 	if memStore != nil {
 		registry.InjectMemory(memStore)
 	}

@@ -9,6 +9,7 @@ import (
 	"github.com/iamthegreatdestroyer/elite-agent-collective/backend/internal/agents/handlers"
 	"github.com/iamthegreatdestroyer/elite-agent-collective/backend/internal/copilot"
 	"github.com/iamthegreatdestroyer/elite-agent-collective/backend/internal/memory"
+	"github.com/iamthegreatdestroyer/elite-agent-collective/backend/internal/retrieval"
 	"github.com/iamthegreatdestroyer/elite-agent-collective/backend/pkg/models"
 	"gopkg.in/yaml.v3"
 )
@@ -148,6 +149,18 @@ func (r *Registry) InjectCrews(c *CrewRegistry) {
 	for _, handler := range r.agents {
 		if ci, ok := handler.(interface{ SetCrews(*CrewRegistry) }); ok {
 			ci.SetCrews(c)
+		}
+	}
+}
+
+// InjectRetriever attaches rt to every agent handler that supports prompt
+// augmentation (BaseAgent + ApexAgent). Call after creating the registry.
+func (r *Registry) InjectRetriever(rt retrieval.Retriever) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	for _, handler := range r.agents {
+		if ri, ok := handler.(interface{ SetRetriever(retrieval.Retriever) }); ok {
+			ri.SetRetriever(rt)
 		}
 	}
 }

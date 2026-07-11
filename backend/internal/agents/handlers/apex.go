@@ -10,14 +10,16 @@ import (
 	"github.com/iamthegreatdestroyer/elite-agent-collective/backend/internal/copilot"
 	"github.com/iamthegreatdestroyer/elite-agent-collective/backend/internal/memory"
 	"github.com/iamthegreatdestroyer/elite-agent-collective/backend/internal/metrics"
+	"github.com/iamthegreatdestroyer/elite-agent-collective/backend/internal/retrieval"
 	"github.com/iamthegreatdestroyer/elite-agent-collective/backend/pkg/models"
 )
 
 // ApexAgent is the Elite Computer Science Engineering Specialist.
 type ApexAgent struct {
-	upstream *copilot.UpstreamClient
-	ollama   *copilot.OllamaClient
-	mem      *memory.Store
+	upstream  *copilot.UpstreamClient
+	ollama    *copilot.OllamaClient
+	mem       *memory.Store
+	retriever retrieval.Retriever
 }
 
 // NewApexAgent creates a new APEX agent.
@@ -35,6 +37,11 @@ func (a *ApexAgent) SetMemory(m *memory.Store) {
 // the canned template response).
 func (a *ApexAgent) SetOllama(o *copilot.OllamaClient) {
 	a.ollama = o
+}
+
+// SetRetriever attaches a knowledge retriever used to augment the prompt.
+func (a *ApexAgent) SetRetriever(r retrieval.Retriever) {
+	a.retriever = r
 }
 
 // GetInfo returns APEX agent metadata.
@@ -69,6 +76,15 @@ func (a *ApexAgent) Handle(ctx context.Context, req *models.CopilotRequest) (*mo
 	}
 
 	systemPrompt := a.buildSystemPrompt(userID, userMsg)
+
+	// Augment the system prompt with knowledge retrieved from in-my-head
+	// (via sigma-index hybrid RRF). Fail-open: any error leaves the prompt
+	// unchanged.
+	if a.retriever != nil && a.retriever.Enabled() {
+		if block, err := a.retriever.Retrieve(ctx, a.GetInfo().Specialty, userMsg); err == nil && block != "" {
+			systemPrompt = block + "\n" + systemPrompt
+		}
+	}
 
 	if a.upstream != nil {
 		if resp, _ := a.upstream.Forward(ctx, systemPrompt, req); resp != nil {

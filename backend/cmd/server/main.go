@@ -68,6 +68,9 @@ func main() {
 	ollamaClient := copilot.NewOllamaClient()
 	if ollamaClient.Enabled() {
 		log.Printf("Ollama fallback enabled: %s (model %s)", ollamaClient.BaseURL(), ollamaClient.Model())
+		// Pre-load the model in the background so the first real Copilot
+		// request does not pay the CPU cold-load penalty (~40-50s) and time out.
+		go ollamaClient.Warmup(context.Background())
 	} else {
 		log.Printf("Ollama fallback unavailable at %s (agents will use template responses if upstream is also unavailable)", ollamaClient.BaseURL())
 	}

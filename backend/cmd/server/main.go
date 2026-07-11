@@ -20,6 +20,7 @@ import (
 	"github.com/iamthegreatdestroyer/elite-agent-collective/backend/internal/config"
 	"github.com/iamthegreatdestroyer/elite-agent-collective/backend/internal/copilot"
 	"github.com/iamthegreatdestroyer/elite-agent-collective/backend/internal/memory"
+	"github.com/iamthegreatdestroyer/elite-agent-collective/backend/internal/metrics"
 )
 
 // corsMiddleware creates CORS middleware with configurable allowed origins.
@@ -152,11 +153,13 @@ func main() {
 	r.Use(middleware.RealIP)
 	r.Use(middleware.Logger)
 	r.Use(middleware.Recoverer)
+	r.Use(metrics.Middleware)
 	r.Use(middleware.Timeout(60 * time.Second))
 	r.Use(corsMiddleware(cfg.CORSAllowedOrigins))
 
 	// Health check endpoint (no auth required)
 	r.Get("/health", healthCheckHandler)
+	r.Get("/metrics", metrics.Handler)
 
 	// API routes
 	r.Route("/agents", func(r chi.Router) {

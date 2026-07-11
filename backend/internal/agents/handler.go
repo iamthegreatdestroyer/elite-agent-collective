@@ -10,6 +10,7 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/iamthegreatdestroyer/elite-agent-collective/backend/internal/copilot"
+	"github.com/iamthegreatdestroyer/elite-agent-collective/backend/internal/metrics"
 	"github.com/iamthegreatdestroyer/elite-agent-collective/backend/pkg/models"
 )
 
@@ -130,6 +131,7 @@ func (h *Handler) CopilotWebhook(w http.ResponseWriter, r *http.Request) {
 	// Check for @CREW:name mentions first.
 	codenames := h.resolveCodenames(userMessage)
 	if len(codenames) == 0 {
+		metrics.IncRoutingMode("default")
 		codenames = []string{"APEX"}
 	}
 
@@ -175,6 +177,7 @@ func (h *Handler) resolveCodenames(message string) []string {
 		if m := crewMentionPattern.FindStringSubmatch(message); len(m) == 2 {
 			if crew, ok := h.crews.Get(m[1]); ok {
 				log.Printf("Copilot webhook: expanding crew %q → %v", m[1], crew.Agents)
+				metrics.IncRoutingMode("crew")
 				return crew.Agents
 			}
 		}
@@ -182,6 +185,7 @@ func (h *Handler) resolveCodenames(message string) []string {
 
 	// Explicit @AGENT mentions always win.
 	if names := extractAllAgentCodenames(message); len(names) > 0 {
+		metrics.IncRoutingMode("explicit")
 		return names
 	}
 
@@ -191,6 +195,7 @@ func (h *Handler) resolveCodenames(message string) []string {
 	if h.router != nil {
 		if routed := h.router.Route(message); len(routed) > 0 {
 			log.Printf("Copilot webhook: semantic routing \u2192 %v", routed)
+			metrics.IncRoutingMode("semantic")
 			return routed
 		}
 	}

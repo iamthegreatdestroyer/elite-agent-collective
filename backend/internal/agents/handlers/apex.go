@@ -9,6 +9,7 @@ import (
 	"github.com/iamthegreatdestroyer/elite-agent-collective/backend/internal/auth"
 	"github.com/iamthegreatdestroyer/elite-agent-collective/backend/internal/copilot"
 	"github.com/iamthegreatdestroyer/elite-agent-collective/backend/internal/memory"
+	"github.com/iamthegreatdestroyer/elite-agent-collective/backend/internal/metrics"
 	"github.com/iamthegreatdestroyer/elite-agent-collective/backend/pkg/models"
 )
 
@@ -57,6 +58,7 @@ func (a *ApexAgent) GetInfo() models.Agent {
 // Handle processes a Copilot request using APEX's methodology.
 // Forwards to upstream with APEX's system prompt; falls back to template response.
 func (a *ApexAgent) Handle(ctx context.Context, req *models.CopilotRequest) (*models.CopilotResponse, error) {
+	metrics.IncAgent("APEX")
 	userID := memory.UserID(auth.GetGitHubToken(ctx))
 	userMsg := copilot.GetLastUserMessage(req)
 
@@ -70,6 +72,7 @@ func (a *ApexAgent) Handle(ctx context.Context, req *models.CopilotRequest) (*mo
 
 	if a.upstream != nil {
 		if resp, _ := a.upstream.Forward(ctx, systemPrompt, req); resp != nil {
+			metrics.UpstreamTotal.Add(1)
 			return resp, nil
 		}
 	}
@@ -79,6 +82,7 @@ func (a *ApexAgent) Handle(ctx context.Context, req *models.CopilotRequest) (*mo
 	// don't pay the request timeout on every call when Ollama isn't running.
 	if a.ollama != nil && a.ollama.Enabled() {
 		if resp, err := a.ollama.Forward(ctx, systemPrompt, req); err == nil && resp != nil {
+			metrics.OllamaFallbackTotal.Add(1)
 			return resp, nil
 		}
 	}

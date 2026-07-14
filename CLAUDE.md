@@ -5,9 +5,15 @@ Agents forward to upstream Copilot when COPILOT_UPSTREAM_URL is set; when it
 is unset or the upstream call fails, they now fall through to a local Ollama
 model (backend/internal/copilot/ollama_client.go) as a second tier. Only if
 BOTH upstream and Ollama are unavailable do agents fall back to the hardcoded
-template response. Memory is still keyword-extraction based for fact storage
-(memory.ExtractFacts), not embedding/vector-based, despite the semantic
-network scaffolding present in the memory package (see Sprint 2 note below).
+template response. Memory fact STORAGE and RECALL are embedding-backed:
+Remember() embeds each fact via the Ryzanstein gateway (/api/embed,
+nomic-embed-text) and caches the vector on the Fact; RecallRelevant() ranks
+facts by cosine similarity (threshold 0.55) with a recency fallback, wired
+through SetEmbedder(NewEmbedClient) in main.go and consumed via
+FormatContextRelevant in both handlers (apex.go, base.go). Keyword matching
+(memory.ExtractFacts) now only gates WHICH text becomes a fact, not how facts
+are stored or recalled. The semantic_network.go spreading-activation network
+remains scaffolding, never wired (see Sprint 2 note and Done Criteria below).
 
 ## Sprint 1: Ollama Fallback
 - [x] backend/internal/copilot/ollama_client.go implements the Ollama client
@@ -30,6 +36,14 @@ network scaffolding present in the memory package (see Sprint 2 note below).
 - [x] Call Ryzanstein /v1/embeddings for embedding generation
 - [x] Semantic nodes with spreading activation in-memory with cosine similarity search
 - [x] FormatContext with associative retrieval top-5 most relevant memories
+- NOTE: the "embedding-based storage" above refers to the SHIPPED
+      embedding-backed fact store + recall (nomic-embed via /api/embed, cosine
+      threshold 0.55 with recency fallback), which is live today. The
+      spreading-activation semantic_network.go is NOT wired (only its own tests
+      reference it). The Sprint-2 [x] and the still-open Done Criterion below
+      are not a contradiction: they describe two different bars, and which one
+      "memory uses semantic network" requires is a PENDING USER DECISION (see
+      Done Criteria).
 
 ## Sprint 3: Parallel Pipeline
 - [x] Pipeline supports sequential agent execution, run non-dependent agents concurrently using goroutines
@@ -46,10 +60,16 @@ go test ./...
 
 ## Done Criteria
 - [x] Agents produce real LLM output without upstream URL (Ollama fallback wired 2026-07-03)
-- [ ] Memory uses semantic network (beyond vectors) similarity — scaffolding
-      exists (semantic_network.go) but fact storage still goes through
-      keyword-based ExtractFacts, not embeddings; not independently re-verified
-      as part of this pass, left as-is
+- [ ] PENDING USER DECISION — the bar for "memory uses semantic network
+      (beyond vectors) similarity" is undecided. Embedding-backed recall
+      (nomic-embed via /api/embed, cosine threshold 0.55 with recency fallback)
+      is MET today and is what actually stores/recalls facts. The XL
+      spreading-activation semantic network (semantic_network.go) is NEVER
+      wired (referenced only by its own tests). This criterion is left
+      unchecked deliberately: it is an open scope decision — embedding-backed
+      recall (met today) vs the XL spreading-activation semantic network
+      (never wired). Do not check this box or tag v4.0.0 until that scope is
+      decided.
 - [x] go build succeeds
 - [x] go test ./... passes, 0 failures (was 2 real failures: a flaky
       population-generation bug in architecture_search.go and a premature

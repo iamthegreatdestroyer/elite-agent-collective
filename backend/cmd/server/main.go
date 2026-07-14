@@ -189,7 +189,7 @@ func main() {
 	r.With(authMiddleware.Authenticate).Post("/agent", agentHandler.CopilotWebhook)
 
 	// Start server
-	addr := fmt.Sprintf(":%d", cfg.Port)
+	addr := fmt.Sprintf("%s:%d", cfg.BindAddr, cfg.Port)
 	server := &http.Server{
 		Addr:         addr,
 		Handler:      r,

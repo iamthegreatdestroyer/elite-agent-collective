@@ -9,6 +9,12 @@ import (
 // Config holds all configuration for the server.
 type Config struct {
 	// Server configuration
+	// BindAddr restricts which interface the server listens on (e.g. a
+	// specific wg0/loopback IP). Empty means all interfaces -- every other
+	// service in this ecosystem binds to a specific address deliberately,
+	// so an explicit BIND_ADDR should be set in production rather than
+	// relying on the empty default + a firewall rule alone.
+	BindAddr string
 	Port     int
 	LogLevel string
 
@@ -42,6 +48,7 @@ type GitHubConfig struct {
 // Load reads configuration from environment variables with sensible defaults.
 func Load() *Config {
 	return &Config{
+		BindAddr:           getEnv("BIND_ADDR", ""),
 		Port:               getEnvAsInt("PORT", 8080),
 		LogLevel:           getEnv("LOG_LEVEL", "info"),
 		CORSAllowedOrigins: getEnv("CORS_ALLOWED_ORIGINS", ""),

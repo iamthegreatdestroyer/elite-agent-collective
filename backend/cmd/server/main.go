@@ -7,6 +7,8 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"net/http/httputil"
+	"net/url"
 	"os"
 	"os/signal"
 	"path/filepath"
@@ -179,6 +181,29 @@ func main() {
 		r.Get("/{codename}", agentHandler.GetAgent)
 		r.With(authMiddleware.Authenticate).Post("/{codename}/invoke", agentHandler.InvokeAgent)
 	})
+
+	// Task queue proxy: forward /tasks to the eac-taskd worker (runs as an
+	// unprivileged sidecar that owns the SQLite queue, reaches the Ryzanstein
+	// gateway, and writes the in-my-head vault). This backend stays root +
+	// sandboxed and never does LLM work itself; it only enqueues via HTTP.
+	// POST /tasks returns 202 immediately (enqueue), so the 60s router timeout
+	// is never near the multi-minute dispatch. Fail-open: 502 + JSON if the
+	// worker is unreachable, leaving every other route unaffected.
+	if taskdURL := envStr("EAC_TASKD_URL", "http://127.0.0.1:29081"); taskdURL != "" {
+		if target, err := url.Parse(taskdURL); err == nil {
+			proxy := httputil.NewSingleHostReverseProxy(target)
+			proxy.ErrorHandler = func(w http.ResponseWriter, _ *http.Request, e error) {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusBadGateway)
+				fmt.Fprintf(w, `{"error":"eac-taskd worker unreachable at %s","detail":%q}`+"\n", taskdURL, e.Error())
+			}
+			r.Handle("/tasks", proxy)
+			r.Handle("/tasks/*", proxy)
+			log.Printf("Task queue proxy enabled: /tasks -> %s (eac-taskd worker)", taskdURL)
+		} else {
+			log.Printf("Task queue proxy disabled: bad EAC_TASKD_URL %q (%v)", taskdURL, err)
+		}
+	}
 
 	// Copilot webhook endpoint with signature verification
 	// Uses signature verification when GITHUB_WEBHOOK_SECRET is configured

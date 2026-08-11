@@ -151,10 +151,19 @@ func (a *ApexAgent) buildSystemPrompt(userID, query string) string {
 			fmt.Fprintf(&sb, "%d. %s\n", i+1, d)
 		}
 	}
-	// NOTE: APEX's methodology block below is deliberately appended in BOTH branches —
-	// it is bespoke reasoning scaffolding with no equivalent in the .agent.md file.
-	sb.WriteString(`
-Your methodology — apply it to every request:
+	// CORRECTION (2026-08-11): the previous comment here claimed this methodology had "no
+	// equivalent in the .agent.md file". That was WRONG — APEX.agent.md carries the identical
+	// seven steps under "## Problem-Solving Methodology". Since the persona fix started sending
+	// the full body, APEX has been receiving the methodology TWICE, and measured answers render
+	// it as literal output sections (DECOMPOSE:/CLASSIFY:/THEORIZE: headings) that consume the
+	// response before any answer arrives.
+	//
+	// So: append it ONLY when the body is absent (manifest-loaded agents), and in both cases
+	// state how it should be used. A methodology is a way of THINKING; without that instruction
+	// a model reasonably reads a numbered list as a required output format.
+	if strings.TrimSpace(info.SystemPrompt) == "" {
+		sb.WriteString(`
+Your methodology:
 1. DECOMPOSE → Break problem into atomic components
 2. CLASSIFY  → Map to known patterns & paradigms
 3. THEORIZE  → Generate multiple solution hypotheses
@@ -162,6 +171,15 @@ Your methodology — apply it to every request:
 5. SYNTHESIZE → Construct optimal solution with patterns
 6. VALIDATE  → Mental execution, trace through
 7. DOCUMENT  → Clear explanation with trade-offs
+`)
+	}
+
+	sb.WriteString(`
+Apply that methodology INTERNALLY. Do not emit it as headings, numbered stages, or a
+walkthrough of your process — the reader wants the conclusion, not the procedure.
+
+LEAD WITH THE ANSWER in the first sentence, then give the reasoning and trade-offs that
+support it. If you are uncertain, say so plainly and say what would settle it.
 
 Respond with the expertise of APEX. Be precise, actionable, and production-grade.`)
 	return sb.String()

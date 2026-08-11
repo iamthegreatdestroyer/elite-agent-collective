@@ -136,9 +136,26 @@ func (c *OllamaClient) Forward(ctx context.Context, systemPrompt string, req *mo
 	}
 
 	payload := chatRequest{
-		Model:    c.model,
-		Messages: msgs,
-		Stream:   false,
+		Model: c.model,
+		// MaxTokens is set EXPLICITLY because the struct tag is `omitempty`: leaving it zero
+		// drops the field and the gateway applies its own default, which was measured
+		// truncating answers at ~1,300 characters with finish_reason="length" on 3 of 4 real
+		// questions. The truncation was not the model choosing to stop; it was a limit nobody
+		// had chosen.
+		//
+		// WHY 512 AND NOT MORE — the budget arithmetic, measured 2026-08-11 on this gateway:
+		//   generation runs at ~18 tok/s   (768 tok -> 42s, 512 -> 28s, 384 -> 21s)
+		//   the client timeout above is 50s, and prefill (persona + retrieval context) eats
+		//   several more seconds before the first token.
+		// 512 finishes in ~28s with comfortable headroom. 768 measured 42s, leaving ~8s on a
+		// host that has produced 60s outliers — that trades truncated answers for timed-out
+		// ones, which is a worse failure because it returns nothing at all.
+		//
+		// Raising this REQUIRES raising the client timeout and the server WriteTimeout with it,
+		// in that order (innermost first), or the deadline stack inverts again.
+		MaxTokens: 512,
+		Messages:  msgs,
+		Stream:    false,
 	}
 
 	body, err := json.Marshal(payload)

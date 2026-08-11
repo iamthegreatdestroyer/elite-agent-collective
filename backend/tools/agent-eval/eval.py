@@ -60,7 +60,15 @@ CASES = [
 
     ("echo_hash",
      "What hash function does the Echo chain use? Name it.",
-     r"BLAKE2b", r"SHA-?256|SHA-?1\b|MD5|SHA-?512",
+     r"BLAKE2b",
+     # An ASSERTION of the wrong hash, not a mention of one. The 2026-08-11
+     # re-run graded a fully correct answer "mixed" because it said BLAKE2b
+     # "offers advantages over older algorithms like SHA-2 or MD5" — a true
+     # comparative aside that the old pattern read as a competing claim.
+     # Naming a rival algorithm while correctly rejecting it is what a good
+     # answer looks like; the grader must not punish it.
+     r"(?:uses?|using|is|employs?|based on|implemented with|computed with|via)\s+"
+     r"(?:the\s+)?(?:SHA-?256|SHA-?1\b|MD5|SHA-?512|SHA-?3)",
      "H(x) = BLAKE2b-256 per the primitive law"),
 
     ("failclosed_level",
@@ -70,7 +78,11 @@ CASES = [
 
     ("echo_env",
      "Which environment variable enables the Echo audit chain? Give just the variable name.",
-     r"EAC_ECHO_PATH", r"EAC_ECHO_ENABLED|ECHO_ENABLED|EAC_AUDIT|ENABLE_ECHO",
+     r"EAC_ECHO_PATH",
+     # Same rule: the variable must be PUT FORWARD as the answer, not listed
+     # among things it is not.
+     r"(?:is|are|use|uses|set|named|variable)\s+`?(?:EAC_ECHO_ENABLED|ECHO_ENABLED|EAC_AUDIT|ENABLE_ECHO)`?"
+     r"|^\s*`?(?:EAC_ECHO_ENABLED|ECHO_ENABLED|EAC_AUDIT|ENABLE_ECHO)`?\s*$",
      "EAC_ECHO_PATH"),
 
     ("chain_contents",

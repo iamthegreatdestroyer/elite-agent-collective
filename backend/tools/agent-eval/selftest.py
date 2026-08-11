@@ -18,6 +18,18 @@ T = [
     ("artifact_holders", "FORGE holds artifact.write.", "wrong"),
     ("echo_hash", "It uses BLAKE2b-256.", "correct"),
     ("echo_hash", "It uses SHA-256.", "wrong"),
+    # A correct answer that COMPARES against other hashes must not be marked
+    # down for naming them. This is the exact 2026-08-11 answer that exposed
+    # the grader, trimmed; it scored "mixed" and was fully correct.
+    ("echo_hash",
+     "The Echo chain uses BLAKE2b-256 as its hash function. BLAKE2b offers collision "
+     "resistance and performance advantages over older algorithms like SHA-2 or MD5.",
+     "correct"),
+    # ...but the grader must still be able to FAIL. An answer that asserts the
+    # wrong hash while mentioning the right one is not a pass.
+    ("echo_hash", "The chain is implemented with SHA-256, not BLAKE2b.", "mixed"),
+    ("echo_env", "The variable is EAC_ECHO_PATH, not ENABLE_ECHO.", "correct"),
+    ("echo_env", "ENABLE_ECHO", "wrong"),
     ("failclosed_level", "fail-closed", "correct"),
     ("failclosed_level", "fail-open", "wrong"),
     ("approval_executes", "No — approval records a decision and executes nothing.", "correct"),

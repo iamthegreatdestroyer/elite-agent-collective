@@ -103,7 +103,7 @@ func TestDecisionPathRecordsUnauthenticated(t *testing.T) {
 	p := &proposal.Proposal{
 		Agent: "FORGE", Title: "Rebuild the index",
 		Rationale: "It is stale.",
-		Steps:     []proposal.Step{{Order: 1, Action: "rebuild", Target: "sigma-index", Reversible: true}},
+		Steps:     []proposal.Step{{Order: 1, Action: "rebuild", Target: "sigma-index", ReversibleClaimed: true}},
 		Status:    proposal.StatusPending,
 	}
 	p.Commit()

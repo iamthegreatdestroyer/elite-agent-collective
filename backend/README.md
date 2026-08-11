@@ -206,6 +206,21 @@ is needed:
 | 5 | `L3` | Domain specialists (`SENTRY`, `VERTEX`, `STREAM`, `ATLAS`, `FORGE`) |
 | all others | `L2` | Tiers 1–3 and 6–8, **and any unrecognised tier** |
 
+### A ceiling is not a grant
+
+⚠️ **Reaching `L3` is necessary but not sufficient.** From `L3` upward a request must also
+**name a capability**, and that capability must appear in the agent's enumerated grant table —
+*"per-agent enumerated grants; nothing ambient."* A tier is a class and sets the ceiling; a grant
+is a decision about one agent and says what it may do there.
+
+**The grant table is currently EMPTY, and that is correct:** no capability is implemented and there
+is no tool surface, so an entry would grant an ability that does not exist. **L3 is therefore
+unreachable by construction** — every `L3` request is refused regardless of tier, and a test
+fails if a grant ever appears, so granting power cannot ride along quietly with other work.
+
+Capabilities narrow along a delegation chain exactly as ceilings do: **every** agent in the chain
+must hold the capability, so a caller cannot borrow a callee's grant.
+
 Behaviour:
 
 - **No header means `L1`**, which is below every ceiling — so requests that worked before the
@@ -263,6 +278,12 @@ serving host would be decorative.
 
 The commitment excludes `status` and `decision`, so ruling on a proposal does not invalidate it. The
 store verifies the commitment on **every read** and refuses to return altered content.
+
+**`reversible_claimed` is the model's claim, not a fact.** §7 rates "agent error at machine speed" on
+L3 being reversible; a bare `reversible: true` supplied by the model and checked by nobody would be a
+claim carrying the authority of a measurement. The field name carries its provenance, as
+`"authenticated": false` does on decisions. Authoritative reversibility will come from the capability a
+step exercises, once L3 capabilities exist.
 
 **Approval decides; it does not execute.** There is no tool surface in this service and L3 is not
 implemented. An approved proposal is a decision on the record, not an action taken.

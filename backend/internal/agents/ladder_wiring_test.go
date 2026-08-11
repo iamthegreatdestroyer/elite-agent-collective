@@ -95,10 +95,14 @@ func TestUnlabelledRequestIsUnaffected(t *testing.T) {
 
 func TestLevelsAtOrBelowCeilingAreAllowed(t *testing.T) {
 	_, r := setupTestHandler()
+	// NOTE: FORGE at L3 is DELIBERATELY absent. Its ceiling permits L3, but §2.2 requires
+	// "per-agent enumerated grants; nothing ambient" — and the grant table is empty, so no
+	// agent may act. Reaching a rung is not the same as holding a capability. See
+	// TestCeilingWithoutGrantIsRefused below, which asserts the refusal directly.
 	cases := []struct{ agent, level string }{
 		{"OMNISCIENT", "L2"}, {"OMNISCIENT", "L0"}, // tier 4, ceiling L2
-		{"FORGE", "L3"}, {"FORGE", "propose"}, // tier 5, ceiling L3
-		{"SCRIBE", "L2"}, // tier 7, ceiling L2
+		{"FORGE", "propose"}, // tier 5, below its ceiling and needing no capability
+		{"SCRIBE", "L2"},     // tier 7, ceiling L2
 	}
 	for _, c := range cases {
 		if w := invoke(r, c.agent, c.level); w.Code == http.StatusForbidden {
@@ -118,6 +122,28 @@ func TestLevelsAboveCeilingAreRefused(t *testing.T) {
 		if w := invoke(r, c.agent, c.level); w.Code != http.StatusForbidden {
 			t.Errorf("%s at %s: status %d, want 403", c.agent, c.level, w.Code)
 		}
+	}
+}
+
+// Reaching the ceiling is NOT sufficient at L3: §2.2 requires an enumerated capability, and the
+// grant table is empty. This is the behaviour change that corrected the ambient-authority defect —
+// FORGE's ceiling still permits L3 and FORGE is still refused.
+func TestCeilingWithoutGrantIsRefused(t *testing.T) {
+	_, r := setupTestHandler()
+
+	// DELTA, not an absolute: metrics are package-global and other tests in this package have
+	// already dispatched FORGE. Asserting == 0 measures the test ordering, not this request.
+	before := readCounter(t, "eac_requests_by_agent_total", "FORGE")
+
+	w := invoke(r, "FORGE", "L3")
+	if w.Code != http.StatusForbidden {
+		t.Errorf("FORGE at L3: status %d, want 403 — a ceiling is not a grant", w.Code)
+	}
+	if !strings.Contains(w.Body.String(), "capability") {
+		t.Errorf("refusal does not explain that a capability is required: %s", w.Body.String())
+	}
+	if after := readCounter(t, "eac_requests_by_agent_total", "FORGE"); after != before {
+		t.Errorf("a capability refusal counted as a dispatch: %d -> %d", before, after)
 	}
 }
 

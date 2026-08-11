@@ -51,11 +51,12 @@ Reply with a single JSON object and nothing else — no commentary, no code fenc
 {
   "title": "<one line, what you propose>",
   "rationale": "<why, grounded in what you were told>",
-  "steps": [{"order": 1, "action": "<verb phrase>", "target": "<what it acts on>", "reversible": true}],
+  "steps": [{"order": 1, "action": "<verb phrase>", "target": "<what it acts on>", "reversible_claimed": true}],
   "risks": ["<what could go wrong>"]
 }
 Replace every bracketed placeholder with real content. Do not return the template.
-You are proposing, not acting. Nothing you write here is executed.`
+You are proposing, not acting. Nothing you write here is executed.
+reversible_claimed is YOUR claim; it is recorded as a claim and grants nothing.`
 
 // templatePlaceholders are the exact strings the instruction above uses as placeholders.
 //

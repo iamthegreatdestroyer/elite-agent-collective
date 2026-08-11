@@ -18,8 +18,8 @@ func sample() *Proposal {
 		Rationale: "The index is stale and blocks retrieval.",
 		CreatedAt: time.Unix(0, tsFixed).UTC(),
 		Steps: []Step{
-			{Order: 1, Action: "rebuild", Target: "sigma-index", Reversible: true},
-			{Order: 2, Action: "restart", Target: "eac-backend", Reversible: true},
+			{Order: 1, Action: "rebuild", Target: "sigma-index", ReversibleClaimed: true},
+			{Order: 2, Action: "restart", Target: "eac-backend", ReversibleClaimed: true},
 		},
 		Risks:  []string{"brief downtime during restart"},
 		Status: StatusPending,
@@ -29,13 +29,17 @@ func sample() *Proposal {
 }
 
 // KNOWN-ANSWER vector, computed by a separate implementation from the documented encoding
-// (BLAKE2b-256 over "sigma-agentos-payload-v1" ‖ LP("proposal.v1") ‖ LP(field)…).
+// (BLAKE2b-256 over "sigma-agentos-payload-v1" ‖ LP("proposal.v2") ‖ LP(field)…).
+//
+// The vector CHANGED when Step.Reversible became Step.ReversibleClaimed — the field list
+// moved, so every commitment moved, so Schema was bumped v1 -> v2. That is the mechanism
+// working: the rename could not be made quietly.
 //
 // This is what makes Schema a promise: any change to the field list or its order changes every
 // commitment and breaks this test, forcing the schema name to be bumped with it.
 func TestCommitmentKnownAnswer(t *testing.T) {
 	p := sample()
-	const want = "3fbf5552c582ae11f4f8b5a00fdc1fbfce08a9839a027feabf674c80d989d5be"
+	const want = "a18ae55ed64948f5229f3a227bfcf2c9494134d4d7bd963949ba4e421ba9c5ba"
 	if p.Commitment != want {
 		t.Errorf("commitment\n got  %s\n want %s\n(if intentional, bump Schema)", p.Commitment, want)
 	}

@@ -23,7 +23,7 @@ type Fact struct {
 	Timestamp int64  `json:"timestamp"`
 	// Vector is the nomic embedding of "key: value", cached once at Remember
 	// time for semantic recall. Absent for pre-feature or fail-open records.
-	Vector    []float32 `json:"vector,omitempty"`
+	Vector []float32 `json:"vector,omitempty"`
 }
 
 // userMemory holds all facts for one user.

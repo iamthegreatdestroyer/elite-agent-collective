@@ -77,7 +77,7 @@ func TestRetriever_Retrieve(t *testing.T) {
 
 func TestRetriever_FailOpen(t *testing.T) {
 	t.Setenv("EAC_RETRIEVER", "1")
-	t.Setenv("EAC_GATEWAY_URL", "http://127.0.0.1:1")   // unreachable
+	t.Setenv("EAC_GATEWAY_URL", "http://127.0.0.1:1") // unreachable
 	t.Setenv("EAC_SIGMA_INDEX_URL", "http://127.0.0.1:1")
 	r := NewSigmaIndexRetriever()
 	if r == nil {

@@ -52,7 +52,7 @@ import (
 // Schema names the canonical encoding. Changing the field list REQUIRES a new schema name: the
 // schema is hashed first, so a silent field change would produce commitments indistinguishable
 // from the old shape's.
-const Schema = "proposal.v1"
+const Schema = "proposal.v2"
 
 // Status is a proposal's lifecycle state.
 type Status string
@@ -66,10 +66,22 @@ const (
 // Step is one action a proposal proposes. It is a description, never an instruction that anything
 // executes — nothing in this service can act on it.
 type Step struct {
-	Order      int    `json:"order"`
-	Action     string `json:"action"`
-	Target     string `json:"target"`
-	Reversible bool   `json:"reversible"`
+	Order  int    `json:"order"`
+	Action string `json:"action"`
+	Target string `json:"target"`
+	// ReversibleClaimed is the MODEL'S claim that this step could be undone. It is not verified
+	// and must not be read as a fact.
+	//
+	// §7 rates "agent error at machine speed" Medium on the strength of "Reversible L3" — a
+	// rating resting on a property that, as a bare `reversible: true`, was supplied by the model
+	// and checked by nobody. That is a claim carrying the authority of a measurement, which is
+	// the defect this whole series keeps finding in other people's documents.
+	//
+	// The name carries the provenance, exactly as Decision.Authenticated does. Authoritative
+	// reversibility will come from the CAPABILITY a step exercises — our statement about our own
+	// tool, verifiable — once L3 capabilities exist. Until then this field informs the human
+	// reviewer and grants nothing.
+	ReversibleClaimed bool `json:"reversible_claimed"`
 }
 
 // Decision records a human ruling on a proposal.
@@ -196,7 +208,7 @@ func (p *Proposal) commitmentFields() [][]byte {
 		u32(len(p.Steps)),
 	}
 	for _, s := range p.Steps {
-		f = append(f, u32(s.Order), []byte(s.Action), []byte(s.Target), boolByte(s.Reversible))
+		f = append(f, u32(s.Order), []byte(s.Action), []byte(s.Target), boolByte(s.ReversibleClaimed))
 	}
 	f = append(f, u32(len(p.Risks)))
 	for _, r := range p.Risks {

@@ -129,6 +129,10 @@ type Decision struct {
 	Granted   Level  `json:"granted"`
 	Denied    bool   `json:"denied"`
 	Reason    string `json:"reason"`
+	// Capability is the named ability the request wanted to exercise. Empty below L3, where
+	// no capability is named or needed. Recorded so an audit entry can answer "to do what",
+	// not merely "how high" — a level alone does not describe an action.
+	Capability Capability `json:"capability,omitempty"`
 }
 
 // Check adjudicates a requested rung against an agent's ceiling.

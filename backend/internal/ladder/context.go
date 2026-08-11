@@ -20,6 +20,7 @@ type ctxKey int
 const (
 	levelKey ctxKey = iota
 	chainKey
+	capabilityKey
 )
 
 // WithLevel attaches the authority level a request is asking for.
@@ -38,6 +39,22 @@ func LevelFrom(ctx context.Context) Level {
 		return l
 	}
 	return DefaultRequested
+}
+
+// WithCapability attaches the capability a request wants to exercise. Required from L3 up.
+func WithCapability(ctx context.Context, c Capability) context.Context {
+	return context.WithValue(ctx, capabilityKey, c)
+}
+
+// CapabilityFrom returns the requested capability, or "" when none was named.
+//
+// The zero value is deliberately NOT a wildcard: an unnamed capability is refused at L3 and above,
+// so forgetting to set one fails closed rather than granting everything.
+func CapabilityFrom(ctx context.Context) Capability {
+	if c, ok := ctx.Value(capabilityKey).(Capability); ok {
+		return c
+	}
+	return ""
 }
 
 // WithCaller appends an agent to the delegation chain.
@@ -69,6 +86,25 @@ func CallersFrom(ctx context.Context) []models.Agent {
 // call at each of the six dispatch sites.
 func Authorize(ctx context.Context, callee models.Agent) (context.Context, Decision) {
 	next := WithCaller(ctx, callee) // copies; never aliases a sibling's backing array
-	d := CheckChain(LevelFrom(ctx), CallersFrom(next)...)
+	chain := CallersFrom(next)
+	requested := LevelFrom(ctx)
+
+	d := CheckChain(requested, chain...)
+	if d.Denied {
+		return next, d
+	}
+
+	// §2.2's enumerated-grant rule. Checked AFTER the ceiling so the reported reason is the
+	// first thing that actually failed, and applied over the whole chain for the same reason
+	// the ceiling is: authority must not widen by delegation.
+	cap := CapabilityFrom(ctx)
+	if ok, why := checkCapability(requested, cap, chain); !ok {
+		d.Denied = true
+		d.Granted = L0
+		d.Capability = cap
+		d.Reason = why
+		return next, d
+	}
+	d.Capability = cap
 	return next, d
 }

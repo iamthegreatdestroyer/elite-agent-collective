@@ -59,6 +59,7 @@ package echo
 
 import (
 	"bufio"
+	"bytes"
 	"encoding/binary"
 	"encoding/hex"
 	"encoding/json"
@@ -278,9 +279,72 @@ func (c *Chain) Append(trigger string, payloadHash []byte) (Record, error) {
 		return Record{}, fmt.Errorf("echo: fsync failed, record rolled back, head not advanced: %w", err)
 	}
 
+	// READ-BACK BEFORE MARKING CURRENT (Ouroboros Round 30, R30-3).
+	//
+	// R30-3 found that the commit protocol applies `retain-previous-until-verified` to the
+	// EXPORTED copy but never to the original: rename() replaces the live envelope and no
+	// step reads it back before the next step marks the epoch current, so a re-seal that
+	// completes and produces an envelope that does not open is not detected at commit time
+	// — it is detected at the next read, by which point the previous envelope is gone.
+	//
+	// The same shape applies here. Without this, a write that reports success but lands
+	// corrupt advances the in-memory head to a hash the file does not contain, and the
+	// damage surfaces only at the next Open — by which point every later record has been
+	// chained onto it. Verifying at append time keeps the head and the durable file in
+	// agreement at all times, and costs one read of one line.
+	if err := c.verifyTail(durable, r); err != nil {
+		rollback()
+		return Record{}, fmt.Errorf("echo: record did not read back, rolled back, head not advanced: %w", err)
+	}
+
 	raw, _ := hex.DecodeString(r.Hash)
 	c.last, c.seq = raw, r.Seq
 	return r, nil
+}
+
+// verifyTail re-reads the bytes just appended and confirms they decode to the record we
+// intended and carry the hash we computed.
+//
+// It reads from `offset` — the file's size before the write — rather than re-reading the
+// whole chain, so the cost is one line regardless of chain length. Reading the whole file
+// on every append would make the audit log quadratic in the number of events.
+func (c *Chain) verifyTail(offset int64, want Record) error {
+	f, err := os.Open(c.path)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+
+	if _, err := f.Seek(offset, io.SeekStart); err != nil {
+		return err
+	}
+	tail, err := io.ReadAll(f)
+	if err != nil {
+		return err
+	}
+
+	var got Record
+	if err := json.Unmarshal(bytes.TrimSpace(tail), &got); err != nil {
+		return fmt.Errorf("appended bytes do not parse: %w", err)
+	}
+	if got.Hash != want.Hash || got.Seq != want.Seq || got.Prev != want.Prev {
+		return fmt.Errorf("appended record differs from the one written (seq %d/%d)", got.Seq, want.Seq)
+	}
+	// Recompute from what is ON DISK, not from what we meant to write: this is the check
+	// that would catch a corrupted field, and it is the reason the read-back is worth its
+	// cost at all. Comparing the stored hash against itself would prove nothing.
+	ph, err := hex.DecodeString(got.PayloadHash)
+	if err != nil {
+		return fmt.Errorf("payload hash on disk is unreadable: %w", err)
+	}
+	prevRaw, err := hex.DecodeString(got.Prev)
+	if err != nil {
+		return fmt.Errorf("prev on disk is unreadable: %w", err)
+	}
+	if h := hex.EncodeToString(EventHash(prevRaw, time.Unix(0, got.TS), got.Trigger, ph)); h != got.Hash {
+		return fmt.Errorf("record on disk does not hash to its own stored hash")
+	}
+	return nil
 }
 
 // Head returns the current head hash (hex) and sequence number.

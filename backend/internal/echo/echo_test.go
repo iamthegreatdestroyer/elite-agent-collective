@@ -467,3 +467,104 @@ func TestHeadDoesNotAdvanceOnSyncFailure(t *testing.T) {
 		t.Errorf("chain did not recover after a failed sync: %v", err)
 	}
 }
+
+// R30-3 applied: a record that lands CORRUPT must be caught at append time, not at the next
+// Open. Round 30 found the commit protocol marks an epoch current without ever reading the
+// re-sealed envelope back, so a completed-but-wrong write surfaces only at the next read —
+// after the previous good state is gone.
+//
+// The corruption is injected through syncFn, which runs between the write and the read-back,
+// so no extra seam is needed. This is the analogue of R30-1's seal-then-corrupt-one-byte
+// test: a commit that RUNS TO COMPLETION and produces a wrong result — the case the eight
+// divergence tests never covered, because all of them stop the commit rather than spoiling it.
+func TestCorruptedRecordIsCaughtAtAppendTime(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "echo.log")
+	c, err := Open(path, []byte("vault-id"), time.Unix(0, tsGenesis))
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer c.Close()
+
+	if _, err := c.Append("agent.dispatch", PayloadHash([]byte("good"))); err != nil {
+		t.Fatal(err)
+	}
+	headBefore, seqBefore := c.Head()
+
+	// Sync "succeeds", but the bytes on disk are not the bytes we wrote: flip one character
+	// inside the last record. The write path reports success all the way through.
+	// ONE-SHOT. rollback() also calls syncFn to make its truncation durable, so a fake that
+	// mutates the file fires twice — the second time on the already-truncated file, damaging
+	// the previous good record. The instrument has to stop acting once it has acted.
+	corrupted := false
+	c.syncFn = func(f *os.File) error {
+		if corrupted {
+			return nil
+		}
+		corrupted = true
+		raw, rerr := os.ReadFile(path)
+		if rerr != nil {
+			return nil
+		}
+		i := bytes.LastIndex(raw, []byte(`"trigger":"`))
+		if i >= 0 {
+			raw[i+11] = 'X' // corrupt the trigger, leaving the stored hash intact
+			os.WriteFile(path, raw, 0o600)
+		}
+		return nil
+	}
+
+	if _, err := c.Append("agent.dispatch", PayloadHash([]byte("bad"))); err == nil {
+		t.Error("a record that landed corrupt was accepted — a completed-but-wrong commit went undetected")
+	}
+
+	headAfter, seqAfter := c.Head()
+	if headAfter != headBefore || seqAfter != seqBefore {
+		t.Errorf("head advanced onto a corrupt record: %s/%d -> %s/%d",
+			short(headBefore), seqBefore, short(headAfter), seqAfter)
+	}
+
+	// And the chain must be left usable: the corrupt record was rolled back, so a later
+	// append still chains from the last good record.
+	c.syncFn = (*os.File).Sync
+	if _, err := c.Append("agent.dispatch", PayloadHash([]byte("recovered"))); err != nil {
+		t.Fatalf("chain unusable after a corrupt write: %v", err)
+	}
+	if err := c.Verify(); err != nil {
+		t.Errorf("chain does not verify after recovering from a corrupt write: %v", err)
+	}
+}
+
+// PAYLOAD IDENTITY (R30-1's third recommended test): what is recovered after an append is
+// bit-identical to what was committed. Distinct from tamper detection — this asserts the
+// undamaged path is right, which is precisely what the eight divergence tests never did.
+func TestAppendedRecordIsRecoveredIdentically(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "echo.log")
+	c, err := Open(path, []byte("vault-id"), time.Unix(0, tsGenesis))
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer c.Close()
+
+	written := make([]Record, 0, 5)
+	for i := 0; i < 5; i++ {
+		r, err := c.Append("agent.dispatch", PayloadHash([]byte{byte(i)}))
+		if err != nil {
+			t.Fatal(err)
+		}
+		written = append(written, r)
+	}
+
+	recs, err := readAll(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(recs) != len(written)+1 { // +1 for genesis
+		t.Fatalf("recovered %d records, want %d", len(recs), len(written)+1)
+	}
+	for i, w := range written {
+		got := recs[i+1]
+		if got != w {
+			t.Errorf("record %d differs after round-trip:\n written %+v\n read    %+v", i, w, got)
+		}
+	}
+}

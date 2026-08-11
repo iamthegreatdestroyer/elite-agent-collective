@@ -372,8 +372,16 @@ The server can be configured using environment variables:
 | `EMBED_URL` | `` | Embedding endpoint used by retrieval |
 | `EMBED_MODEL` | `nomic-embed-text` | Embedding model |
 | `EAC_RETRIEVER` | `` | Set to `1` to ground answers in the sigma-index corpus. Fail-open: an index outage degrades answers, never breaks invocations |
-| `EAC_RETRIEVER_K` | `5` | Snippets retrieved per request |
+| `EAC_RETRIEVER_K` | `2` | Notes retrieved per request. Lowered from 5 on measurement — see [Retrieval window](#retrieval-window) |
+| `EAC_RETRIEVER_HEAD` | `350` | Characters taken from the start of each note (its summary) |
+| `EAC_RETRIEVER_EXCERPT` | `350` | Additional characters taken from the passage that best matches the query |
 | `EAC_RETRIEVER_INJECT` | `point-of-need` | `point-of-need` or `system` |
+| `EAC_GATEWAY_URL` | `http://localhost:8000` | Ryzanstein gateway, used for query embeddings |
+| `EAC_SIGMA_INDEX_URL` | `http://localhost:8200` | sigma-index hybrid search endpoint |
+| `EAC_RETRIEVER_MODEL` | `nomic-embed-text` | Embedding model for the query vector |
+| `EAC_RETRIEVER_NAMESPACE` | `imh-notes` | sigma-index namespace searched |
+| `TOKEN_RECYCLER_THRESHOLD` | `12` | Compress the conversation when it exceeds this many messages |
+| `TOKEN_RECYCLER_PRESERVE` | `4` | Most recent turns always kept verbatim |
 | `EAC_ECHO_PATH` | `` | Audit-chain log path. Unset disables auditing. Must be writable by the service account |
 | `EAC_ECHO_IDENTITY` | `sigma-agentos` | Identity bound into the chain's genesis record |
 | `EAC_PROPOSAL_DIR` | `` | L2 proposal store directory. Unset disables the propose/proposals endpoints. Must be writable by the service account |
@@ -400,6 +408,63 @@ The MNEMONIC memory system can be configured via `pkg/models/memory.go`:
 - Increase `HNSWEfConstruction` for better graph quality (slower indexing)
 - Increase `HNSWEfSearch` for better recall (slower queries)
 - Adjust `MinFitnessThreshold` to filter low-quality experiences
+
+
+### Retrieval window
+
+Retrieval is not free context on this stack. Prefill runs at **~20 tokens/sec —
+the same rate as generation** (measured 2026-08-11, n=3, spread <2%: 469 prompt
+tokens = 18.6s, 1,304 = 59.1s, 1,841 = 88.8s). Every character retrieved is
+charged against the same ~50s budget the answer is drawn from, so the block is a
+fixed spend of roughly 1,600 characters (~17s) and the only real question is
+*which* characters to buy with it.
+
+The first version spent that budget badly. Each of 5 notes was truncated to its
+first 280 characters, and ~138 of those were the mirror header
+(`… > **Mirrored from Claude Code memory** · source memory/<file>.md > >`) —
+about half the window restating the note ID printed on the same line.
+
+Measured against the 8 known-answer questions in `tools/agent-eval`, at a fixed
+budget:
+
+| policy | facts reached | chars |
+|---|---|---|
+| k=5, first 280 chars, header kept (original) | 3 of 8 | 1,400 |
+| k=5, first 280, header stripped | 4 of 8 | 1,400 |
+| k=4, 175 head + 175 query-matched | 6 of 8 | 1,412 |
+| **k=2, 350 head + 350 query-matched** | **7 of 8** | **1,406** |
+
+Ranking was never the problem: sigma-index returned the correct note **first**
+for every question the agent answered wrongly. The window closed before the
+fact. `BLAKE2b` sat at character 318 of a 5,953-character note and the cut was
+at 280 — the model was handed the right note, truncated 38 characters short of
+the answer, and filled the gap from its prior with *"SHA-256… Uncertainty:
+None."*
+
+Two properties are deliberate and tested:
+
+- **The head is always included.** An earlier candidate that *slid* one window
+  to the query's best match scored higher overall but lost two facts the plain
+  head already delivered. Growing a window is safe; moving one is not.
+- **Query terms are taken longest-first** before the 24-term cap, so a long
+  question cannot spend the cap on words that appear everywhere and evict the
+  rare term that identifies the fact.
+
+⚠️ This was tuned on **single-fact lookup** questions, which structurally favour
+reading fewer notes more deeply. Questions that need synthesis across several
+notes want the opposite; raise `EAC_RETRIEVER_K` and lower the two window sizes
+together, since it is their product that costs time.
+
+Verify against the live index after any change:
+
+```bash
+EAC_LIVE_RETRIEVAL_CHECK=1 go test ./internal/retrieval/ -run Live -v
+```
+
+That check is what caught a header variant the unit tests missed — notes whose
+body opens on a heading rather than a blockquote kept their full header while
+every fixture-based test passed.
+
 
 ## Project Structure
 

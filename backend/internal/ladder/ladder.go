@@ -171,9 +171,21 @@ func Check(a models.Agent, requested Level) Decision {
 // The ceiling must therefore be MONOTONIC along the chain — authority can only narrow as it is
 // delegated, never widen. Effective ceiling = min over every agent in the chain.
 //
-// Not a live vulnerability today: nothing requests above L1 and the backend has no tool surface
-// (`exec.Command` appears 0 times). It is a hole that opens the moment L3 becomes real, which is
-// why it belongs in the ladder now rather than in the incident that would find it later.
+// REACHABILITY, stated precisely (measured 2026-08-11): this guard currently cannot change any
+// outcome, and the earlier note here understated why. It is not merely that nothing requests above
+// L1 — it is that OMNISCIENT is the ONLY agent that delegates (omniscient.go dispatches to a
+// specialist and to fallbackAPEX; no other handler calls another handler), and OMNISCIENT's tier-4
+// ceiling of L2 is the LOWEST ceiling the table produces. So min(L2, anything) == L2 == the
+// caller's own ceiling, and the chain check agrees with a per-agent check on every input.
+//
+// It becomes load-bearing the moment any of these change:
+//   - a second agent gains the ability to delegate, or
+//   - a delegator's ceiling rises above the lowest callee ceiling, or
+//   - Ceiling gains a value below L2.
+//
+// TestDelegationGuardIsCurrentlyRedundant pins that, and FAILS when it stops being true — which is
+// exactly when this comment must be rewritten. A guarantee that is documented as latent and
+// silently becomes active is worse than either state.
 func ChainCeiling(chain ...models.Agent) Level {
 	if len(chain) == 0 {
 		return L0 // no identity, no authority

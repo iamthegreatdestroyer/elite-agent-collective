@@ -177,6 +177,106 @@ Main Copilot webhook endpoint. Automatically routes to the appropriate agent bas
 }
 ```
 
+## Authority Levels
+
+Every agent invocation is checked against the **authority ladder** before dispatch. A request
+declares the level it wants with an optional header:
+
+```
+X-Agent-Level: L2
+```
+
+Accepted values are `L0`–`L4`, or the level's name (`perceive`, `converse`, `propose`, `act`,
+`human-gated`), case-insensitive.
+
+| Level | Name | Permits |
+|-------|------|---------|
+| `L0` | Perceive | Metadata only — state, logs, counters |
+| `L1` | Converse | Plain-language answers from actual state |
+| `L2` | Propose | Signed, structured, logged proposals — human-approved |
+| `L3` | Act (scoped) | A narrow pre-authorised capability set; tools, not root |
+| `L4` | Human-gated | Irreversibles — agent-prepared, human-performed |
+
+**Ceilings are derived from each agent's existing tier**, so no per-agent configuration exists or
+is needed:
+
+| Tier | Ceiling | Agents |
+|------|---------|--------|
+| 4 | `L2` | `OMNISCIENT` — may propose, never act |
+| 5 | `L3` | Domain specialists (`SENTRY`, `VERTEX`, `STREAM`, `ATLAS`, `FORGE`) |
+| all others | `L2` | Tiers 1–3 and 6–8, **and any unrecognised tier** |
+
+Behaviour:
+
+- **No header means `L1`**, which is below every ceiling — so requests that worked before the
+  ladder existed still work unchanged.
+- A request **above** an agent's ceiling returns **`403`** with a reason. It is refused, never
+  silently downgraded: a caller must be able to tell "I acted" from "I only spoke".
+- An **unparseable** level returns **`400`**. It is not treated as the default; a caller asking for
+  a level it cannot name is the caller to stop.
+- Authority **narrows along a delegation chain, never widens**. When `OMNISCIENT` dispatches to a
+  specialist, the effective ceiling is the minimum over the chain, so a tier-4 caller cannot reach
+  `L3` by proxy through a tier-5 callee.
+- Denials are counted in `eac_ladder_denials_total` and are **not** counted as dispatches. The
+  check runs before `eac_requests_by_agent_total` increments, so a refusal is distinguishable from
+  an invocation in the metrics.
+
+```bash
+# allowed — OMNISCIENT may propose
+curl -X POST localhost:8080/agents/OMNISCIENT/invoke \
+  -H 'Content-Type: application/json' -H 'X-Agent-Level: L2' \
+  -d '{"messages":[{"role":"user","content":"outline an approach"}],"stream":false}'
+
+# refused (403) — tier 4 is capped at L2
+curl -X POST localhost:8080/agents/OMNISCIENT/invoke \
+  -H 'Content-Type: application/json' -H 'X-Agent-Level: L3' \
+  -d '{"messages":[{"role":"user","content":"act on this"}],"stream":false}'
+```
+
+The header is honoured on both `/agents/{codename}/invoke` and `/copilot`.
+
+## Audit Chain
+
+When `EAC_ECHO_PATH` is set, every ladder decision — **allow and deny** — is appended to an
+append-only, hash-chained log (BLAKE2b-256, length-prefixed fields, domain-separated, anchored by a
+genesis record).
+
+Records hold **hashes and metadata only**: agent codename, delegation chain, the three levels, and
+the denied flag. **No prompt text, no message content, no keys** ever reach the log — which is what
+makes it safe to leak, and is enforced by a test that puts a canary string in a request body and
+asserts it appears in no byte of the chain.
+
+- The chain is **verified in full at startup**. A log that does not verify **disables auditing**
+  rather than being extended — appending onto a break would launder it behind valid-looking
+  successors.
+- Each append is fsynced and **read back** before the in-memory head advances; a write that is not
+  durable, or that lands corrupt, is rolled back rather than chained onto.
+- Audit failure is **fail-open**: a write failure does not block the request, because every path
+  today is L0/L1 with no side effect. Failures are counted in `eac_echo_append_failures_total`.
+  ⚠️ This must be revisited when `L3` gains a real tool surface — once an agent can act, "if it
+  cannot be logged it must not happen" becomes the correct stance.
+- Unset `EAC_ECHO_PATH` leaves auditing off and the request path unchanged.
+
+## Observability
+
+`GET /metrics` serves Prometheus text format.
+
+| Metric | Type | Meaning |
+|--------|------|---------|
+| `eac_requests_total` | counter | HTTP requests served |
+| `eac_errors_total` | counter | Responses with a 5xx status — **note: cannot see a request that dies when the connection closes mid-handler** |
+| `eac_in_flight_requests` | gauge | Requests currently in flight |
+| `eac_requests_by_agent_total{agent}` | counter | Agent dispatches by codename |
+| `eac_routing_mode_total{mode}` | counter | Routing decisions (`explicit`/`semantic`/`crew`/`default`) |
+| `eac_upstream_answers_total` | counter | Answers served by the upstream Copilot API |
+| `eac_ollama_fallback_total` | counter | Answers served by the local model |
+| `eac_model_timeouts_total` | counter | Model calls that exceeded their budget |
+| `eac_ladder_denials_total{agent}` | counter | Requests refused by the authority ladder |
+| `eac_echo_append_failures_total` | counter | Audit-chain appends that failed |
+
+All counters **reset on restart**. Comparing a counter across a restart measures the restart, not
+the change under test.
+
 ## Configuration
 
 The server can be configured using environment variables:
@@ -184,10 +284,29 @@ The server can be configured using environment variables:
 | Variable | Default | Description |
 |----------|---------|-------------|
 | `PORT` | `8080` | Server port |
+| `BIND_ADDR` | `` | Listen address. Empty binds **all interfaces**; set it to pin the service to one. (A service reachable on a mesh interface but not loopback — or the reverse — is a recurring source of false "it is down" readings: verify the LISTENER, not the unit state.) |
 | `LOG_LEVEL` | `info` | Logging level |
+| `CORS_ALLOWED_ORIGINS` | `` | Comma-separated allowed origins |
 | `OIDC_ISSUER` | `https://token.actions.githubusercontent.com` | OIDC issuer URL |
-| `OIDC_CLIENT_ID` | `` | OIDC client ID (enables authentication when set) |
-| `OIDC_CLIENT_SECRET` | `` | OIDC client secret |
+| `OIDC_CLIENT_ID` | `` | OIDC client ID (**enables authentication when set** — unset means the invoke route is unauthenticated) |
+| `OIDC_CLIENT_SECRET` | `` | OIDC client secret — **secret, never commit** |
+| `GITHUB_APP_ID` | `` | GitHub App ID used for webhook signature verification |
+| `GITHUB_APP_PRIVATE_KEY` | `` | GitHub App private key — **secret, never commit** |
+| `GITHUB_WEBHOOK_SECRET` | `` | Webhook signing secret — **secret, never commit** |
+| `OLLAMA_URL` | `http://localhost:8000` | Model endpoint. Point at a gateway to move inference off the local host |
+| `OLLAMA_MODEL` | `ling-mini-2.0` | Model name. ⚠️ A gateway may **route by model name**, so this and `OLLAMA_URL` must change together |
+| `COPILOT_UPSTREAM_URL` | `` | Upstream Copilot API; unset disables upstream |
+| `MEMORY_DATA_DIR` | `data/memories` | MNEMONIC store location |
+| `CREWS_CONFIG` | `` | Path to the crew definitions file |
+| `AGENTMEM_MCP_URL` | `` | agentmem MCP endpoint |
+| `EAC_TASKD_URL` | `` | task daemon proxied under `/tasks` |
+| `EMBED_URL` | `` | Embedding endpoint used by retrieval |
+| `EMBED_MODEL` | `nomic-embed-text` | Embedding model |
+| `EAC_RETRIEVER` | `` | Set to `1` to ground answers in the sigma-index corpus. Fail-open: an index outage degrades answers, never breaks invocations |
+| `EAC_RETRIEVER_K` | `5` | Snippets retrieved per request |
+| `EAC_RETRIEVER_INJECT` | `point-of-need` | `point-of-need` or `system` |
+| `EAC_ECHO_PATH` | `` | Audit-chain log path. Unset disables auditing. Must be writable by the service account |
+| `EAC_ECHO_IDENTITY` | `sigma-agentos` | Identity bound into the chain's genesis record |
 
 ### Memory System Configuration
 

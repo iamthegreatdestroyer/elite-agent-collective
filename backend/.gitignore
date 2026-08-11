@@ -19,3 +19,8 @@ coverage.html
 # OS generated files
 .DS_Store
 Thumbs.db
+
+# Editor/manual backups (never intentional)
+*.bak
+*.bak-*
+*.pre-*

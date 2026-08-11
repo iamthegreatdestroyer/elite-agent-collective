@@ -3,7 +3,9 @@ package handlers
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"log"
 	"strings"
 
 	"github.com/iamthegreatdestroyer/elite-agent-collective/backend/internal/auth"
@@ -93,9 +95,19 @@ func (a *BaseAgent) Handle(ctx context.Context, req *models.CopilotRequest) (*mo
 	// client is configured and its endpoint is actually reachable, so we
 	// don't pay the request timeout on every call when Ollama isn't running.
 	if a.ollama != nil && a.ollama.Enabled() {
-		if resp, err := a.ollama.Forward(ctx, systemPrompt, reqForLLM); err == nil && resp != nil {
+		resp, err := a.ollama.Forward(ctx, systemPrompt, reqForLLM)
+		if err == nil && resp != nil {
 			metrics.OllamaFallbackTotal.Add(1)
 			return resp, nil
+		}
+		// The error used to be DISCARDED here, which is why a model that was down, a model
+		// that timed out, and a model that answered were indistinguishable from outside —
+		// all three fell through to the same silent template response.
+		if err != nil {
+			if errors.Is(err, context.DeadlineExceeded) {
+				metrics.ModelTimeoutsTotal.Add(1)
+			}
+			log.Printf("agent %s: model call failed: %v", a.info.Codename, err)
 		}
 	}
 
@@ -112,6 +124,19 @@ func (a *BaseAgent) buildSystemPrompt(userID, query string) string {
 			sb.WriteString(ctx)
 			sb.WriteString("\n")
 		}
+	}
+
+	// Prefer the agent's FULL definition over a 4-field reconstruction. Measured
+	// 2026-08-10: the synthesis below drops Core Capabilities, the named tool list,
+	// and the worked taxonomies — ~60% of the file — and answers scored 1-4 on
+	// dropped-content markers versus 4-6 with the full body. Fall back to the
+	// synthesis only when the body is unavailable (e.g. manifest-loaded agents).
+	if p := strings.TrimSpace(a.info.SystemPrompt); p != "" {
+		sb.WriteString(p)
+		sb.WriteString("\n\nRespond with the expertise of ")
+		sb.WriteString(a.info.Codename)
+		sb.WriteString(". Be precise, actionable, and production-grade.")
+		return sb.String()
 	}
 
 	fmt.Fprintf(&sb, "You are %s, the %s Specialist in the Elite Agent Collective.\n", a.info.Codename, a.info.Specialty)

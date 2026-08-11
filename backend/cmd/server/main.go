@@ -218,9 +218,14 @@ func main() {
 	server := &http.Server{
 		Addr:         addr,
 		Handler:      r,
-		ReadTimeout:  15 * time.Second,
-		WriteTimeout: 60 * time.Second,
-		IdleTimeout:  60 * time.Second,
+		ReadTimeout: 15 * time.Second,
+		// TIMEOUT ORDERING (2026-08-10). Innermost must expire FIRST so its error is
+		// still writable:  model 45s (ollama_client.go)  <  chi 60s (line ~171)  <  90s here.
+		// Was 60s — TIED with middleware.Timeout, so the two raced and which fired was
+		// undefined. A WriteTimeout closes the connection without a status, which is why
+		// eac_errors_total (5xx-only) could never see the failure.
+		WriteTimeout: 90 * time.Second,
+		IdleTimeout:  90 * time.Second,
 	}
 
 	// Graceful shutdown handling

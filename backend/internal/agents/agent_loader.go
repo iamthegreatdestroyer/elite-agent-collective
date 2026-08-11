@@ -57,6 +57,9 @@ func LoadAgentFromFile(filePath string) (*models.Agent, error) {
 		Collaborators: collaborators,
 		Category:      metadata.Category,
 		MarkdownPath:  filePath,
+		// Keep the whole body. It was already parsed above for extraction and then
+		// discarded; the runtime needs it to give the agent its real persona.
+		SystemPrompt:  strings.TrimSpace(markdownContent),
 	}
 
 	return agent, nil

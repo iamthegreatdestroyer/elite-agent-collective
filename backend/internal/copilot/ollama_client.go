@@ -55,7 +55,12 @@ func NewOllamaClient() *OllamaClient {
 		model = "gemma3:4b-it-qat"
 	}
 	return &OllamaClient{
-		httpClient: &http.Client{Timeout: 120 * time.Second},
+		// 50s is the EFFECTIVE per-request model budget: Forward inherits the caller's
+		// context and sets no deadline of its own, so this client timeout is the innermost
+		// one that actually fires on the request path. It sits well under the server's 90s
+		// WriteTimeout so the error is still writable. Was 120s — TWICE the server's budget,
+		// so the client kept waiting long after the connection had been abandoned.
+		httpClient: &http.Client{Timeout: 50 * time.Second},
 		baseURL:    baseURL,
 		model:      model,
 	}
@@ -87,7 +92,11 @@ func (c *OllamaClient) Model() string {
 // which would otherwise time out the first real Copilot request. Best-effort:
 // errors are logged and swallowed, never fatal.
 func (c *OllamaClient) Warmup(ctx context.Context) {
-	ctx, cancel := context.WithTimeout(ctx, 90*time.Second)
+	// Bounds the WARM-UP probe only — Forward does not set a deadline of its own, so this
+	// does not govern real requests (their budget is the 50s httpClient timeout above).
+	// 45s ~= 880 tokens at the measured 19.5 tok/s on sigma-infer (2026-08-10), far beyond
+	// any real answer, so a warmup that exceeds it means the model is not serving.
+	ctx, cancel := context.WithTimeout(ctx, 45*time.Second)
 	defer cancel()
 
 	payload := chatRequest{

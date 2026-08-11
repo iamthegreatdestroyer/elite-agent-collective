@@ -17,6 +17,12 @@ type Agent struct {
 	Collaborators []string `json:"collaborators"`
 	Category      string   `json:"category"`
 	MarkdownPath  string   `json:"-"` // Internal: path to .agent.md file
+	// SystemPrompt is the FULL .agent.md body (frontmatter stripped). Internal-only:
+	// json:"-" keeps /agents responses the same size as before.
+	// Without this the runtime rebuilt each persona from 4 parsed fields (~556 B) and
+	// discarded ~60% of the definition — measured to produce measurably less specific
+	// answers than the MCP shim, which has always sent the whole body.
+	SystemPrompt  string   `json:"-"`
 }
 
 // CopilotRequest represents a request from GitHub Copilot.

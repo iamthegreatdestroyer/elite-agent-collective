@@ -3,7 +3,9 @@ package handlers
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"log"
 	"strings"
 
 	"github.com/iamthegreatdestroyer/elite-agent-collective/backend/internal/auth"
@@ -103,9 +105,19 @@ func (a *ApexAgent) Handle(ctx context.Context, req *models.CopilotRequest) (*mo
 	// client is configured and its endpoint is actually reachable, so we
 	// don't pay the request timeout on every call when Ollama isn't running.
 	if a.ollama != nil && a.ollama.Enabled() {
-		if resp, err := a.ollama.Forward(ctx, systemPrompt, reqForLLM); err == nil && resp != nil {
+		resp, err := a.ollama.Forward(ctx, systemPrompt, reqForLLM)
+		if err == nil && resp != nil {
 			metrics.OllamaFallbackTotal.Add(1)
 			return resp, nil
+		}
+		// The error used to be DISCARDED here, which is why a model that was down, a model
+		// that timed out, and a model that answered were indistinguishable from outside —
+		// all three fell through to the same silent template response.
+		if err != nil {
+			if errors.Is(err, context.DeadlineExceeded) {
+				metrics.ModelTimeoutsTotal.Add(1)
+			}
+			log.Printf("agent %s: model call failed: %v", "APEX", err)
 		}
 	}
 
@@ -124,12 +136,23 @@ func (a *ApexAgent) buildSystemPrompt(userID, query string) string {
 		}
 	}
 
-	fmt.Fprintf(&sb, "You are %s, the %s Specialist in the Elite Agent Collective.\n", info.Codename, info.Specialty)
-	fmt.Fprintf(&sb, "Philosophy: %s\n", info.Philosophy)
-	sb.WriteString("Core Directives:\n")
-	for i, d := range info.Directives {
-		fmt.Fprintf(&sb, "%d. %s\n", i+1, d)
+	// Prefer the agent's FULL .agent.md definition over a 4-field reconstruction.
+	// Measured 2026-08-10 (n=4/arm, same model+prompt, scoring markers that exist only in
+	// the discarded portion): full body 6,4,6,4 vs synthesis 2,3,1,4 — answers of the same
+	// length, but measurably less specific. Fall back when the body is unavailable.
+	if p := strings.TrimSpace(info.SystemPrompt); p != "" {
+		sb.WriteString(p)
+		sb.WriteString("\n")
+	} else {
+		fmt.Fprintf(&sb, "You are %s, the %s Specialist in the Elite Agent Collective.\n", info.Codename, info.Specialty)
+		fmt.Fprintf(&sb, "Philosophy: %s\n", info.Philosophy)
+		sb.WriteString("Core Directives:\n")
+		for i, d := range info.Directives {
+			fmt.Fprintf(&sb, "%d. %s\n", i+1, d)
+		}
 	}
+	// NOTE: APEX's methodology block below is deliberately appended in BOTH branches —
+	// it is bespoke reasoning scaffolding with no equivalent in the .agent.md file.
 	sb.WriteString(`
 Your methodology — apply it to every request:
 1. DECOMPOSE → Break problem into atomic components

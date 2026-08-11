@@ -311,10 +311,19 @@ asserts it appears in no byte of the chain.
   successors.
 - Each append is fsynced and **read back** before the in-memory head advances; a write that is not
   durable, or that lands corrupt, is rolled back rather than chained onto.
-- Audit failure is **fail-open**: a write failure does not block the request, because every path
-  today is L0/L1 with no side effect. Failures are counted in `eac_echo_append_failures_total`.
-  ⚠️ This must be revisited when `L3` gains a real tool surface — once an agent can act, "if it
-  cannot be logged it must not happen" becomes the correct stance.
+- Audit failure is **fail-open below `L3`, fail-closed from `L3` up.**
+  Below `L3` an agent produces words and no effect, so a lost record loses the evidence of a
+  conversation — refusing to answer because a disk write failed would turn a logging problem into
+  an outage for no integrity gain. From `L3` an agent **acts**, and a lost record means an action
+  happened with no evidence that it did: *if it cannot be logged, it must not happen.*
+- **There is no escape hatch, deliberately.** A flag permitting action without an audit record is the
+  setting that gets turned on during an incident and never turned off. The consequence is stated
+  plainly: **`L3` requires a working audit chain** — if `EAC_ECHO_PATH` is unset or the chain is
+  broken, `L3` is unavailable. That is the rule, not a side effect of it.
+- A fail-closed denial is itself unrecordable (the chain is what failed), so it is counted twice:
+  `eac_echo_append_failures_total` **and** `eac_ladder_denials_total`. The pair is diagnostic —
+  denials without append failures are ordinary ladder refusals; denials **with** them are the audit
+  chain taking `L3` offline.
 - Unset `EAC_ECHO_PATH` leaves auditing off and the request path unchanged.
 
 ## Observability

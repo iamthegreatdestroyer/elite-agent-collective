@@ -3,6 +3,8 @@ package agents
 import (
 	"context"
 	"encoding/binary"
+	"errors"
+	"fmt"
 	"log"
 	"net/http"
 	"strings"
@@ -59,19 +61,14 @@ const ladderPayloadSchema = "ladder.decision.v1"
 // little entropy and are recoverable by brute force. That is acceptable precisely because
 // they are already non-sensitive.
 //
-// FAILURE POLICY — fail-OPEN, deliberately: a logging failure does not block the request.
-// Today every path is L0/L1, a text answer with no side effect, so refusing to answer
-// because a disk write failed would convert a logging problem into an outage for no
-// integrity gain. ⚠️ This must be revisited the moment L3 acquires a real tool surface:
-// once an agent can ACT, "if it cannot be logged it must not happen" becomes the correct
-// stance. Failures are counted in eac_echo_append_failures_total so the choice is visible
-// rather than silent.
-func recordDecision(d ladder.Decision, chain []models.Agent) {
+// FAILURE POLICY — see auditPolicy below. Fail-OPEN under L3, fail-CLOSED from L3 up.
+// Returns the append error so the caller can apply that policy; it is never swallowed here.
+func recordDecision(d ladder.Decision, chain []models.Agent) error {
 	echoMu.RLock()
 	c := echoChain
 	echoMu.RUnlock()
 	if c == nil {
-		return
+		return errNoChain
 	}
 
 	names := make([]string, 0, len(chain))
@@ -88,7 +85,46 @@ func recordDecision(d ladder.Decision, chain []models.Agent) {
 	if _, err := c.Append(trigger, payload); err != nil {
 		metrics.IncEchoFailure()
 		log.Printf("echo: failed to record %s for %s: %v", trigger, d.Agent, err)
+		return err
 	}
+	return nil
+}
+
+// errNoChain means no audit chain is configured at all. It is distinct from an append that
+// failed: "auditing is switched off" and "auditing is broken" are different operational
+// situations, and below L3 both are tolerated while above L3 neither is.
+var errNoChain = errors.New("echo: no audit chain configured")
+
+// auditPolicy decides what an audit failure means for a request.
+//
+// FAIL-OPEN below L3, FAIL-CLOSED from L3 up.
+//
+// Below L3 an agent produces words and no effect, so a lost record loses the evidence of a
+// conversation — real, but refusing to answer because a disk write failed would convert a logging
+// problem into an outage for no integrity gain. From L3 an agent ACTS, and a lost record means an
+// action happened with no evidence that it happened: "if it cannot be logged it must not happen."
+//
+// THERE IS DELIBERATELY NO ESCAPE HATCH. A flag that permits acting without an audit record is the
+// setting that gets turned on during an incident and never turned off, and its existence would
+// make every §7 rating that rests on the chain conditional on a runtime value nobody re-checks.
+// The consequence is stated plainly: L3 REQUIRES a working audit chain. If EAC_ECHO_PATH is unset
+// or the chain is broken, L3 is unavailable — which is the correct reading of the rule, not a
+// side effect of it.
+//
+// A denial produced here is itself unrecordable — the chain is what failed — so it is counted
+// twice instead: eac_echo_append_failures_total (the write failed) and eac_ladder_denials_total
+// (the request was refused). The pair is diagnostic: denials without append failures are ordinary
+// ladder refusals; denials WITH them are the audit chain taking the service's L3 offline.
+func auditPolicy(d ladder.Decision, auditErr error) (ladder.Decision, bool) {
+	if auditErr == nil || d.Denied || d.Requested < ladder.CapabilityRequiredFrom {
+		return d, false
+	}
+	reason := fmt.Sprintf("%s requires a durable audit record and the chain is unavailable (%v); "+
+		"refusing rather than acting unrecorded", d.Requested, auditErr)
+	d.Denied = true
+	d.Granted = ladder.L0
+	d.Reason = reason
+	return d, true
 }
 
 // ladderPayload computes the digest committed to the chain for one decision.
@@ -139,6 +175,14 @@ func guard(ctx context.Context, h models.AgentHandler) (context.Context, ladder.
 	// Record BOTH outcomes. An audit chain holding only denials cannot answer "what did
 	// this agent do?" — and a log that records only refusals makes a compromised allow
 	// path invisible, which is the wrong half to keep.
-	recordDecision(d, ladder.CallersFrom(next))
+	auditErr := recordDecision(d, ladder.CallersFrom(next))
+
+	// Apply the fail-closed policy AFTER the record is attempted and BEFORE the caller
+	// dispatches: an L3 request whose record did not land must not proceed.
+	if refused, changed := auditPolicy(d, auditErr); changed {
+		metrics.IncLadderDenial(info.Codename)
+		log.Printf("ladder: DENIED (audit) %s", refused.Reason)
+		return next, refused
+	}
 	return next, d
 }

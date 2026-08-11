@@ -21,6 +21,7 @@ import (
 	"github.com/iamthegreatdestroyer/elite-agent-collective/backend/internal/auth"
 	"github.com/iamthegreatdestroyer/elite-agent-collective/backend/internal/config"
 	"github.com/iamthegreatdestroyer/elite-agent-collective/backend/internal/copilot"
+	"github.com/iamthegreatdestroyer/elite-agent-collective/backend/internal/echo"
 	"github.com/iamthegreatdestroyer/elite-agent-collective/backend/internal/memory"
 	"github.com/iamthegreatdestroyer/elite-agent-collective/backend/internal/metrics"
 	"github.com/iamthegreatdestroyer/elite-agent-collective/backend/internal/retrieval"
@@ -151,6 +152,31 @@ func main() {
 
 	// Initialize handlers
 	agentHandler := agents.NewHandler(registry).WithCrews(crewRegistry)
+
+	// Echo audit chain — every authority-ladder decision is recorded here.
+	//
+	// OPT-IN: unset EAC_ECHO_PATH leaves the chain nil and guard() behaves exactly as it
+	// did before, so this cannot break a running service by existing.
+	//
+	// A chain that FAILS TO OPEN is fatal-to-the-feature but not to the process: Open
+	// refuses to extend a log that does not verify, and that refusal is the point — it
+	// means the existing chain is damaged and must be examined, not quietly appended to.
+	// Starting without auditing is visible (the log line below, plus the absence of
+	// events); silently appending onto a broken chain would not be.
+	if echoPath := envStr("EAC_ECHO_PATH", ""); echoPath != "" {
+		if err := os.MkdirAll(filepath.Dir(echoPath), 0o750); err != nil {
+			log.Printf("Echo: cannot create directory for %s: %v — auditing DISABLED", echoPath, err)
+		} else if chain, err := echo.Open(echoPath, []byte(envStr("EAC_ECHO_IDENTITY", "sigma-agentos")), time.Now()); err != nil {
+			log.Printf("Echo: chain at %s did not open: %v — auditing DISABLED (inspect the chain; it is not extended while broken)", echoPath, err)
+		} else {
+			agents.SetEchoChain(chain)
+			head, seq := chain.Head()
+			log.Printf("Echo: audit chain at %s verified and open (head=%s… seq=%d)", echoPath, head[:12], seq)
+			defer chain.Close()
+		}
+	} else {
+		log.Printf("Echo: EAC_ECHO_PATH unset — ladder decisions are NOT being audited")
+	}
 	registry.InjectCrews(crewRegistry)
 
 	// Initialize authentication middleware
@@ -216,8 +242,8 @@ func main() {
 	// Start server
 	addr := fmt.Sprintf("%s:%d", cfg.BindAddr, cfg.Port)
 	server := &http.Server{
-		Addr:         addr,
-		Handler:      r,
+		Addr:        addr,
+		Handler:     r,
 		ReadTimeout: 15 * time.Second,
 		// TIMEOUT ORDERING (2026-08-10). Innermost must expire FIRST so its error is
 		// still writable:  model 45s (ollama_client.go)  <  chi 60s (line ~171)  <  90s here.

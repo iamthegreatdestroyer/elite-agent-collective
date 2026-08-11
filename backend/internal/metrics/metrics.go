@@ -21,6 +21,7 @@ var (
 	UpstreamTotal       atomic.Int64 // counter: answers served by upstream Copilot
 	OllamaFallbackTotal atomic.Int64 // counter: answers served by the local Ollama fallback
 	ModelTimeoutsTotal  atomic.Int64 // counter: model calls that exceeded their budget
+	EchoFailuresTotal   atomic.Int64 // counter: Echo audit appends that failed
 	InFlight            atomic.Int64 // gauge: in-flight HTTP requests
 )
 
@@ -72,6 +73,12 @@ func IncLadderDenial(codename string) {
 	}
 	ladderDenials.Inc(codename)
 }
+
+// IncEchoFailure counts one failed Echo audit append.
+//
+// The ladder currently fails OPEN on an audit-write failure, so without this counter a
+// broken audit chain would look exactly like a working one from outside.
+func IncEchoFailure() { EchoFailuresTotal.Add(1) }
 
 // IncRoutingMode counts one routing decision by mode.
 func IncRoutingMode(mode string) { routingMode.Inc(mode) }
@@ -136,6 +143,7 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 	// eac_errors_total counts 5xx statuses ONLY, so it structurally cannot see a request
 	// that dies when the connection closes mid-handler. This counter can.
 	writeScalar("eac_model_timeouts_total", "Model calls that exceeded their budget.", "counter", ModelTimeoutsTotal.Load())
+	writeScalar("eac_echo_append_failures_total", "Echo audit-chain appends that failed.", "counter", EchoFailuresTotal.Load())
 
 	writeLabeled := func(name, help, label string, vals map[string]int64) {
 		fmt.Fprintf(&b, "# HELP %s %s\n# TYPE %s counter\n", name, help, name)

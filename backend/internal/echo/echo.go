@@ -425,3 +425,36 @@ func short(hexStr string) string {
 	}
 	return hexStr
 }
+
+// domAgentPayload separates AgentOS-local payloads from Ouroboros vault payloads.
+//
+// WHY A SEPARATE DOMAIN RATHER THAN REUSING payload_hash: the spec's payload_hash is defined
+// over canonical() = deterministic CBOR (RFC 8949). AgentOS events are encoded with the
+// length-prefixed field form below instead, which is deterministic and injective but is NOT
+// CBOR. Feeding non-CBOR bytes through PayloadHash would produce a digest that CLAIMS to be
+// the spec's construction and that no Ouroboros verifier could reproduce — a silent interop
+// lie. A distinct separator states the difference in the hash itself, which is exactly what
+// domain separation is for. The chain construction (§6.3) is unchanged and shared, so one
+// verifier still walks both.
+const domAgentPayload = "sigma-agentos-payload-v1"
+
+// AgentPayloadHash hashes a fixed-schema AgentOS payload:
+//
+//	H( "sigma-agentos-payload-v1" ‖ LP(schema) ‖ LP(field₀) ‖ … ‖ LP(fieldₙ) )
+//
+// Length-prefixing every field makes the encoding injective, so two different field lists
+// cannot produce the same digest. `schema` names the payload shape and is hashed first, so
+// adding a field to one schema cannot collide with another schema's encoding.
+//
+// Callers pass HASHES OR SMALL ENUMERATED VALUES ONLY — never request text, never prompts.
+// The digest is what lands in the append-only chain; the fields themselves are not stored,
+// but a low-entropy field is still recoverable by brute force, so treat this as a commitment,
+// not as encryption.
+func AgentPayloadHash(schema string, fields ...[]byte) []byte {
+	parts := make([][]byte, 0, len(fields)+2)
+	parts = append(parts, []byte(domAgentPayload), lp([]byte(schema)))
+	for _, f := range fields {
+		parts = append(parts, lp(f))
+	}
+	return h(parts...)
+}

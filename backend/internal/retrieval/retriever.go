@@ -38,6 +38,9 @@ type SigmaIndexRetriever struct {
 	k          int
 	head       int
 	excerptLen int
+	// includeSpecialty controls whether the agent's specialty string is
+	// prepended to the LEXICAL (BM25) query. See the constructor comment.
+	includeSpecialty bool
 }
 
 // NewSigmaIndexRetriever builds a retriever from the environment, or returns
@@ -88,7 +91,29 @@ func NewSigmaIndexRetriever() *SigmaIndexRetriever {
 		k:          envInt("EAC_RETRIEVER_K", 2),
 		head:       envInt("EAC_RETRIEVER_HEAD", 350),
 		excerptLen: envInt("EAC_RETRIEVER_EXCERPT", 350),
+		// EAC_RETRIEVER_SPECIALTY (default on): prepend the agent's specialty
+		// to the text query. Measured 2026-08-11 with the vector arm held
+		// constant: the specialty string ALONE pulls in the exact distractor
+		// notes seen in live results (project-email-intelligence,
+		// project-sandbox-rebuild-idea), and on one question pushed a noise
+		// note above the note holding the answer. The toggle exists so the
+		// effect can be A/B-tested on the ACCURACY eval — fact-reached is 8/8
+		// both ways, so only end-to-end accuracy can decide it. Default stays
+		// "on" (live behavior) until that A/B says otherwise.
+		includeSpecialty: envBool("EAC_RETRIEVER_SPECIALTY", true),
 	}
+}
+
+// envBool reads an on/off switch, falling back to def when unset. Only the
+// explicit negatives disable — the same convention EAC_RETRIEVER itself uses.
+func envBool(key string, def bool) bool {
+	switch strings.ToLower(strings.TrimSpace(os.Getenv(key))) {
+	case "0", "false", "off", "no":
+		return false
+	case "":
+		return def
+	}
+	return true
 }
 
 // envInt reads a positive integer from the environment, falling back to def on
@@ -140,7 +165,10 @@ func (r *SigmaIndexRetriever) Retrieve(ctx context.Context, specialty, query str
 	if len(vec) == 0 {
 		return "", fmt.Errorf("retriever: empty query embedding")
 	}
-	textQuery := strings.TrimSpace(specialty + " " + query)
+	textQuery := query
+	if r.includeSpecialty {
+		textQuery = strings.TrimSpace(specialty + " " + query)
+	}
 	hits, err := r.search(ctx, vec, textQuery)
 	if err != nil {
 		return "", err

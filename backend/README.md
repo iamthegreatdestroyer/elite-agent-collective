@@ -375,6 +375,7 @@ The server can be configured using environment variables:
 | `EAC_RETRIEVER_K` | `2` | Notes retrieved per request. Lowered from 5 on measurement — see [Retrieval window](#retrieval-window) |
 | `EAC_RETRIEVER_HEAD` | `350` | Characters taken from the start of each note (its summary) |
 | `EAC_RETRIEVER_EXCERPT` | `350` | Additional characters taken from the passage that best matches the query |
+| `EAC_RETRIEVER_SPECIALTY` | `on` | Prepend the agent's specialty to the lexical (BM25) query. Measured with the vector arm held constant: the specialty string alone retrieves the recurring distractor notes, and once outranked the note holding the answer. Toggle exists for A/B on the accuracy eval; `0`/`false`/`off` disables |
 | `EAC_RETRIEVER_INJECT` | `point-of-need` | `point-of-need` or `system` |
 | `EAC_GATEWAY_URL` | `http://localhost:8000` | Ryzanstein gateway, used for query embeddings |
 | `EAC_SIGMA_INDEX_URL` | `http://localhost:8200` | sigma-index hybrid search endpoint |

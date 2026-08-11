@@ -2,6 +2,7 @@ package retrieval
 
 import (
 	"context"
+	"encoding/json"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -88,5 +89,53 @@ func TestRetriever_FailOpen(t *testing.T) {
 	}
 	if _, err := r.Retrieve(context.Background(), "x", "y"); err == nil {
 		t.Fatal("Retrieve should error (fail-open) when backends are down")
+	}
+}
+
+// TestRetriever_SpecialtyPrefixToggle asserts what actually reaches the index:
+// the "text" field of the /search request, captured by the stub. Asserting the
+// struct field would only prove the env was parsed, not that the query changed.
+func TestRetriever_SpecialtyPrefixToggle(t *testing.T) {
+	gw, _ := stubBackends(t)
+	defer gw.Close()
+
+	var gotText string
+	idx := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path != "/search" {
+			w.WriteHeader(200)
+			return
+		}
+		var body struct {
+			Text string `json:"text"`
+		}
+		_ = json.NewDecoder(r.Body).Decode(&body)
+		gotText = body.Text
+		_, _ = w.Write([]byte(`{"count":0,"results":[]}`))
+	}))
+	defer idx.Close()
+
+	t.Setenv("EAC_RETRIEVER", "1")
+	t.Setenv("EAC_GATEWAY_URL", gw.URL)
+	t.Setenv("EAC_SIGMA_INDEX_URL", idx.URL)
+
+	const spec, q = "Elite Computer Science Engineering", "what hash does the echo chain use"
+
+	t.Setenv("EAC_RETRIEVER_SPECIALTY", "") // default: prefix ON (live behavior)
+	if _, err := NewSigmaIndexRetriever().Retrieve(context.Background(), spec, q); err != nil {
+		t.Fatalf("Retrieve: %v", err)
+	}
+	if gotText != spec+" "+q {
+		t.Fatalf("default text query = %q, want specialty-prefixed", gotText)
+	}
+
+	t.Setenv("EAC_RETRIEVER_SPECIALTY", "0")
+	if _, err := NewSigmaIndexRetriever().Retrieve(context.Background(), spec, q); err != nil {
+		t.Fatalf("Retrieve: %v", err)
+	}
+	if gotText != q {
+		t.Fatalf("toggled-off text query = %q, want the bare question", gotText)
+	}
+	if strings.Contains(gotText, spec) {
+		t.Fatal("specialty leaked into the lexical query with the toggle off")
 	}
 }

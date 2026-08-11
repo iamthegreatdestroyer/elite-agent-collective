@@ -24,6 +24,7 @@ import (
 	"github.com/iamthegreatdestroyer/elite-agent-collective/backend/internal/echo"
 	"github.com/iamthegreatdestroyer/elite-agent-collective/backend/internal/memory"
 	"github.com/iamthegreatdestroyer/elite-agent-collective/backend/internal/metrics"
+	"github.com/iamthegreatdestroyer/elite-agent-collective/backend/internal/proposal"
 	"github.com/iamthegreatdestroyer/elite-agent-collective/backend/internal/retrieval"
 )
 
@@ -177,6 +178,23 @@ func main() {
 	} else {
 		log.Printf("Echo: EAC_ECHO_PATH unset — ladder decisions are NOT being audited")
 	}
+
+	// L2 proposal store. Opt-in like the audit chain: unset leaves the /propose and /proposals
+	// endpoints returning 503 and every other path untouched.
+	if propDir := envStr("EAC_PROPOSAL_DIR", ""); propDir != "" {
+		if ps, err := proposal.NewStore(propDir); err != nil {
+			log.Printf("Proposals: store at %s did not open: %v — L2 DISABLED", propDir, err)
+		} else {
+			agents.SetProposalStore(ps)
+			existing, errs := ps.List()
+			log.Printf("Proposals: L2 store open at %s (%d stored, %d unreadable)", propDir, len(existing), len(errs))
+			for _, e := range errs {
+				log.Printf("Proposals: UNREADABLE — %v", e)
+			}
+		}
+	} else {
+		log.Printf("Proposals: EAC_PROPOSAL_DIR unset — L2 propose endpoints disabled")
+	}
 	registry.InjectCrews(crewRegistry)
 
 	// Initialize authentication middleware
@@ -206,6 +224,7 @@ func main() {
 		r.Get("/", agentHandler.ListAgents)
 		r.Get("/{codename}", agentHandler.GetAgent)
 		r.With(authMiddleware.Authenticate).Post("/{codename}/invoke", agentHandler.InvokeAgent)
+		r.With(authMiddleware.Authenticate).Post("/{codename}/propose", agentHandler.ProposeAgent)
 	})
 
 	// Task queue proxy: forward /tasks to the eac-taskd worker (runs as an
@@ -234,6 +253,15 @@ func main() {
 	// Copilot webhook endpoint with signature verification
 	// Uses signature verification when GITHUB_WEBHOOK_SECRET is configured
 	// Falls back to OIDC auth otherwise
+	// L2 proposals. Reading is open; DECIDING is authenticated when auth is enabled —
+	// and when it is not, the stored decision records authenticated:false rather than
+	// pretending otherwise.
+	r.Route("/proposals", func(r chi.Router) {
+		r.Get("/", agentHandler.ListProposals)
+		r.Get("/{id}", agentHandler.GetProposal)
+		r.With(authMiddleware.Authenticate).Post("/{id}/decision", agentHandler.DecideProposal)
+	})
+
 	r.With(signatureMiddleware.VerifySignature, authMiddleware.OptionalAuth).Post("/copilot", agentHandler.CopilotWebhook)
 
 	// Alternative Copilot endpoint with only OIDC auth (for direct API calls)

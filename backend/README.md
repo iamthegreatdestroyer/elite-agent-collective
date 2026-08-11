@@ -235,6 +235,45 @@ curl -X POST localhost:8080/agents/OMNISCIENT/invoke \
 
 The header is honoured on both `/agents/{codename}/invoke` and `/copilot`.
 
+## Proposals (L2)
+
+`L2 Propose` is defined by the ladder as *"signed, structured, Echo-logged proposals — human-approved."*
+Three of those four hold here; the fourth is stated rather than implied.
+
+```
+POST /agents/{codename}/propose     -> 201 with a Proposal, or 422 if the agent did not produce one
+GET  /proposals                     -> all proposals, newest first
+GET  /proposals/{id}
+POST /proposals/{id}/decision       -> {"decision":"approve"|"reject","note":"..."}
+```
+
+Enabled by `EAC_PROPOSAL_DIR`. Unset, every endpoint above returns **503** and nothing else changes.
+
+**Structured, not prose.** The agent is asked for a JSON object and the response is parsed strictly.
+If it returns prose, malformed JSON, or the instruction template echoed back, the request fails with
+**422 and no proposal is stored** — there is deliberately no path that wraps prose in a
+proposal-shaped envelope, because that would make L2 a label on an L1 answer.
+
+**Commitment, not signature.** Each proposal carries a BLAKE2b-256 digest over its canonical content,
+recorded in the audit chain at creation. Because the chain is append-only and hash-linked, content
+cannot be altered afterwards without breaking it. That is **tamper-evidence, not authenticity**: it
+proves the content is what was recorded, and says nothing about who produced it. Nothing is signed,
+because there is no key-custody model in this service and a signature from an unmanaged key on the
+serving host would be decorative.
+
+The commitment excludes `status` and `decision`, so ruling on a proposal does not invalidate it. The
+store verifies the commitment on **every read** and refuses to return altered content.
+
+**Approval decides; it does not execute.** There is no tool surface in this service and L3 is not
+implemented. An approved proposal is a decision on the record, not an action taken.
+
+⚠️ **Approval is not currently authenticated.** Auth is enabled only when `OIDC_CLIENT_ID` is set. When
+it is not, the stored decision records `"authenticated": false` and `"approver": "unauthenticated"` —
+the record carries its own weakness, so a later reader can tell a verified approval from an unverified
+one without knowing how the service was configured at the time.
+
+A proposal is ruled on **once**; a second decision returns **409**.
+
 ## Audit Chain
 
 When `EAC_ECHO_PATH` is set, every ladder decision — **allow and deny** — is appended to an
@@ -307,6 +346,7 @@ The server can be configured using environment variables:
 | `EAC_RETRIEVER_INJECT` | `point-of-need` | `point-of-need` or `system` |
 | `EAC_ECHO_PATH` | `` | Audit-chain log path. Unset disables auditing. Must be writable by the service account |
 | `EAC_ECHO_IDENTITY` | `sigma-agentos` | Identity bound into the chain's genesis record |
+| `EAC_PROPOSAL_DIR` | `` | L2 proposal store directory. Unset disables the propose/proposals endpoints. Must be writable by the service account |
 
 ### Memory System Configuration
 

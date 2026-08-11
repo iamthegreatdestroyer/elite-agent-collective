@@ -10,6 +10,7 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/iamthegreatdestroyer/elite-agent-collective/backend/internal/copilot"
+	"github.com/iamthegreatdestroyer/elite-agent-collective/backend/internal/ladder"
 	"github.com/iamthegreatdestroyer/elite-agent-collective/backend/internal/metrics"
 	"github.com/iamthegreatdestroyer/elite-agent-collective/backend/pkg/models"
 )
@@ -90,9 +91,22 @@ func (h *Handler) InvokeAgent(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Authority ladder (§2.2) — BEFORE dispatch AND before the "Invoking" log, so a
+	// denial never reaches metrics.IncAgent and never appears in the log as an invocation.
+	lvl, lerr := levelFromRequest(r)
+	if lerr != nil {
+		copilot.WriteError(w, lerr.Error(), http.StatusBadRequest)
+		return
+	}
+	ctx, dec := guard(ladder.WithLevel(r.Context(), lvl), agent)
+	if dec.Denied {
+		copilot.WriteError(w, dec.Reason, http.StatusForbidden)
+		return
+	}
+
 	log.Printf("Invoking agent %s with %d messages", codename, len(req.Messages))
 
-	resp, err := agent.Handle(r.Context(), req)
+	resp, err := agent.Handle(ctx, req)
 	if err != nil {
 		log.Printf("Error handling request: %v", err)
 		copilot.WriteError(w, "Error processing request", http.StatusInternalServerError)
@@ -135,11 +149,19 @@ func (h *Handler) CopilotWebhook(w http.ResponseWriter, r *http.Request) {
 		codenames = []string{"APEX"}
 	}
 
+	lvl, lerr := levelFromRequest(r)
+	if lerr != nil {
+		copilot.WriteError(w, lerr.Error(), http.StatusBadRequest)
+		return
+	}
+	reqCtx := ladder.WithLevel(r.Context(), lvl)
+
 	var resp *models.CopilotResponse
 	if len(codenames) > 1 {
 		// Sequential pipeline — each agent sees prior agents' reasoning.
+		// Each agent is ladder-checked individually inside Execute.
 		log.Printf("Copilot webhook: pipeline %v", codenames)
-		resp, err = h.pipeline.Execute(r.Context(), req, codenames)
+		resp, err = h.pipeline.Execute(reqCtx, req, codenames)
 	} else {
 		codename := codenames[0]
 		agent, agentErr := h.registry.Get(codename)
@@ -148,7 +170,12 @@ func (h *Handler) CopilotWebhook(w http.ResponseWriter, r *http.Request) {
 			codename = "APEX"
 		}
 		log.Printf("Copilot webhook: routing to agent %s", codename)
-		resp, err = agent.Handle(r.Context(), req)
+		ctx, dec := guard(reqCtx, agent)
+		if dec.Denied {
+			copilot.WriteError(w, dec.Reason, http.StatusForbidden)
+			return
+		}
+		resp, err = agent.Handle(ctx, req)
 	}
 
 	if err != nil {

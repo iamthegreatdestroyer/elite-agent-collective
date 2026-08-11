@@ -20,6 +20,7 @@ var (
 	ErrorsTotal         atomic.Int64 // counter: responses with a 5xx status
 	UpstreamTotal       atomic.Int64 // counter: answers served by upstream Copilot
 	OllamaFallbackTotal atomic.Int64 // counter: answers served by the local Ollama fallback
+	ModelTimeoutsTotal  atomic.Int64 // counter: model calls that exceeded their budget
 	InFlight            atomic.Int64 // gauge: in-flight HTTP requests
 )
 
@@ -49,6 +50,7 @@ func (c *labeledCounter) snapshot() map[string]int64 {
 
 var (
 	requestsByAgent = newLabeledCounter() // label: agent
+	ladderDenials   = newLabeledCounter() // label: agent — authority-ladder refusals
 	routingMode     = newLabeledCounter() // label: mode (explicit|semantic|crew|default)
 )
 
@@ -58,6 +60,17 @@ func IncAgent(codename string) {
 		codename = "unknown"
 	}
 	requestsByAgent.Inc(codename)
+}
+
+// IncLadderDenial counts one authority-ladder refusal for the named agent.
+//
+// Deliberately SEPARATE from IncAgent: a denied request was never dispatched, so counting it
+// as a dispatch would hide the refusal in the very metric used to detect it.
+func IncLadderDenial(codename string) {
+	if codename == "" {
+		codename = "unknown"
+	}
+	ladderDenials.Inc(codename)
 }
 
 // IncRoutingMode counts one routing decision by mode.
@@ -120,6 +133,9 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 	writeScalar("eac_in_flight_requests", "In-flight HTTP requests.", "gauge", InFlight.Load())
 	writeScalar("eac_upstream_answers_total", "Answers served by the upstream Copilot API.", "counter", UpstreamTotal.Load())
 	writeScalar("eac_ollama_fallback_total", "Answers served by the local Ollama fallback.", "counter", OllamaFallbackTotal.Load())
+	// eac_errors_total counts 5xx statuses ONLY, so it structurally cannot see a request
+	// that dies when the connection closes mid-handler. This counter can.
+	writeScalar("eac_model_timeouts_total", "Model calls that exceeded their budget.", "counter", ModelTimeoutsTotal.Load())
 
 	writeLabeled := func(name, help, label string, vals map[string]int64) {
 		fmt.Fprintf(&b, "# HELP %s %s\n# TYPE %s counter\n", name, help, name)
@@ -134,6 +150,7 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 	}
 	writeLabeled("eac_requests_by_agent_total", "Agent dispatches by codename.", "agent", requestsByAgent.snapshot())
 	writeLabeled("eac_routing_mode_total", "Routing decisions by mode.", "mode", routingMode.snapshot())
+	writeLabeled("eac_ladder_denials_total", "Requests refused by the authority ladder.", "agent", ladderDenials.snapshot())
 
 	_, _ = w.Write([]byte(b.String()))
 }

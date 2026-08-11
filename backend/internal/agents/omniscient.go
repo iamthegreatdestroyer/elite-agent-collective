@@ -142,7 +142,11 @@ func (o *OmniscientAgent) Handle(ctx context.Context, req *models.CopilotRequest
 		if err != nil {
 			return o.fallbackAPEX(ctx, req)
 		}
-		inner, herr := ag.Handle(ctx, req)
+		innerCtx, dec := guard(ctx, ag)
+		if dec.Denied {
+			return copilot.NewResponse("[OMNISCIENT] " + dec.Reason), nil
+		}
+		inner, herr := ag.Handle(innerCtx, req)
 		if herr != nil || inner == nil || len(inner.Choices) == 0 {
 			return o.fallbackAPEX(ctx, req)
 		}
@@ -163,7 +167,11 @@ func (o *OmniscientAgent) fallbackAPEX(ctx context.Context, req *models.CopilotR
 	if err != nil {
 		return copilot.NewResponse("[OMNISCIENT] No agents available."), nil
 	}
-	return ag.Handle(ctx, req)
+	fbCtx, dec := guard(ctx, ag)
+	if dec.Denied {
+		return copilot.NewResponse("[OMNISCIENT] " + dec.Reason), nil
+	}
+	return ag.Handle(fbCtx, req)
 }
 
 // planHeader summarizes the orchestration decision and the planner's own

@@ -41,7 +41,16 @@ func (p *AgentPipeline) Execute(ctx context.Context, req *models.CopilotRequest,
 			continue
 		}
 
-		resp, err := agent.Handle(ctx, cur)
+		// A denied agent is skipped, not fatal: the rest of the pipeline still runs.
+		// The step is recorded as skipped so the refusal is visible in the output
+		// rather than silently shortening the chain.
+		stepCtx, dec := guard(ctx, agent)
+		if dec.Denied {
+			steps = append(steps, pipelineStep{agent: codename, skipped: true})
+			continue
+		}
+
+		resp, err := agent.Handle(stepCtx, cur)
 		if err != nil || len(resp.Choices) == 0 {
 			steps = append(steps, pipelineStep{agent: codename, skipped: true})
 			continue

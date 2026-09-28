@@ -37,6 +37,10 @@ type chatMsg struct {
 
 // chatResponse is the OpenAI-compatible /v1/chat/completions response body.
 type chatResponse struct {
+	// Model is who ACTUALLY answered. The gateway substitutes its default for any model outside
+	// GATEWAY_ALLOWED_MODELS and still returns 200, so without this field the client cannot tell
+	// that it was served something else (measured 2026-09-28).
+	Model   string `json:"model"`
 	Choices []struct {
 		Message      chatMsg `json:"message"`
 		FinishReason string  `json:"finish_reason"`
@@ -50,9 +54,13 @@ func NewOllamaClient() *OllamaClient {
 	}
 	model := os.Getenv("OLLAMA_MODEL")
 	if model == "" {
-		// gemma3:4b-it-qat is the gateway-advertised quality tier: warm,
-		// policy-clean (not Meta), and small enough for the CPU-only box.
-		model = "gemma3:4b-it-qat"
+		// Was gemma3:4b-it-qat, described here as "the gateway-advertised quality tier". The
+		// gateway does not serve it: measured 2026-09-28, the effective allowlist is three
+		// OFFLOAD models and gemma3:4b-it-qat exists only on the hub-local ollama that the
+		// offload policy excludes - so the request was silently answered by granite4:7b-a1b-h.
+		// This matches what eac-backend.service actually sets, so the fallback can no longer
+		// differ from production in which model it reaches.
+		model = "hf.co/inclusionAI/Ling-mini-2.0-GGUF:Q4_K_M"
 	}
 	return &OllamaClient{
 		// 90s (was 50s, raised 2026-09-27) is the EFFECTIVE per-request model budget: Forward inherits the caller's
@@ -199,13 +207,23 @@ func (c *OllamaClient) Forward(ctx context.Context, systemPrompt string, req *mo
 	if len(chatResp.Choices) == 0 {
 		return nil, fmt.Errorf("gateway returned no choices")
 	}
+	// Never accept an answer from a model we did not request. A miss on this path returns the
+	// persona scaffold, which the grader SCORES - so a substituted model would be graded as a
+	// real answer. Empty Model is tolerated so an upstream that omits the field cannot wedge
+	// this into a permanent failure.
+	if chatResp.Model != "" && chatResp.Model != c.model {
+		return nil, fmt.Errorf("model substituted: asked %s, gateway served %s", c.model, chatResp.Model)
+	}
 
 	content := chatResp.Choices[0].Message.Content
 	finish := chatResp.Choices[0].FinishReason
 	if finish == "" {
 		finish = "stop"
 	}
-	log.Printf("OLLAMA_FALLBACK: generated %d chars via %s", len(content), c.model)
+	// chatResp.Model, not c.model: the log should record who answered, which is now verified
+	// equal to what was asked. Logging the request as if it were the response is how a
+	// substitution gets written down as fact.
+	log.Printf("OLLAMA_FALLBACK: generated %d chars via %s", len(content), chatResp.Model)
 
 	return &models.CopilotResponse{
 		Choices: []models.Choice{

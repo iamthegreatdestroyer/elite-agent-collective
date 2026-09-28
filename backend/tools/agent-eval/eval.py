@@ -26,10 +26,35 @@ THREE OUTCOMES, NOT TWO
     A system that abstains is usable. A system that fabricates is worse than one that
     refuses, because it cannot be told apart from one that knows.
 """
-import argparse, json, re, subprocess, sys, time
+import argparse, json, os, re, subprocess, sys, time
 
 AGENT = "http://10.88.0.1:29080/agents/%s/invoke"
 GATEWAY = "http://localhost:8000/v1/chat/completions"
+
+# The --path gateway model. It was hardcoded to "ling-mini-2.0", which NOTHING SERVES: the
+# gateway does not error on an unknown model, it silently substitutes its default and returns
+# HTTP 200 with a different name in the body. That one name silently broke the weekly synth for
+# two months and eac-backend for weeks. (It is not even a typo - ling-mini-2.0 is a real 9.9 GB
+# model, on INFER; the gateway routing table just never mapped it to the host that has it.)
+# 🔴 THE EVAL WAS READING ITS OWN CACHED ANSWERS. It asks the SAME 8 fixed questions every
+# night, and the gateway sits behind the Token Recycler, whose L1 layer is EXACT-match. Measured
+# 2026-09-27: both eval questions returned x-cache: hit, x-cache-layer: l1-exact. So after the
+# first run this stopped being a measurement and became a REPLAY - it would keep emitting a
+# stable, plausible score long after the system under test had changed, in either direction.
+#
+# Cache-Control: no-store is NOT sufficient - measured: the gateway honours it for STORING only
+# and still serves a hit on lookup. So each run salts its prompts, which changes the L1 exact
+# key. Verified: salted + no-store -> x-cache: miss, and L2 semantic did not rescue the hit.
+# no-store is sent as well so these one-off salted answers do not pollute the cache for anyone
+# else. Set EAC_EVAL_SALT to reproduce a specific run.
+RUN_SALT = os.environ.get("EAC_EVAL_SALT") or ("%06x" % (int(time.time()) & 0xffffff))
+
+def _fresh(q):
+    """The question, made unique to this run so an exact-match cache cannot answer it."""
+    return "%s\n\n(eval run %s)" % (q, RUN_SALT)
+
+GATEWAY_MODEL = os.environ.get("EAC_EVAL_GATEWAY_MODEL",
+                               "hf.co/inclusionAI/Ling-mini-2.0-GGUF:Q4_K_M")
 
 # Each item: (id, question, right, wrong, note)
 #   right : regex that must match for CORRECT
@@ -38,7 +63,12 @@ GATEWAY = "http://localhost:8000/v1/chat/completions"
 CASES = [
     ("dispatch_sites",
      "How many agent dispatch sites does the authority ladder gate? Reply with just the number.",
-     r"\b(6|six)\b", r"\b(2|3|4|5|7|8|9|two|three|four|five|seven|eight)\b",
+     r"\b(6|six)\b",
+     # ANY count that is not six. Was a hand-listed 2-9 with no 1 and no 0, so when the model
+     # answered "1" it matched neither pattern and was graded MISS -- a wrong answer recorded
+     # as an abstention, three runs running. Bounded to 0-20 plus number-words deliberately:
+     # a bare \\d+ would also match version strings and IDs inside a prose answer.
+     r"\b(?!6\b)(?:1?[0-9]|20|zero|one|two|three|four|five|seven|eight|nine|ten)\b",
      "six .Handle( call sites are guarded"),
 
     ("artifact_holders",
@@ -81,8 +111,19 @@ CASES = [
      r"EAC_ECHO_PATH",
      # Same rule: the variable must be PUT FORWARD as the answer, not listed
      # among things it is not.
-     r"(?:is|are|use|uses|set|named|variable)\s+`?(?:EAC_ECHO_ENABLED|ECHO_ENABLED|EAC_AUDIT|ENABLE_ECHO)`?"
-     r"|^\s*`?(?:EAC_ECHO_ENABLED|ECHO_ENABLED|EAC_AUDIT|ENABLE_ECHO)`?\s*$",
+     # ANY env-var-shaped identifier that is not EAC_ECHO_PATH -- but ONLY where it is PUT
+     # FORWARD as the answer. That assertion context is the original's good idea and a first
+     # attempt at this fix discarded it, which graded "The variable is EAC_ECHO_PATH, not
+     # ENABLE_ECHO" as mixed. The selftest caught that; it is why the selftest exists.
+     # What WAS wrong: the hand-listed four guesses. The model invented ECHO_CHAIN_ENABLED and
+     # ECHO_CHAIN_STATE, matched nothing, and scored MISS. A closed answer space (one exact
+     # variable name) must be matched by EXCLUSION, never by guessing the wrong names.
+     # (?-i:) because grade() searches with re.I, under which [A-Z] also matches lowercase
+     # prose such as fail_closed.
+     r"(?:is|are|use|uses|set|named|variable)\s+`?(?-i:(?!EAC_ECHO_PATH\b)[A-Z][A-Z0-9]*(?:_[A-Z0-9]+)+)`?"
+     # (?:=\\S*)? because the model also answers in VAR=value form (observed:
+     # ECHO_AUDIT_CHAIN=true), which the bare end-anchor rejected.
+     r"|^\s*`?(?-i:(?!EAC_ECHO_PATH\b)[A-Z][A-Z0-9]*(?:_[A-Z0-9]+)+)`?(?:=\S*)?\s*$",
      "EAC_ECHO_PATH"),
 
     ("chain_contents",
@@ -92,6 +133,16 @@ CASES = [
      "hashes and metadata only — a canary test asserts this"),
 ]
 
+# 2026-08-26 onward the agent path returned this persona scaffold instead of an answer,
+# because its configured model (ling-mini-2.0) is not served by its configured endpoint
+# (localhost:8000 = ryzanstein-api, which offers only ryzanstein-bitnet-7b). The scaffold is
+# confident, well-formed, and says nothing -- and it was being GRADED. A stub is not a wrong
+# answer; it means the system under test never ran.
+STUB = re.compile(
+    r"(My approach follows these principles|"
+    r"\d\.\s*DECOMPOSE\s*.{0,3}\s*Break problem into atomic components|"
+    r"Let me analyze your request)", re.I | re.S)
+
 ABSTAIN = re.compile(
     r"i (don'?t|do not) (have|know)|no (specific )?information|unable to (determine|find)|"
     r"not (enough|sufficient) (context|information)|cannot determine|unclear from|"
@@ -99,9 +150,10 @@ ABSTAIN = re.compile(
 
 
 def ask_agent(agent, q, timeout):
-    body = json.dumps({"messages": [{"role": "user", "content": q}], "stream": False})
+    body = json.dumps({"messages": [{"role": "user", "content": _fresh(q)}], "stream": False})
     p = subprocess.run(["curl", "-s", "-m", str(timeout), "-X", "POST", AGENT % agent,
-                        "-H", "Content-Type: application/json", "-d", body],
+                        "-H", "Content-Type: application/json",
+                        "-H", "Cache-Control: no-store", "-d", body],
                        capture_output=True, text=True)
     try:
         return json.loads(p.stdout)["choices"][0]["message"]["content"]
@@ -110,13 +162,27 @@ def ask_agent(agent, q, timeout):
 
 
 def ask_gateway(q, timeout):
-    body = json.dumps({"model": "ling-mini-2.0", "max_tokens": 512,
-                       "messages": [{"role": "user", "content": q}], "stream": False})
+    body = json.dumps({"model": GATEWAY_MODEL, "max_tokens": 512,
+                       "messages": [{"role": "user", "content": _fresh(q)}], "stream": False})
     p = subprocess.run(["curl", "-s", "-m", str(timeout), "-X", "POST", GATEWAY,
-                        "-H", "Content-Type: application/json", "-d", body],
+                        "-H", "Content-Type: application/json",
+                        "-H", "Cache-Control: no-store", "-d", body],
                        capture_output=True, text=True)
     try:
-        return json.loads(p.stdout)["choices"][0]["message"]["content"]
+        resp = json.loads(p.stdout)
+    except Exception:
+        return ""
+    # A SUBSTITUTED MODEL STILL ANSWERS, AND THE ANSWER LOOKS FINE. The only way to notice is to
+    # check the name that came back. Scoring a model you did not ask for is not a weaker result;
+    # it is a different experiment wearing this one's label.
+    served = resp.get("model", "")
+    if served and served != GATEWAY_MODEL:
+        raise SystemExit(
+            "FATAL: asked the gateway for %r but it served %r. Every score below would describe "
+            "the wrong model. Set EAC_EVAL_GATEWAY_MODEL, or fix the gateway routing."
+            % (GATEWAY_MODEL, served))
+    try:
+        return resp["choices"][0]["message"]["content"]
     except Exception:
         return ""
 
@@ -126,6 +192,11 @@ def grade(ans, right, wrong):
     A pure abstention only counts when nothing was asserted either way."""
     if not ans.strip():
         return "error"
+    if STUB.search(ans):
+        # The backend answered with boilerplate. Grading it would invent a quality signal
+        # out of an infrastructure failure -- which is exactly what happened here for the
+        # eleven nights from 2026-08-26.
+        return "stub"
     r = re.search(right, ans, re.I) is not None
     w = re.search(wrong, ans, re.I) is not None
     if r and not w:
@@ -168,12 +239,20 @@ def main():
     for p in paths:
         t = tally[p]
         n = sum(t.values())
-        print("%-8s correct=%d  wrong=%d  mixed=%d  abstain=%d  miss=%d  error=%d   (n=%d)" % (
+        print("%-8s correct=%d  wrong=%d  mixed=%d  abstain=%d  miss=%d  error=%d  stub=%d   (n=%d)" % (
             p, t.get("correct", 0), t.get("wrong", 0), t.get("mixed", 0),
-            t.get("abstain", 0), t.get("miss", 0), t.get("error", 0), n))
+            t.get("abstain", 0), t.get("miss", 0), t.get("error", 0), t.get("stub", 0), n))
+        if t.get("stub", 0):
+            print("%-8s ^^ NOT A QUALITY RESULT: %d of %d answers were the persona scaffold, so"
+                  % ("", t["stub"], n))
+            print("%-8s    the model never ran. Check OLLAMA_URL/OLLAMA_MODEL on eac-backend"
+                  % "")
+            print("%-8s    and that the endpoint actually serves that model (/v1/models)." % "")
     print("\nanswers: %s" % a.out)
     print("NOTE: wrong != abstain. A system that declines is usable; one that fabricates")
     print("      cannot be told apart from one that knows.")
+    print("      stub != wrong.  A stub means the system under test never ran at all; a score")
+    print("      computed over stubs is not a measurement of anything.")
 
 
 if __name__ == "__main__":

@@ -212,7 +212,7 @@ func main() {
 	r.Use(middleware.Logger)
 	r.Use(middleware.Recoverer)
 	r.Use(metrics.Middleware)
-	r.Use(middleware.Timeout(60 * time.Second))
+	r.Use(middleware.Timeout(120 * time.Second)) // middle layer; see the stack note below
 	r.Use(corsMiddleware(cfg.CORSAllowedOrigins))
 
 	// Health check endpoint (no auth required)
@@ -273,13 +273,17 @@ func main() {
 		Addr:        addr,
 		Handler:     r,
 		ReadTimeout: 15 * time.Second,
-		// TIMEOUT ORDERING (2026-08-10). Innermost must expire FIRST so its error is
+		// TIMEOUT ORDERING (2026-08-10, values raised 2026-09-27). Innermost must expire FIRST
+		// so its error is still writable. Current stack, strictly increasing, no ties:
+		//   model 90s (ollama_client.go) < chi 120s (line ~215) < 150s here < eval curl 180s.
+		// Raised because a real answer STUBBED at exactly the old 50s model budget on an idle
+		// gateway - variance alone crossed it. Original note follows; it is why ties are fatal:
 		// still writable:  model 45s (ollama_client.go)  <  chi 60s (line ~171)  <  90s here.
 		// Was 60s — TIED with middleware.Timeout, so the two raced and which fired was
 		// undefined. A WriteTimeout closes the connection without a status, which is why
 		// eac_errors_total (5xx-only) could never see the failure.
-		WriteTimeout: 90 * time.Second,
-		IdleTimeout:  90 * time.Second,
+		WriteTimeout: 150 * time.Second,
+		IdleTimeout:  150 * time.Second,
 	}
 
 	// Graceful shutdown handling

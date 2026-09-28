@@ -55,12 +55,25 @@ func NewOllamaClient() *OllamaClient {
 		model = "gemma3:4b-it-qat"
 	}
 	return &OllamaClient{
-		// 50s is the EFFECTIVE per-request model budget: Forward inherits the caller's
+		// 90s (was 50s, raised 2026-09-27) is the EFFECTIVE per-request model budget: Forward inherits the caller's
 		// context and sets no deadline of its own, so this client timeout is the innermost
-		// one that actually fires on the request path. It sits well under the server's 90s
+		// one that actually fires on the request path. It sits well under the server's 150s
+		// WriteTimeout so the error is still writable.
+		// RAISED 2026-09-27 after three clean eval runs: answers measured 4-32s typically, and
+		// run 2 STUBBED at exactly 50s on an idle gateway (embed 0.078s, load 0.28 verified
+		// immediately before). So normal run-to-run variance alone crossed the old budget -
+		// roughly 1 stub in 24 questions with nothing else running. A miss here does not error,
+		// it returns the persona scaffold, which the grader then SCORES: one slow answer
+		// silently cost a point and looked like a quality regression.
+		// The whole stack moved together, innermost first, per the invariant below:
+		//   model 90s < chi 120s < WriteTimeout 150s < the eval's own 180s curl.
+		// Strictly increasing and no ties - a tie is what made the 60s/60s race undefined.
+		// NOT changed: MaxTokens 512 (~28s at the measured ~18 tok/s). There is now room to
+		// raise it, but that is an answer-quality decision and belongs in its own change.
+		// The old note, kept because it is the trap: it WAS 120s once -
 		// WriteTimeout so the error is still writable. Was 120s — TWICE the server's budget,
 		// so the client kept waiting long after the connection had been abandoned.
-		httpClient: &http.Client{Timeout: 50 * time.Second},
+		httpClient: &http.Client{Timeout: 90 * time.Second},
 		baseURL:    baseURL,
 		model:      model,
 	}

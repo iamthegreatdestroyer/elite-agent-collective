@@ -97,6 +97,34 @@ class ProtocolErrorTests(ServerTestCase):
             self.assertIsNone(reply["id"])
         self.assertEqual(self.server.handle({"jsonrpc": "2.0", "id": "x", "method": "ping"})["id"], "x")
 
+    def test_non_finite_numbers_are_parse_errors_and_never_echoed(self):
+        for line in (
+            b'{"jsonrpc":"2.0","id":NaN,"method":"ping"}',
+            b'{"jsonrpc":"2.0","id":-Infinity,"method":"ping"}',
+            b'{"jsonrpc":"2.0","id":1e999,"method":"ping"}',
+            b'{"jsonrpc":"2.0","id":1,"method":"ping","params":{"x":1e999}}',
+        ):
+            raw = self.server.handle_line(line + b"\n")
+            self.assertNotIn(b"NaN", raw)
+            self.assertNotIn(b"Infinity", raw)
+            reply = json.loads(raw, parse_constant=self.fail)
+            self.assertEqual((reply["id"], reply["error"]["code"]), (None, srv.PARSE_ERROR), line)
+        # a non-finite id that reaches handle() directly is refused too, with a null id
+        reply = self.server.handle({"jsonrpc": "2.0", "id": float("inf"), "method": "ping"})
+        self.assertEqual((reply["id"], reply["error"]["code"]), (None, srv.INVALID_REQUEST))
+        self.assertEqual(self.server.handle({"jsonrpc": "2.0", "id": 1.5, "method": "ping"})["id"], 1.5)
+
+    def test_bad_id_is_never_echoed_even_without_a_method(self):
+        for message in (
+            {"jsonrpc": "2.0", "id": {"a": 1}},
+            {"jsonrpc": "2.0", "id": [1]},
+            {"jsonrpc": "2.0", "id": True, "method": 5},
+        ):
+            reply = self.server.handle(message)
+            self.assertEqual((reply["id"], reply["error"]["code"]), (None, srv.INVALID_REQUEST), message)
+        # a valid id is still echoed on a method-less message
+        self.assertEqual(self.server.handle({"jsonrpc": "2.0", "id": 7})["id"], 7)
+
     def test_blank_line_ignored(self):
         self.assertIsNone(self.server.handle_line(b"  \r\n"))
 

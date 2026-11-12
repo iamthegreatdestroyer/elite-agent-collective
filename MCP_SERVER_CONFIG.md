@@ -107,7 +107,9 @@ Agent names are case-insensitive and may carry a leading `@`.
 | Tool ran but failed (for example agent not found) | Normal result with `isError: true` |
 
 No protocol error ends the session, including a line nested too deeply to parse (`-32700`).
-Request ids must be strings or numbers; `params` may be omitted or `null`.
+Request ids must be strings or finite numbers; any other id is answered with `-32600` and a
+`null` id, never echoed. `NaN`, `Infinity` and numbers too large for a float (`1e999`) are not
+accepted anywhere in a message (`-32700`). `params` may be omitted or `null`.
 
 ## How `find_agent` ranks
 
@@ -127,8 +129,8 @@ files and nothing else.
 python -m unittest discover -s mcp_server/tests -t .
 ```
 
-69 tests, standard library only: 24 for the registry (including the real 40-agent roster),
-34 for the JSON-RPC server in-process, and 11 end-to-end tests that start
+71 tests, standard library only: 24 for the registry (including the real 40-agent roster),
+36 for the JSON-RPC server in-process, and 11 end-to-end tests that start
 `python -m mcp_server` as a child process and exchange real JSON-RPC messages with it over
 stdio. The tests read the definition files and write only to temporary directories.
 

@@ -12,6 +12,7 @@ the caller's own model to run.
 from __future__ import annotations
 
 import json
+import math
 import sys
 from typing import Any, BinaryIO
 
@@ -283,18 +284,23 @@ class McpServer:
         """Handle one decoded message. Returns the response, or None for a notification."""
         if not isinstance(message, dict) or message.get("jsonrpc") != "2.0":
             return _error(None, INVALID_REQUEST, "Not a JSON-RPC 2.0 message")
+        msg_id = message.get("id")
+        # Only a string or a finite number is ever echoed back as an id; anything else answers with null.
+        if msg_id is not None and (
+            isinstance(msg_id, bool)
+            or not isinstance(msg_id, (str, int, float))
+            or (isinstance(msg_id, float) and not math.isfinite(msg_id))
+        ):
+            return _error(None, INVALID_REQUEST, "Id must be a string or a number")
         if "method" not in message:
             if "result" in message or "error" in message:
                 return None  # a response to a request we never sent; ignore
-            return _error(message.get("id"), INVALID_REQUEST, "Missing method")
-        method, has_id = message["method"], "id" in message
-        msg_id = message.get("id")
+            return _error(msg_id, INVALID_REQUEST, "Missing method")
+        method = message["method"]
         if not isinstance(method, str):
             return _error(msg_id, INVALID_REQUEST, "Method must be a string")
-        if not has_id:
+        if "id" not in message:
             return None  # notifications (notifications/initialized, cancelled, ...) get no reply
-        if msg_id is not None and (isinstance(msg_id, bool) or not isinstance(msg_id, (str, int, float))):
-            return _error(None, INVALID_REQUEST, "Id must be a string or a number")
         params = message.get("params")
         if params is None:
             params = {}
@@ -318,7 +324,7 @@ class McpServer:
         if not line.strip():
             return None
         try:
-            message = json.loads(line.decode("utf-8"))
+            message = json.loads(line.decode("utf-8"), parse_constant=_reject_constant, parse_float=_finite_float)
         except (UnicodeDecodeError, ValueError, RecursionError):  # RecursionError: absurdly deep nesting
             reply: Any = _error(None, PARSE_ERROR, "Parse error")
         else:
@@ -332,7 +338,7 @@ class McpServer:
         if reply is None:
             return None
         # ensure_ascii keeps every message on one line and safe on any console codepage
-        return json.dumps(reply, separators=(",", ":")).encode("ascii") + b"\n"
+        return json.dumps(reply, separators=(",", ":"), allow_nan=False).encode("ascii") + b"\n"
 
     def serve(self, stdin: BinaryIO, stdout: BinaryIO) -> None:
         """Read messages until stdin closes. Binary streams: no CRLF translation on Windows."""
@@ -341,6 +347,19 @@ class McpServer:
             if reply is not None:
                 stdout.write(reply)
                 stdout.flush()
+
+
+def _reject_constant(name: str) -> None:
+    """NaN, Infinity and -Infinity are not JSON; Python's parser accepts them unless told otherwise."""
+    raise ValueError(f"{name} is not valid JSON")
+
+
+def _finite_float(text: str) -> float:
+    """A number too large for a float (1e999) would become inf and could not be written back as JSON."""
+    value = float(text)
+    if not math.isfinite(value):
+        raise ValueError("number out of range")
+    return value
 
 
 def _error(msg_id: Any, code: int, message: str, data: Any = None) -> dict:

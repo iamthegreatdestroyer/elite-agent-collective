@@ -8,11 +8,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- `mcp_server/`: stdio MCP server (JSON-RPC 2.0, Python standard library only) serving the 40 agent definitions through `list_agents`, `find_agent`, `get_agent`, `invoke_agent` and `agents://` resources; 69 tests including an end-to-end stdio test. `invoke_agent` returns the prompt and calls no model
 - Comprehensive documentation in `docs/` directory
 - Marketplace assets and listing description
 - Issue templates for bug reports and feature requests
 - Privacy policy documentation
 - Contributing guidelines
+
+### Changed
+- `MCP_SERVER_CONFIG.md` rewritten to describe the server that exists; the earlier text documented an HTTP/OIDC/Redis MCP service that was never built
 
 ---
 

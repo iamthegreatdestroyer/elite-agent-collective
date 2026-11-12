@@ -1,5 +1,7 @@
 # Task 2 Completion Report: Backend Agent Tooling Update
 
+> **Correction 2026-11-12:** the lines below about "GitHub MCP support" and an "MCP server [that] can route to agents dynamically" describe the Go backend's HTTP agent-discovery API, not MCP. The backend does not speak MCP. The only MCP server in this repository is the stdio server in `mcp_server/`, added 2026-11-12 - see [MCP_SERVER_CONFIG.md](MCP_SERVER_CONFIG.md).
+
 **Status:** ✅ COMPLETE  
 **Date:** December 11, 2025  
 **Commit:** 5877c77  

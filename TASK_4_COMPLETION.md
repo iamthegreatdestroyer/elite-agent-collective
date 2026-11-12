@@ -1,5 +1,7 @@
 # Task 4 Completion Summary
 
+> **Correction 2026-11-12:** the "MCP server configuration - Complete" items below refer to a ~500-line document only. No MCP server code existed when this report was written, and the features that document listed (HTTP/WebSocket transport, OIDC, Redis, PostgreSQL, rate limits, cloud deployments) were never built as an MCP server. The document was rewritten on 2026-11-12 to describe the real stdio server in `mcp_server/` - see [MCP_SERVER_CONFIG.md](MCP_SERVER_CONFIG.md).
+
 ## 🎯 Objective
 
 Complete GitHub Integration & Marketplace Setup for Elite Agent Collective with all necessary documentation, guides, and validation checklists.

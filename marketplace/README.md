@@ -39,7 +39,7 @@ marketplace/
 1. **Update Listing**: Edit [listing.md](listing.md) if features change
 2. **Update Policies**: Keep privacy policy and ToS current
 3. **Update Screenshots**: Capture new screenshots if UI changes
-4. **Test Locally**: Use [../MCP_SERVER_CONFIG.md](../MCP_SERVER_CONFIG.md) for local testing
+4. **Test Locally**: Run the backend from `backend/` (see [../DEPLOYMENT_GUIDE.md](../DEPLOYMENT_GUIDE.md)); the MCP server in [../MCP_SERVER_CONFIG.md](../MCP_SERVER_CONFIG.md) is a separate stdio tool and does not exercise the extension
 
 ## 📝 Asset Specifications
 

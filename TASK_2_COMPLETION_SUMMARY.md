@@ -1,5 +1,7 @@
 # Task 2: Backend Agent Tooling - Completion Summary
 
+> **Correction 2026-11-12:** the "MCP (Model Context Protocol) server pattern" claimed below was never MCP. What Task 2 delivered is the Go backend's HTTP agent-discovery API (`/agents`, `/agents/{codename}`). The backend does not speak MCP. The only MCP server in this repository is the stdio server in `mcp_server/`, added 2026-11-12 - see [MCP_SERVER_CONFIG.md](MCP_SERVER_CONFIG.md).
+
 ## Overview
 
 Successfully completed Task 2 - modernizing backend to load 40 agents from distributed `.agent.md` files instead of a monolithic hardcoded array.
